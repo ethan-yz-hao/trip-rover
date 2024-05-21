@@ -9,7 +9,7 @@ import {formatISO} from "date-fns";
 import {selectArrivalTimeArray} from "@/features/arrivalTimeArray/arrivalTimeArraySlice.ts";
 import CustomDatePicker from "@/components/home/CustomDatePicker.tsx";
 import CustomTimePicker from "@/components/home/CustomTimePicker.tsx";
-import {Plan, StoreContext} from "../../context/StoreContext.tsx";
+// import {Plan, StoreContext} from "../../context/StoreContext.tsx";
 import {useForm} from "react-hook-form";
 
 
@@ -71,15 +71,15 @@ const SideBar = () => {
     });
 
     const onSubmit = (data: { title: string, startTime: string }) => {
-        if (!currentUserId) {
-            console.log('User not logged in');
-            return;
-        }
-        if (currentPlan) {
-            modifyPlan({...currentPlan, title: data.title, places: placesArray, startTime: data.startTime});
-        } else {
-            addPlan(currentUserId, data.title, placesArray, data.startTime);
-        }
+        // if (!currentUserId) {
+        //     console.log('User not logged in');
+        //     return;
+        // }
+        // if (currentPlan) {
+        //     modifyPlan({...currentPlan, title: data.title, places: placesArray, startTime: data.startTime});
+        // } else {
+        //     addPlan(currentUserId, data.title, placesArray, data.startTime);
+        // }
 
     };
 

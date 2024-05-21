@@ -5,7 +5,6 @@ import Profile from "@/components/Profile.tsx";
 import Login from "@/components/Login.tsx";
 import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
 import Signup from './components/Signup';
-import StoreContextProvider from './context/StoreContext';
 import Post from "@/components/Post.tsx";
 import NewPost from './components/NewPost';
 import Detail from './components/Detail';
@@ -15,7 +14,6 @@ import PostEdit from './components/PostEdit';
 function App() {
     return (
         <Router>
-            <StoreContextProvider>
                 <NavBar/>
                 <Routes>
                     <Route path="/profile/:userId" element={<Profile/>}/>
@@ -29,7 +27,6 @@ function App() {
                     <Route path={`/comment/:commentId`} element={<CommentEdit />} />
                     <Route path={`/postedit/:postId`} element={<PostEdit />} />
                 </Routes>
-            </StoreContextProvider>
         </Router>
     )
 }
