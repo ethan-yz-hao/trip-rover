@@ -1,1 +1,2 @@
 Spring Security
+Redis Caching authentication to improve verification efficiency (when authenticated user access resources)
