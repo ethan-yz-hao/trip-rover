@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: TripRover
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/trip_rover?useUnicode=true&characterEncoding=utf-8
+    username: root
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 123456
+      database: 10
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          google:
+#            client-id: 405704196940-sf6a4gn0mairbdaib9h9fvg4bo0a61tp.apps.googleusercontent.com
+#            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+#            scope:
+#              - email
+#              - profile
+logging:
+  level:
+    org.springframework.security: trace
