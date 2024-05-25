@@ -1,23 +1,44 @@
 package org.ethanhao.triprover.domain;
 
-import lombok.AllArgsConstructor;
+import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class LoginUser implements UserDetails {
 
     private User user;
 
+    private List<String> permissions;
+
+    public LoginUser(User user, List<String> list) {
+        this.user = user;
+        this.permissions = list;
+    }
+
+    @JSONField(serialize = false) // ignore
+    private List<SimpleGrantedAuthority> authorities;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        // avoid duplicate conversion
+        if (authorities != null){
+            return authorities;
+        }
+
+        // Convert string type permission information in permissions to GrantedAuthority object and store it in authorities
+        authorities = permissions.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+        return authorities;
     }
 
     @Override

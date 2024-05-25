@@ -46,19 +46,19 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             // throw exception if token is invalid
             throw new RuntimeException("Invalid token");
         }
+
         // get user info from redis
         String redisKey = "login:" + subject;
-        // get user info from redis
         LoginUser loginUser = redisCache.getCacheObject(redisKey);
 
         // check if loginUser is empty
         if (Objects.isNull(loginUser)) {
             throw new RuntimeException("User not logged in");
         }
+
         // store user info in SecurityContextHolder (user info, permission info)
-        // TODO get user authorities
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginUser, null, null);
+                new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         // let it pass through

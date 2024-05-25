@@ -10,6 +10,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -30,7 +33,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new RuntimeException("Username or password is incorrect");
         }
 
-        return new LoginUser(user);
+        // encapsulate user information in UserDetails implementation class
+        List<String> list = new ArrayList<>(Arrays.asList("test", "admin"));
+
+        return new LoginUser(user, list);
     }
 
 }
