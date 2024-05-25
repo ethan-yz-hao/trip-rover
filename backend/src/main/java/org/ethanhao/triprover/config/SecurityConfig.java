@@ -50,13 +50,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Configure authorization rules, specify the user/login path, allow anonymous access (cannot access after login), and other paths require authentication
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/user/login").anonymous().anyRequest().authenticated())
-                // Enable cross-origin access
-                .cors(AbstractHttpConfigurer::disable)
                 // Add JWT authentication filter
                 .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 // Configure exception handling
                 .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler)
-                        .authenticationEntryPoint(authenticationEntryPoint));
+                        .authenticationEntryPoint(authenticationEntryPoint))
+                // Enable cross-origin access
+                .cors(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
