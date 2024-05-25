@@ -1,5 +1,6 @@
 package org.ethanhao.triprover.config;
 
+import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.utils.FastJsonRedisSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +16,7 @@ public class RedisConfig {
                                                                connectionFactory) {
         RedisTemplate<Object, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
-        FastJsonRedisSerializer serializer = new FastJsonRedisSerializer(Object.class);
+        FastJsonRedisSerializer serializer = new FastJsonRedisSerializer(LoginUser.class);
         // 使用StringRedisSerializer来序列化和反序列化redis的key值
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(serializer);
