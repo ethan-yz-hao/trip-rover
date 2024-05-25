@@ -42,7 +42,6 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             // parse token
             Claims claims = JwtUtil.parseJWT(token);
             subject = claims.getSubject();
-            // get user id from token
         } catch (Exception e) {
             // throw exception if token is invalid
             throw new RuntimeException("Invalid token");
