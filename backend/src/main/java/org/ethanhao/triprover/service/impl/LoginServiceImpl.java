@@ -31,7 +31,7 @@ public class LoginServiceImpl implements LoginService {
                 new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword());
         // Authenticate the user through the authenticate method of AuthenticationManager
         Authentication authenticated = authenticationManager.authenticate(authenticationToken);
-
+        // If the authentication fails, throw an exception
         if (Objects.isNull(authenticated)) {
             throw new RuntimeException("Login failed");
         }
