@@ -24,7 +24,9 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     RedisCache redisCache;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
         // get token from request header
         String token = request.getHeader("token");
