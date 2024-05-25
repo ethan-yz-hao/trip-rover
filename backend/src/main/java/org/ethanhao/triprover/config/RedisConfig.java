@@ -16,6 +16,7 @@ public class RedisConfig {
                                                                connectionFactory) {
         RedisTemplate<Object, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
+        // Note that the FastJsonRedisSerializer uses the LoginUser class
         FastJsonRedisSerializer serializer = new FastJsonRedisSerializer(LoginUser.class);
         // 使用StringRedisSerializer来序列化和反序列化redis的key值
         template.setKeySerializer(new StringRedisSerializer());
