@@ -3,6 +3,7 @@ package org.ethanhao.triprover.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.User;
+import org.ethanhao.triprover.mapper.MenuMapper;
 import org.ethanhao.triprover.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,6 +22,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private MenuMapper menuMapper;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
@@ -34,7 +38,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         // encapsulate user information in UserDetails implementation class
-        List<String> list = new ArrayList<>(Arrays.asList("test", "admin"));
+        List<String> list = menuMapper.selectPermsByUserId(user.getId());
 
         return new LoginUser(user, list);
     }

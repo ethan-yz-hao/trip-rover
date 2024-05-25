@@ -1,10 +1,13 @@
 package org.ethanhao.triprover;
 
 import org.ethanhao.triprover.mapper.UserMapper;
+import org.ethanhao.triprover.mapper.MenuMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import java.util.List;
 
 @SpringBootTest
 public class MapperTest {
@@ -24,5 +27,14 @@ public class MapperTest {
     @Test
     public void testSelect() {
         userMapper.selectList(null).forEach(System.out::println);
+    }
+
+    @Autowired
+    private MenuMapper menuMapper;
+
+    @Test
+    public void testSelectPermsByUserId() {
+        List<String> list = menuMapper.selectPermsByUserId(42L);
+        System.out.println(list);
     }
 }
