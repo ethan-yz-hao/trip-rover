@@ -1,6 +1,8 @@
 package org.ethanhao.triprover.config;
 
 import org.ethanhao.triprover.filter.JwtAuthenticationTokenFilter;
+import org.ethanhao.triprover.handler.AccessDeniedHandlerImpl;
+import org.ethanhao.triprover.handler.AuthenticationEntryPointImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +26,10 @@ public class SecurityConfig {
     AuthenticationConfiguration authenticationConfiguration;
     @Autowired
     JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
+    @Autowired
+    AccessDeniedHandlerImpl accessDeniedHandler;
+    @Autowired
+    AuthenticationEntryPointImpl authenticationEntryPoint;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -47,7 +53,10 @@ public class SecurityConfig {
                 // Enable cross-origin access
                 .cors(AbstractHttpConfigurer::disable)
                 // Add JWT authentication filter
-                .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                // Configure exception handling
+                .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler)
+                        .authenticationEntryPoint(authenticationEntryPoint));
 
         return http.build();
     }
