@@ -4,17 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ResponseResult<T> {
-    /**
-     * 状态码
-     */
+    // Response Status Code
     private Integer code;
-    /**
-     * 提示信息，如果有错误时，前端可以获取该字段进行提示
-     */
+    // Response Message
     private String msg;
-    /**
-     * 查询到的结果数据，
-     */
+    // Response Data
     private T data;
 
     public ResponseResult(Integer code, String msg) {

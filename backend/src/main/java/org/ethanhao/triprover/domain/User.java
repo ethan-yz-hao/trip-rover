@@ -6,6 +6,8 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -21,81 +23,63 @@ public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 主键
-     */
+    // Primary key
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 用户名
-     */
+    // User Name
+    @Column(nullable = false, columnDefinition = "varchar(64)")
     private String userName;
 
-    /**
-     * 昵称
-     */
+    // Nickname
+    @Column(nullable = false, columnDefinition = "varchar(64)")
     private String nickName;
 
-    /**
-     * 密码
-     */
+    // User password
+    @Column(nullable = false, columnDefinition = "varchar(64)")
     private String password;
 
-    /**
-     * 用户类型：0代表普通用户，1代表管理员
-     */
-    private String type;
+    // User type (0 normal user 1 system user)
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer type;
 
-    /**
-     * 账号状态（0正常 1停用）
-     */
-    private String status;
+    // User status (0 normal 1 disabled)
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer status;
 
-    /**
-     * 邮箱
-     */
+    // Email
+    @Column(columnDefinition = "varchar(64) default NULL")
     private String email;
 
-    /**
-     * 手机号
-     */
-    private String phonenumber;
+    // Phone number
+    @Column(columnDefinition = "varchar(32) default NULL")
+    private String phoneNumber;
 
-    /**
-     * 用户性别（0男，1女，2未知）
-     */
-    private String sex;
-
-    /**
-     * 头像
-     */
+    // Avatar
+    @Column(columnDefinition = "varchar(128) default NULL")
     private String avatar;
 
-    /**
-     * 创建人的用户id
-     */
+    // User ID of the creator
+    @Column(columnDefinition = "bigint default NULL")
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
+    // Creation time
+    @CreationTimestamp
+    @Column(columnDefinition = "timestamp default CURRENT_TIMESTAMP")
     private LocalDateTime createTime;
 
-    /**
-     * 更新人
-     */
+    // Update by
+    @Column(columnDefinition = "bigint default NULL")
     private Long updateBy;
 
-    /**
-     * 更新时间
-     */
+    // Update time
+    @UpdateTimestamp
+    @Column(columnDefinition = "timestamp default CURRENT_TIMESTAMP")
     private LocalDateTime updateTime;
 
-    /**
-     * 删除标志（0代表未删除，1代表已删除）
-     */
+    // Delete flag (0 exists 1 deleted)
+    @Column(columnDefinition = "int default 0")
     private Integer delFlag;
 
     @ManyToMany

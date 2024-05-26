@@ -5,6 +5,8 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -20,91 +22,80 @@ public class Menu implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // Primary key
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 菜单名称
-     */
+    // Menu name
+    @Column(nullable = false)
     private String menuName;
 
-    /**
-     * 父菜单ID
-     */
+    // Parent menu ID
+    @Column(columnDefinition = "bigint default 0")
     private Long parentId;
 
-    /**
-     * 显示顺序
-     */
+    // Display order
+    @Column(columnDefinition = "int default 0")
     private Integer orderNum;
 
-    /**
-     * 路由地址
-     */
+    // Routing address
+    @Column(columnDefinition = "varchar(200) default ''")
     private String path;
 
-    /**
-     * 组件路径
-     */
+    // Component path
+    @Column(columnDefinition = "varchar(200) default NULL")
     private String component;
 
-    /**
-     * 是否为外链（0是 1否）
-     */
+    // Whether it is an external link (0 is, 1 is not)
+    @Column(columnDefinition = "int default 1")
     private Integer isFrame;
 
-    /**
-     * 菜单类型（M目录 C菜单 F按钮）
-     */
+    // Menu type (M directory C menu F button)
+    @Column(columnDefinition = "char(1) default ''")
     private String menuType;
 
-    /**
-     * 菜单状态（0显示 1隐藏）
-     */
-    private String visible;
+    // Menu display status (0 display 1 hidden)
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer visible;
 
-    /**
-     * 菜单状态（0正常 1停用）
-     */
-    private String status;
+    // Menu status (0 normal 1 disabled)
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer status;
 
-    /**
-     * 权限标识
-     */
+    // Permissions identification
+    @Column(columnDefinition = "varchar(100) default NULL")
     private String perms;
 
-    /**
-     * 菜单图标
-     */
+    // Menu icon
+    @Column(columnDefinition = "varchar(100) default '#'")
     private String icon;
 
-    /**
-     * 创建者
-     */
+    // Create by
+    @Column(columnDefinition = "bigint default NULL")
     private Long createBy;
 
-    /**
-     * 创建时间
-     */
+    // Creation time
+    @CreationTimestamp
+    @Column(columnDefinition = "timestamp  default CURRENT_TIMESTAMP")
     private LocalDateTime createTime;
 
-    /**
-     * 更新者
-     */
+    // Update by
+    @Column(columnDefinition = "bigint default NULL")
     private Long updateBy;
 
-    /**
-     * 更新时间
-     */
+    // Update time
+    @UpdateTimestamp
+    @Column(columnDefinition = "timestamp default CURRENT_TIMESTAMP")
     private LocalDateTime updateTime;
 
-    /**
-     * 备注
-     */
+    // Remarks
+    @Column(columnDefinition = "varchar(255) default NULL")
     private String remark;
 
-    private String delFlag;
+    // Delete flag (0 exists 1 deleted)
+    @Column(columnDefinition = "int default 0")
+    private Integer delFlag;
 
     @ManyToMany(mappedBy = "menus")
     private Set<Role> roles = new HashSet<>();
