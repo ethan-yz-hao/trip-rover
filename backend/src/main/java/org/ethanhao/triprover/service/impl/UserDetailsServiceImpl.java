@@ -1,10 +1,9 @@
 package org.ethanhao.triprover.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.User;
-import org.ethanhao.triprover.mapper.MenuMapper;
-import org.ethanhao.triprover.mapper.UserMapper;
+import org.ethanhao.triprover.repository.MenuRepository;
+import org.ethanhao.triprover.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,17 +17,16 @@ import java.util.Objects;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
-    private UserMapper userMapper;
+    private UserRepository userRepository;
 
     @Autowired
-    private MenuMapper menuMapper;
+    private MenuRepository menuRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         // search User by username
-        LambdaQueryWrapper wrapper = new LambdaQueryWrapper<User>().eq(User::getUserName, username);
-        User user = userMapper.selectOne(wrapper);
+        User user = userRepository.findByUserName(username);
 
         // if user not found, throw exception
         if (Objects.isNull(user)) {
@@ -36,7 +34,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         // encapsulate user information in UserDetails implementation class
-        List<String> list = menuMapper.selectPermsByUserId(user.getId());
+        List<String> list = menuRepository.findPermsByUserId(user.getId());
 
         return new LoginUser(user, list);
     }

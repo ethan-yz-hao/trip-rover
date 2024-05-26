@@ -1,27 +1,22 @@
 package org.ethanhao.triprover.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import jakarta.persistence.Entity;
+import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
-/**
- * <p>
- * 用户表
- * </p>
- *
- * @author 哈纳桑
- * @since 2024-05-07
- */
-@TableName("sys_user")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
+@Table(name = "sys_user")
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -29,7 +24,8 @@ public class User implements Serializable {
     /**
      * 主键
      */
-    @TableId(value = "id", type = IdType.AUTO)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**
@@ -102,5 +98,11 @@ public class User implements Serializable {
      */
     private Integer delFlag;
 
-
+    @ManyToMany
+    @JoinTable(
+            name = "sys_user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 }

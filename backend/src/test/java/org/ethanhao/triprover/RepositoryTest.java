@@ -1,7 +1,7 @@
 package org.ethanhao.triprover;
 
-import org.ethanhao.triprover.mapper.UserMapper;
-import org.ethanhao.triprover.mapper.MenuMapper;
+import org.ethanhao.triprover.repository.MenuRepository;
+import org.ethanhao.triprover.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,10 +10,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.util.List;
 
 @SpringBootTest
-public class MapperTest {
+public class RepositoryTest {
 
     @Autowired
-    private UserMapper userMapper;
+    private UserRepository userRepository;
 
     @Test
     public void testBCrypt() {
@@ -26,15 +26,17 @@ public class MapperTest {
 
     @Test
     public void testSelect() {
-        userMapper.selectList(null).forEach(System.out::println);
+        userRepository.findAll().forEach(user -> {
+            System.out.println("User ID: " + user.getId() + ", Username: " + user.getUserName());
+        });
     }
 
     @Autowired
-    private MenuMapper menuMapper;
+    private MenuRepository menuRepository;
 
     @Test
     public void testSelectPermsByUserId() {
-        List<String> list = menuMapper.selectPermsByUserId(42L);
+        List<String> list = menuRepository.findPermsByUserId(1L);
         System.out.println(list);
     }
 }

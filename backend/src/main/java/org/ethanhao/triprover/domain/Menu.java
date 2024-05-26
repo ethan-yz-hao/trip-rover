@@ -1,35 +1,27 @@
 package org.ethanhao.triprover.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
-/**
- * <p>
- * 菜单权限表
- * </p>
- *
- * @author 哈纳桑
- * @since 2024-05-09
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("sys_menu")
+@Entity
+@Table(name = "sys_menu")
 public class Menu implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 菜单ID
-     */
-    @TableId(value = "id", type = IdType.AUTO)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**
@@ -114,5 +106,6 @@ public class Menu implements Serializable {
 
     private String delFlag;
 
-
+    @ManyToMany(mappedBy = "menus")
+    private Set<Role> roles = new HashSet<>();
 }
