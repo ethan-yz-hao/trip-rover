@@ -52,7 +52,7 @@ public class Menu implements Serializable {
     private Integer isFrame;
 
     // Menu type (M directory C menu F button)
-    @Column(columnDefinition = "char(1) default ''")
+    @Column(columnDefinition = "varchar(1) default ''")
     private String menuType;
 
     // Menu display status (0 display 1 hidden)
