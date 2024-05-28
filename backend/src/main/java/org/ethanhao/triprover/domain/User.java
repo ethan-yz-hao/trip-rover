@@ -3,7 +3,10 @@ package org.ethanhao.triprover.domain;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -45,12 +48,16 @@ public class User implements Serializable {
     private String password;
 
     // User type (0 normal user 1 system user)
-    @NotEmpty
+    @NotNull
+    @Min(value = 0)
+    @Max(value = 1)
     @Column(nullable = false, columnDefinition = "int default 0")
     private Integer type;
 
     // User status (0 normal 1 disabled)
-    @NotEmpty
+    @NotNull
+    @Min(value = 0)
+    @Max(value = 1)
     @Column(nullable = false, columnDefinition = "int default 0")
     private Integer status;
 

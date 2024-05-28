@@ -49,7 +49,7 @@ public class SecurityConfig {
                 // Set session creation policy to stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Configure authorization rules, specify the user/login path, allow anonymous access (cannot access after login), and other paths require authentication
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/user/login").anonymous().anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/user/login", "/user/register").anonymous().anyRequest().authenticated())
                 // Add JWT authentication filter
                 .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 // Configure exception handling

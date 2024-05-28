@@ -14,8 +14,10 @@ INSERT INTO sys_menu (menu_name, order_num, path, component, visible, status, pe
 
 -- Associating Roles with Menus
 INSERT INTO sys_role_menu (role_id, menu_id) VALUES
-    ((SELECT id FROM sys_role WHERE role_name = 'Administrator'), (SELECT id FROM sys_menu WHERE menu_name = 'Test'));
+    ((SELECT id FROM sys_role WHERE role_name = 'Administrator'), (SELECT id FROM sys_menu WHERE menu_name = 'Test')),
+    ((SELECT id FROM sys_role WHERE role_name = 'User'), (SELECT id FROM sys_menu WHERE menu_name = 'Test'));
 
 -- Associating Users with Roles
 INSERT INTO sys_user_role (user_id, role_id) VALUES
-    ((SELECT id FROM sys_user WHERE user_name = 'admin'), (SELECT id FROM sys_role WHERE role_name = 'Administrator'));
+    ((SELECT id FROM sys_user WHERE user_name = 'admin'), (SELECT id FROM sys_role WHERE role_name = 'Administrator')),
+    ((SELECT id FROM sys_user WHERE user_name = 'johndoe'), (SELECT id FROM sys_role WHERE role_name = 'User'));
