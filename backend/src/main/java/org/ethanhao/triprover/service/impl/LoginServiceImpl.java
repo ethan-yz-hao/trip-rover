@@ -59,4 +59,9 @@ public class LoginServiceImpl implements LoginService {
         redisCache.deleteObject("login:" + userId);
         return new ResponseResult(200, "Logout successful");
     }
+
+    @Override
+    public ResponseResult register(User user) {
+        return null;
+    }
 }

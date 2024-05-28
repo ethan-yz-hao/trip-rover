@@ -3,6 +3,7 @@ package org.ethanhao.triprover.domain;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,22 +30,27 @@ public class User implements Serializable {
     private Long id;
 
     // User Name
+    @NotEmpty
     @Column(nullable = false, columnDefinition = "varchar(64)")
     private String userName;
 
     // Nickname
+    @NotEmpty
     @Column(nullable = false, columnDefinition = "varchar(64)")
     private String nickName;
 
     // User password
+    @NotEmpty
     @Column(nullable = false, columnDefinition = "varchar(64)")
     private String password;
 
     // User type (0 normal user 1 system user)
+    @NotEmpty
     @Column(nullable = false, columnDefinition = "int default 0")
     private Integer type;
 
     // User status (0 normal 1 disabled)
+    @NotEmpty
     @Column(nullable = false, columnDefinition = "int default 0")
     private Integer status;
 
