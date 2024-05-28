@@ -75,4 +75,15 @@ public class LoginServiceImpl implements LoginService {
         }
         return new ResponseResult(HttpStatus.OK.value(), "Register successful");
     }
+
+    @Override
+    public ResponseResult updateUser(User user) {
+        return null;
+    }
+
+    @Override
+    public ResponseResult deleteUser(User user) {
+        // set status and delete flag to 1
+        return null;
+    }
 }

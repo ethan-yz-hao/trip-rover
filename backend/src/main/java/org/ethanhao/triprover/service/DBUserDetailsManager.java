@@ -60,7 +60,8 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
     }
 
     public void createUserWithRole(User user, List<String> roles) {
-        if (userRepository.findByUserName(user.getUserName()) != null) {
+        // no duplicate user with status 0
+        if (userRepository.findByUserNameAndDelFlag(user.getUserName(), 0) != null) {
             throw new RuntimeException("User already exists");
         }
         // set user type and status

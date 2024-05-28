@@ -9,4 +9,8 @@ public interface LoginService {
     ResponseResult logout();
 
     ResponseResult register(User user);
+
+    ResponseResult updateUser(User user);
+
+    ResponseResult deleteUser(User user);
 }
