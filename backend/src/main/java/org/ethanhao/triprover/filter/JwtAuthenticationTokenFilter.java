@@ -29,7 +29,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         // get token from request header
-        String token = request.getHeader("token");
+        String token = request.getHeader("Authorization");
 
         // check if token is empty
         if (!StringUtils.hasText(token)) {

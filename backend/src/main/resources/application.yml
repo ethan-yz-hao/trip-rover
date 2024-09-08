@@ -1,10 +1,13 @@
 spring:
+  config:
+    import: file:.env[.properties]
   application:
     name: TripRover
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/trip_rover
-    username: postgres
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,18 +17,21 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: 123456
+      password: ${REDIS_PASSWORD}
       database: 10
+
+logging:
+  level:
+    org.springframework.security: trace
+
 #  security:
 #    oauth2:
 #      client:
 #        registration:
 #          google:
 #            client-id: 405704196940-sf6a4gn0mairbdaib9h9fvg4bo0a61tp.apps.googleusercontent.com
+#            client-secret: ${GOOGLE_CLIENT_SECRET}
 #            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
 #            scope:
 #              - email
 #              - profile
-logging:
-  level:
-    org.springframework.security: trace

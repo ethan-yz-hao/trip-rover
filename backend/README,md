@@ -1,3 +1,14 @@
 Spring Security
 Redis Caching authentication to improve verification efficiency (when authenticated user access resources)
 RBAC authorization
+
+## Local Development
+Start the application
+```
+docker-compose up -d
+```
+
+Down and remove volumes
+```
+docker-compose down -v
+```
