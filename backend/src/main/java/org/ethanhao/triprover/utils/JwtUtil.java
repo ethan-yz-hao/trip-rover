@@ -4,6 +4,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.core.env.Environment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -14,11 +20,16 @@ import java.util.UUID;
 /**
  * JWT token generation and parsing
  */
+@Component
 public class JwtUtil {
+    private static final Environment environment = new StandardEnvironment();
+
     // Set the expiration time of the token
-    public static final Long JWT_TTL = 60 * 60 * 1000L;// 60 * 60 * 1000 milliseconds = 1 hour
-    // Set the plaintext of the token
-    public static final String JWT_KEY = "ethanhao";
+    @Value("${JWT_TTL:3600000}") // 1 hour default (in milliseconds)
+    private Long jwtTtl;
+
+    @Value("${JWT_SECRET_KEY}")
+    private String jwtKey;
 
     public static String getUUID() {
         String token = UUID.randomUUID().toString().replaceAll("-", "");
@@ -31,7 +42,7 @@ public class JwtUtil {
      * @param subject Data to be stored in the token (in JSON format)
      * @return
      */
-    public static String createJWT(String subject) {
+    public String createJWT(String subject) {
         JwtBuilder builder = getJwtBuilder(subject, null, getUUID()); // Set expiration time
         return builder.compact();
     }
@@ -43,19 +54,24 @@ public class JwtUtil {
      * @param ttlMillis Expiration time of the token (in milliseconds)
      * @return
      */
-    public static String createJWT(String subject, Long ttlMillis) {
+    public String createJWT(String subject, Long ttlMillis) {
         JwtBuilder builder = getJwtBuilder(subject, ttlMillis, getUUID()); // Set expiration time
         return builder.compact();
     }
 
-    private static JwtBuilder getJwtBuilder(String subject, Long ttlMillis,
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
+
+    private JwtBuilder getJwtBuilder(String subject, Long ttlMillis,
                                             String uuid) {
+        // log JWT token
+        logger.info("JWT token subject: {}", jwtKey);
+
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
         SecretKey secretKey = generalKey();
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
         if (ttlMillis == null) {
-            ttlMillis = JwtUtil.JWT_TTL;
+            ttlMillis = jwtTtl;
         }
         long expMillis = nowMillis + ttlMillis;
         Date expDate = new Date(expMillis);
@@ -76,24 +92,18 @@ public class JwtUtil {
      * @param ttlMillis
      * @return
      */
-    public static String createJWT(String id, String subject, Long ttlMillis) {
+    public String createJWT(String id, String subject, Long ttlMillis) {
         JwtBuilder builder = getJwtBuilder(subject, ttlMillis, id); // Set expiration time
         return builder.compact();
-    }
-
-    public static void main(String[] args) throws Exception {
-        String token = createJWT("hello");
-        Claims claims = parseJWT(token);
-        System.out.println(claims);
     }
 
     /**
      * Generate secret key
      *
-     * @return
+     * @return SecretKey
      */
-    public static SecretKey generalKey() {
-        byte[] encodedKey = Base64.getDecoder().decode(JwtUtil.JWT_KEY);
+    public SecretKey generalKey() {
+        byte[] encodedKey = Base64.getDecoder().decode(jwtKey);
         SecretKey key = new SecretKeySpec(encodedKey, 0, encodedKey.length,
                 "AES");
         return key;
@@ -106,7 +116,7 @@ public class JwtUtil {
      * @return
      * @throws Exception
      */
-    public static Claims parseJWT(String jwt) throws Exception {
+    public Claims parseJWT(String jwt) throws Exception {
         SecretKey secretKey = generalKey();
         return Jwts.parser()
                 .setSigningKey(secretKey)

@@ -1,5 +1,6 @@
 package org.ethanhao.triprover.filter;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
@@ -23,6 +24,9 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     @Autowired
     RedisCache redisCache;
 
+    @Autowired
+    JwtUtil jwtUtil;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response, FilterChain filterChain)
@@ -42,10 +46,11 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         String subject;
         try {
             // parse token
-            Claims claims = JwtUtil.parseJWT(token);
+            Claims claims = jwtUtil.parseJWT(token);
             subject = claims.getSubject();
+        } catch (ExpiredJwtException e) {
+            throw new RuntimeException("Token expired, please log in again");
         } catch (Exception e) {
-            // throw exception if token is invalid
             throw new RuntimeException("Invalid token");
         }
 

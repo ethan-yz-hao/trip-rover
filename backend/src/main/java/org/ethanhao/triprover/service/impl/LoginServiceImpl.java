@@ -31,6 +31,9 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     RedisCache redisCache;
 
+    @Autowired
+    JwtUtil jwtUtil;
+
     @Override
     public ResponseResult login(User user) {
         // Encapsulate the Authentication object
@@ -46,7 +49,7 @@ public class LoginServiceImpl implements LoginService {
         LoginUser loginUser = (LoginUser) authenticated.getPrincipal();
         String userId = loginUser.getUser().getId().toString();
         // Generate token after authentication
-        String jwt = JwtUtil.createJWT(userId);
+        String jwt = jwtUtil.createJWT(userId);
         // Store user information in redis
         redisCache.setCacheObject("login:" + userId, loginUser);
         // Return the token to the front end
