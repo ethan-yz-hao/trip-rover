@@ -12,12 +12,12 @@ import java.util.Date;
 import java.util.UUID;
 
 /**
- * JWT工具类
+ * JWT token generation and parsing
  */
 public class JwtUtil {
-    //有效期为
-    public static final Long JWT_TTL = 60 * 60 * 1000L;// 60 * 60 *1000 一个小时
-    //设置秘钥明文
+    // Set the expiration time of the token
+    public static final Long JWT_TTL = 60 * 60 * 1000L;// 60 * 60 * 1000 milliseconds = 1 hour
+    // Set the plaintext of the token
     public static final String JWT_KEY = "ethanhao";
 
     public static String getUUID() {
@@ -26,25 +26,25 @@ public class JwtUtil {
     }
 
     /**
-     * 生成jtw
+     * Generate JWT token
      *
-     * @param subject token中要存放的数据（json格式）
+     * @param subject Data to be stored in the token (in JSON format)
      * @return
      */
     public static String createJWT(String subject) {
-        JwtBuilder builder = getJwtBuilder(subject, null, getUUID());// 设置过期时间
+        JwtBuilder builder = getJwtBuilder(subject, null, getUUID()); // Set expiration time
         return builder.compact();
     }
 
     /**
-     * 生成jtw
+     * Generate JWT token
      *
-     * @param subject   token中要存放的数据（json格式）
-     * @param ttlMillis token超时时间
+     * @param subject   Data to be stored in the token (in JSON format)
+     * @param ttlMillis Expiration time of the token (in milliseconds)
      * @return
      */
     public static String createJWT(String subject, Long ttlMillis) {
-        JwtBuilder builder = getJwtBuilder(subject, ttlMillis, getUUID());// 设置过期时间
+        JwtBuilder builder = getJwtBuilder(subject, ttlMillis, getUUID()); // Set expiration time
         return builder.compact();
     }
 
@@ -60,16 +60,16 @@ public class JwtUtil {
         long expMillis = nowMillis + ttlMillis;
         Date expDate = new Date(expMillis);
         return Jwts.builder()
-                .setId(uuid) //唯一的ID
-                .setSubject(subject) // 主题 可以是JSON数据
-                .setIssuer("sg") // 签发者
-                .setIssuedAt(now) // 签发时间
-                .signWith(signatureAlgorithm, secretKey) //使用HS256对称加密算法签名, 第二个参数为秘钥
+                .setId(uuid) // unique ID
+                .setSubject(subject) // subject (JSON format)
+                .setIssuer("sg") // issuer
+                .setIssuedAt(now) // issue time
+                .signWith(signatureAlgorithm, secretKey) // use SHA256 encryption, the second parameter is the secret key
                 .setExpiration(expDate);
     }
 
     /**
-     * 创建token
+     * Generate JWT token
      *
      * @param id
      * @param subject
@@ -77,7 +77,7 @@ public class JwtUtil {
      * @return
      */
     public static String createJWT(String id, String subject, Long ttlMillis) {
-        JwtBuilder builder = getJwtBuilder(subject, ttlMillis, id);// 设置过期时间
+        JwtBuilder builder = getJwtBuilder(subject, ttlMillis, id); // Set expiration time
         return builder.compact();
     }
 
@@ -88,7 +88,7 @@ public class JwtUtil {
     }
 
     /**
-     * 生成加密后的秘钥 secretKey
+     * Generate secret key
      *
      * @return
      */
@@ -100,7 +100,7 @@ public class JwtUtil {
     }
 
     /**
-     * 解析
+     * Decrypt JWT token
      *
      * @param jwt
      * @return
