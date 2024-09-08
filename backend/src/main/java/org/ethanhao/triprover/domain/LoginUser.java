@@ -24,7 +24,7 @@ public class LoginUser implements UserDetails {
         this.permissions = list;
     }
 
-    @JSONField(serialize = false) // ignore
+    @JSONField(serialize = false) // ignore this field when converting to JSON
     private List<SimpleGrantedAuthority> authorities;
 
     @Override

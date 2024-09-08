@@ -18,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity()
@@ -46,6 +48,8 @@ public class SecurityConfig {
         http
                 // Disable CSRF protection
                 .csrf(AbstractHttpConfigurer::disable)
+                // Configure CORS
+                .cors(withDefaults())
                 // Set session creation policy to stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Configure authorization rules, specify the user/login path, allow anonymous access (cannot access after login), and other paths require authentication
@@ -54,9 +58,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 // Configure exception handling
                 .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler)
-                        .authenticationEntryPoint(authenticationEntryPoint))
-                // Enable cross-origin access
-                .cors(AbstractHttpConfigurer::disable);
+                        .authenticationEntryPoint(authenticationEntryPoint));
 
         return http.build();
     }

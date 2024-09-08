@@ -18,22 +18,22 @@ public class RedisCache {
     public RedisTemplate redisTemplate;
 
     /**
-     * 缓存基本的对象，Integer、String、实体类等
+     * Cache basic objects, such as Integer, String, entity classes, etc.
      *
-     * @param key   缓存的键值
-     * @param value 缓存的值
+     * @param key   Cache key
+     * @param value Cache value
      */
     public <T> void setCacheObject(final String key, final T value) {
         redisTemplate.opsForValue().set(key, value);
     }
 
     /**
-     * 缓存基本的对象，Integer、String、实体类等
+     * Cache basic objects, such as Integer, String, entity classes, etc.
      *
-     * @param key      缓存的键值
-     * @param value    缓存的值
-     * @param timeout  时间
-     * @param timeUnit 时间颗粒度
+     * @param key      Cache key
+     * @param value    Cache value
+     * @param timeout  Timeout
+     * @param timeUnit Time unit
      */
     public <T> void setCacheObject(final String key, final T value, final
     Integer timeout, final TimeUnit timeUnit) {
@@ -41,33 +41,33 @@ public class RedisCache {
     }
 
     /**
-     * 设置有效时间
+     * Set the expiration time
      *
-     * @param key     Redis键
-     * @param timeout 超时时间
-     * @return true=设置成功；false=设置失败
+     * @param key     Redis key
+     * @param timeout Timeout
+     * @return true=success; false=failure
      */
     public boolean expire(final String key, final long timeout) {
         return expire(key, timeout, TimeUnit.SECONDS);
     }
 
     /**
-     * 设置有效时间
+     * Set the expiration time
      *
-     * @param key     Redis键
-     * @param timeout 超时时间
-     * @param unit    时间单位
-     * @return true=设置成功；false=设置失败
+     * @param key     Redis key
+     * @param timeout Timeout
+     * @param unit    Time unit
+     * @return true=success; false=failure
      */
     public boolean expire(final String key, final long timeout, final TimeUnit unit) {
         return redisTemplate.expire(key, timeout, unit);
     }
 
     /**
-     * 获得缓存的基本对象。
+     * Get cache basic objects
      *
-     * @param key 缓存键值
-     * @return 缓存键值对应的数据
+     * @param key Cache key
+     * @return Cache value
      */
     public <T> T getCacheObject(final String key) {
         ValueOperations<String, T> operation = redisTemplate.opsForValue();
@@ -75,7 +75,7 @@ public class RedisCache {
     }
 
     /**
-     * 删除单个对象
+     * Delete single object
      *
      * @param key
      */
@@ -84,9 +84,9 @@ public class RedisCache {
     }
 
     /**
-     * 删除集合对象
+     * Delete multiple objects
      *
-     * @param collection 多个对象
+     * @param collection Collection of keys
      * @return
      */
     public long deleteObject(final Collection collection) {
@@ -94,11 +94,11 @@ public class RedisCache {
     }
 
     /**
-     * 缓存List数据
+     * Cache List
      *
-     * @param key      缓存的键值
-     * @param dataList 待缓存的List数据
-     * @return 缓存的对象
+     * @param key      Cache key
+     * @param dataList Cache List
+     * @return Cache data object
      */
     public <T> long setCacheList(final String key, final List<T> dataList) {
         Long count = redisTemplate.opsForList().rightPushAll(key, dataList);
@@ -106,21 +106,21 @@ public class RedisCache {
     }
 
     /**
-     * 获得缓存的list对象
+     * Get cache List
      *
-     * @param key 缓存的键值
-     * @return 缓存键值对应的数据
+     * @param key Cache key
+     * @return Cache data object
      */
     public <T> List<T> getCacheList(final String key) {
         return redisTemplate.opsForList().range(key, 0, -1);
     }
 
     /**
-     * 缓存Set
+     * Cache Set
      *
-     * @param key     缓存键值
-     * @param dataSet 缓存的数据
-     * @return 缓存数据的对象
+     * @param key     Cache key
+     * @param dataSet Cache Set
+     * @return Cache data object
      */
     public <T> BoundSetOperations<String, T> setCacheSet(final String key, final
     Set<T> dataSet) {
@@ -134,20 +134,20 @@ public class RedisCache {
     }
 
     /**
-     * 获得缓存的set
+     * Get cache Set
      *
-     * @param key
-     * @return
+     * @param key Cache key
+     * @return Cache data object
      */
     public <T> Set<T> getCacheSet(final String key) {
         return redisTemplate.opsForSet().members(key);
     }
 
     /**
-     * 缓存Map
+     * Cache Map
      *
-     * @param key
-     * @param dataMap
+     * @param key     Cache key
+     * @param dataMap Cache Map
      */
     public <T> void setCacheMap(final String key, final Map<String, T> dataMap) {
         if (dataMap != null) {
@@ -156,21 +156,21 @@ public class RedisCache {
     }
 
     /**
-     * 获得缓存的Map
+     * Get cache Map
      *
-     * @param key
-     * @return
+     * @param key Cache key
+     * @return Cache data object
      */
     public <T> Map<String, T> getCacheMap(final String key) {
         return redisTemplate.opsForHash().entries(key);
     }
 
     /**
-     * 往Hash中存入数据
+     * Store data in Hash
      *
-     * @param key   Redis键
-     * @param hKey  Hash键
-     * @param value 值
+     * @param key   Redis key
+     * @param hKey  Hash key
+     * @param value Hash value
      */
     public <T> void setCacheMapValue(final String key, final String hKey, final
     T value) {
@@ -178,11 +178,11 @@ public class RedisCache {
     }
 
     /**
-     * 获取Hash中的数据
+     * Get data in Hash
      *
-     * @param key  Redis键
-     * @param hKey Hash键
-     * @return Hash中的对象
+     * @param key  Redis key
+     * @param hKey Hash key
+     * @return Data object in Hash
      */
     public <T> T getCacheMapValue(final String key, final String hKey) {
         HashOperations<String, String, T> opsForHash =
@@ -191,10 +191,10 @@ public class RedisCache {
     }
 
     /**
-     * 删除Hash中的数据
+     * Delete data in Hash
      *
-     * @param key
-     * @param hkey
+     * @param key  Redis key
+     * @param hkey Hash key
      */
     public void delCacheMapValue(final String key, final String hkey) {
         HashOperations hashOperations = redisTemplate.opsForHash();
@@ -202,11 +202,11 @@ public class RedisCache {
     }
 
     /**
-     * 获取多个Hash中的数据
+     * Get multiple Hash values
      *
-     * @param key   Redis键
-     * @param hKeys Hash键集合
-     * @return Hash对象集合
+     * @param key   Redis key
+     * @param hKeys Hash key collection
+     * @return Hash value collection
      */
     public <T> List<T> getMultiCacheMapValue(final String key, final
     Collection<Object> hKeys) {
@@ -214,10 +214,10 @@ public class RedisCache {
     }
 
     /**
-     * 获得缓存的基本对象列表
+     * Get a list of basic objects
      *
-     * @param pattern 字符串前缀
-     * @return 对象列表
+     * @param pattern String prefix
+     * @return List of basic objects
      */
     public Collection<String> keys(final String pattern) {
 
