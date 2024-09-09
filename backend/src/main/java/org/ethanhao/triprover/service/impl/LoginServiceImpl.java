@@ -8,6 +8,7 @@ import org.ethanhao.triprover.service.LoginService;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,6 +35,9 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     JwtUtil jwtUtil;
 
+    @Value("${JWT_TTL}")
+    private Long jwtTtl;
+
     @Override
     public ResponseResult login(User user) {
         // Encapsulate the Authentication object
@@ -49,7 +53,7 @@ public class LoginServiceImpl implements LoginService {
         LoginUser loginUser = (LoginUser) authenticated.getPrincipal();
         String userId = loginUser.getUser().getId().toString();
         // Generate token after authentication
-        String jwt = jwtUtil.createJWT(userId);
+        String jwt = jwtUtil.createJWT(userId, jwtTtl);
         // Store user information in redis
         redisCache.setCacheObject("login:" + userId, loginUser);
         // Return the token to the front end

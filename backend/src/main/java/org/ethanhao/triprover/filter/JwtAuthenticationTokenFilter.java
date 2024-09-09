@@ -43,19 +43,19 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         }
 
         // parse token to get user id
-        String subject;
+        String userId;
         try {
             // parse token
             Claims claims = jwtUtil.parseJWT(token);
-            subject = claims.getSubject();
+            userId = claims.getSubject();
         } catch (ExpiredJwtException e) {
-            throw new RuntimeException("Token expired, please log in again");
+            throw new RuntimeException("Access token expired");
         } catch (Exception e) {
             throw new RuntimeException("Invalid token");
         }
 
         // get user info from redis
-        String redisKey = "login:" + subject;
+        String redisKey = "login:" + userId;
         LoginUser loginUser = redisCache.getCacheObject(redisKey);
 
         // check if loginUser is empty

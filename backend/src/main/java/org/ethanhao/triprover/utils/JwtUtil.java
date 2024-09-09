@@ -24,27 +24,12 @@ import java.util.UUID;
 public class JwtUtil {
     private static final Environment environment = new StandardEnvironment();
 
-    // Set the expiration time of the token
-    @Value("${JWT_TTL:3600000}") // 1 hour default (in milliseconds)
-    private Long jwtTtl;
-
     @Value("${JWT_SECRET_KEY}")
     private String jwtKey;
 
     public static String getUUID() {
         String token = UUID.randomUUID().toString().replaceAll("-", "");
         return token;
-    }
-
-    /**
-     * Generate JWT token
-     *
-     * @param subject Data to be stored in the token (in JSON format)
-     * @return
-     */
-    public String createJWT(String subject) {
-        JwtBuilder builder = getJwtBuilder(subject, null, getUUID()); // Set expiration time
-        return builder.compact();
     }
 
     /**
@@ -70,9 +55,6 @@ public class JwtUtil {
         SecretKey secretKey = generalKey();
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
-        if (ttlMillis == null) {
-            ttlMillis = jwtTtl;
-        }
         long expMillis = nowMillis + ttlMillis;
         Date expDate = new Date(expMillis);
         return Jwts.builder()
