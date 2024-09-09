@@ -66,6 +66,8 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
         // set user type and status
         user.setType(0);
         user.setStatus(0);
+        // set delFlag
+        user.setDelFlag(0);
         // encrypt password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         // set user roles

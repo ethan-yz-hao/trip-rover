@@ -10,7 +10,7 @@ INSERT INTO sys_user (user_name, nick_name, password, type, status, email, phone
 
 -- Inserting Menus
 INSERT INTO sys_menu (menu_name, order_num, path, component, visible, status, perms) VALUES
-    ('Test', 1, 'system/test/index', 'Test', 0, 0, 'system:test:list');
+    ('Test', 1, '/*', 'Test', 0, 0, 'user:all');
 
 -- Associating Roles with Menus
 INSERT INTO sys_role_menu (role_id, menu_id) VALUES
