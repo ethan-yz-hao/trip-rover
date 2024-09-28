@@ -66,7 +66,7 @@ public class LoginServiceImpl implements LoginService {
                 .secure(false) // Need to use HTTPS in production
                 .path("/")
                 .maxAge(Duration.ofHours(1)) // 1 hour expiration time
-                .sameSite("None") // Adjust as needed (Strict, Lax, None)
+                .sameSite("Lax") // Adjust as needed (Strict, Lax, None)
                 .build();
 
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -87,7 +87,7 @@ public class LoginServiceImpl implements LoginService {
                 .secure(false) // Need to use HTTPS in production
                 .path("/")
                 .maxAge(Duration.ZERO)
-                .sameSite("None") // Adjust as needed (Strict, Lax, None)
+                .sameSite("Lax") // Adjust as needed (Strict, Lax, None)
                 .build();
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return new ResponseResult(HttpStatus.OK.value(), "Logout successful");

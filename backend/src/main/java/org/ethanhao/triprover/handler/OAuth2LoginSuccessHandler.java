@@ -8,7 +8,9 @@ import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -16,6 +18,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,22 +42,18 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String jwtToken = jwtUtil.createJWT(userId, jwtTtl);
         redisCache.setCacheObject("login:" + userId, loginUser);
 
-//        Map<String, String> responseMap = new HashMap<>();
-//        responseMap.put("token", jwtToken);
-//        ResponseResult result = new ResponseResult(HttpStatus.OK.value(), "OAuth2 login successful", responseMap);
-
-//        // Send the result to the client
-//        response.setContentType("application/json;charset=UTF-8");
-//        response.getWriter().write(result.toString());
-
-//        // Clear the default redirect behavior
-//        clearAuthenticationAttributes(request);
-
-//         redirect to the home page (Header needed for authentication to work properly)
-        response.setHeader("Authorization", jwtToken);
+        // Set JWT as an HTTP-only, Secure cookie
+        ResponseCookie cookie = ResponseCookie.from("JWT", jwtToken)
+                .httpOnly(true)
+                .secure(false) // Need to use HTTPS in production
+                .path("/")
+                .maxAge(Duration.ofHours(1)) // 1 hour expiration time
+                .sameSite("Lax") // Adjust as needed (Strict, Lax, None)
+                .build();
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        clearAuthenticationAttributes(request);
 
         response.sendRedirect("/hello");
-
 
         // authenticate the user
         SecurityContextHolder.getContext().setAuthentication(authentication);
