@@ -58,10 +58,10 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
     public void createUser(UserDetails userDetails) {
     }
 
-    public void createUserWithRole(User user, List<String> roles) {
+    public User createUserWithRole(User user, List<String> roles) {
         // no duplicate user with status 0
         if (userRepository.findByUserNameAndDelFlag(user.getUserName(), 0) != null) {
-            throw new RuntimeException("User already exists");
+            throw new RuntimeException("User with the same username already exists");
         }
         // set user type and status
         user.setType(0);
@@ -73,7 +73,7 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
         // set user roles
         List<Role> roleList = roles.stream().map(roleRepository::findByRoleKey).toList();
         user.getRoles().addAll(roleList);
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     @Override

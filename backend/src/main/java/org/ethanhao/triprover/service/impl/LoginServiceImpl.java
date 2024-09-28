@@ -67,7 +67,7 @@ public class LoginServiceImpl implements LoginService {
         // Get the user id from SecurityContextHolder
         UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        Long userId = loginUser.getUser().getId();
+        String userId = loginUser.getUser().getId().toString();
         // Delete user information from redis
         redisCache.deleteObject("login:" + userId);
         return new ResponseResult(HttpStatus.OK.value(), "Logout successful");

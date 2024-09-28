@@ -3,6 +3,7 @@ package org.ethanhao.triprover.config;
 import org.ethanhao.triprover.filter.JwtAuthenticationTokenFilter;
 import org.ethanhao.triprover.handler.AccessDeniedHandlerImpl;
 import org.ethanhao.triprover.handler.AuthenticationEntryPointImpl;
+import org.ethanhao.triprover.handler.OAuth2LoginSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.FilterChainProxy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -32,6 +34,8 @@ public class SecurityConfig {
     AccessDeniedHandlerImpl accessDeniedHandler;
     @Autowired
     AuthenticationEntryPointImpl authenticationEntryPoint;
+    @Autowired
+    OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -53,7 +57,13 @@ public class SecurityConfig {
                 // Set session creation policy to stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Configure authorization rules, specify the user/login path, allow anonymous access (cannot access after login), and other paths require authentication
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/user/login", "/user/register").anonymous().anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/user/login", "/user/register", "/oauth2/**").anonymous().anyRequest().authenticated())
+                // OAuth2 login configuration
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2LoginSuccessHandler)
+                        .failureUrl("/oauth2/failure")
+                        .permitAll()
+                )
                 // Add JWT authentication filter
                 .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 // Configure exception handling

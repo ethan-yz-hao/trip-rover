@@ -20,18 +20,19 @@ spring:
       password: ${REDIS_PASSWORD}
       database: 10
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+            scope:
+            - email
+            - profile
+
+
 logging:
   level:
     org.springframework.security: trace
-
-#  security:
-#    oauth2:
-#      client:
-#        registration:
-#          google:
-#            client-id: 405704196940-sf6a4gn0mairbdaib9h9fvg4bo0a61tp.apps.googleusercontent.com
-#            client-secret: ${GOOGLE_CLIENT_SECRET}
-#            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
-#            scope:
-#              - email
-#              - profile

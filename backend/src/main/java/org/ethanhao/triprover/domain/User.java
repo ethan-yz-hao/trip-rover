@@ -43,8 +43,7 @@ public class User implements Serializable {
     private String nickName;
 
     // User password
-    @NotEmpty
-    @Column(nullable = false, columnDefinition = "varchar(64)")
+    @Column(columnDefinition = "varchar(64) default NULL")
     private String password;
 
     // User type (0 normal user 1 system user)
