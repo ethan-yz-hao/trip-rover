@@ -1,5 +1,6 @@
 package org.ethanhao.triprover.service.impl;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.domain.User;
@@ -9,13 +10,16 @@ import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +43,7 @@ public class LoginServiceImpl implements LoginService {
     private Long jwtTtl;
 
     @Override
-    public ResponseResult login(User user) {
+    public ResponseResult login(User user, HttpServletResponse response) {
         // Encapsulate the Authentication object
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword());
@@ -56,20 +60,36 @@ public class LoginServiceImpl implements LoginService {
         String jwt = jwtUtil.createJWT(userId, jwtTtl);
         // Store user information in redis
         redisCache.setCacheObject("login:" + userId, loginUser);
-        // Return the token to the front end
-        Map<String, String> hashMap = new HashMap<>();
-        hashMap.put("token", jwt);
-        return new ResponseResult(HttpStatus.OK.value(), "Login successful", hashMap);
+        // Set JWT as an HTTP-only, Secure cookie
+        ResponseCookie cookie = ResponseCookie.from("JWT", jwt)
+                .httpOnly(true)
+                .secure(false) // Need to use HTTPS in production
+                .path("/")
+                .maxAge(Duration.ofHours(1)) // 1 hour expiration time
+                .sameSite("None") // Adjust as needed (Strict, Lax, None)
+                .build();
+
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return new ResponseResult(HttpStatus.OK.value(), "Login successful");
     }
 
     @Override
-    public ResponseResult logout() {
+    public ResponseResult logout(HttpServletResponse response) {
         // Get the user id from SecurityContextHolder
         UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         String userId = loginUser.getUser().getId().toString();
         // Delete user information from redis
         redisCache.deleteObject("login:" + userId);
+        // Clear the Cookie
+        ResponseCookie cookie = ResponseCookie.from("JWT", "")
+                .httpOnly(true)
+                .secure(false) // Need to use HTTPS in production
+                .path("/")
+                .maxAge(Duration.ZERO)
+                .sameSite("None") // Adjust as needed (Strict, Lax, None)
+                .build();
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return new ResponseResult(HttpStatus.OK.value(), "Logout successful");
     }
 

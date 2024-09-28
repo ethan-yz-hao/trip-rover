@@ -1,5 +1,6 @@
 package org.ethanhao.triprover.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.domain.User;
 import org.ethanhao.triprover.service.LoginService;
@@ -16,13 +17,13 @@ public class LoginController {
     private LoginService loginService;
 
     @PostMapping("/user/login")
-    public ResponseResult login(@RequestBody User user) {
-        return loginService.login(user);
+    public ResponseResult login(@RequestBody User user, HttpServletResponse response) {
+        return loginService.login(user, response);
     }
 
     @PostMapping("/user/logout")
-    public ResponseResult logout() {
-        return loginService.logout();
+    public ResponseResult logout(HttpServletResponse response) {
+        return loginService.logout(response);
     }
 
     @PostMapping("/user/register")
