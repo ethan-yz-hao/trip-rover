@@ -57,7 +57,8 @@ public class SecurityConfig {
                 // Set session creation policy to stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Configure authorization rules, specify the user/login path, allow anonymous access (cannot access after login), and other paths require authentication
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/user/login", "/user/register", "/oauth2/**").anonymous().anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/user/login", "/api/user/register", "/oauth2/**", "/testCors")
+                        .anonymous().anyRequest().authenticated())
                 // OAuth2 login configuration
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2LoginSuccessHandler)
