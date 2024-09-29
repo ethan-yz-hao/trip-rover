@@ -28,7 +28,7 @@ public class PlanController {
 
     @GetMapping("/{planId}")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseEntity<Plan> getPlan(
+    public ResponseEntity<Plan> getPlanPlace(
             @PathVariable Long planId,
             Authentication authentication
     ) {
@@ -40,21 +40,5 @@ public class PlanController {
 
         Plan plan = planService.getPlan(planId);
         return ResponseEntity.ok(plan);
-    }
-
-    @GetMapping("/{planId}/place")
-    @PreAuthorize("hasAuthority('user:all')")
-    public ResponseEntity<List<PlanPlace>> getPlanPlace(
-            @PathVariable Long planId,
-            Authentication authentication
-    ) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        Long userId = loginUser.getUser().getId();
-        if (!planService.isUserAuthorized(planId, userId)) {
-            return ResponseEntity.status(403).build(); // Forbidden
-        }
-
-        List<PlanPlace> places = planService.getPlanPlace(planId);
-        return ResponseEntity.ok(places);
     }
 }

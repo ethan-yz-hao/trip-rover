@@ -27,12 +27,6 @@ public class PlanServiceImpl implements PlanService {
     }
 
     @Override
-    public List<PlanPlace> getPlanPlace(Long planId) {
-        Plan plan = getPlan(planId);
-        return plan.getPlaces();
-    }
-
-    @Override
     public boolean isUserAuthorized(Long planId, Long userId) {
         // Check if the user is associated with the plan
         Plan plan = getPlan(planId);

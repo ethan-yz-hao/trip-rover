@@ -33,7 +33,6 @@ public class Plan {
     )
     private Set<User> users;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id.sequenceNumber ASC")
     private List<PlanPlace> places;
