@@ -28,9 +28,7 @@ public class PlanServiceImpl implements PlanService {
 
     @Override
     public boolean isUserAuthorized(Long planId, Long userId) {
-        // Check if the user is associated with the plan
-        Plan plan = getPlan(planId);
-        return plan.getUsers().stream().anyMatch(user -> user.getId().equals(userId));
+        return planRepository.existsByPlanIdAndUsers_Id(planId, userId);
     }
 
 }
