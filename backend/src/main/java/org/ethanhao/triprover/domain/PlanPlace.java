@@ -25,14 +25,4 @@ public class PlanPlace {
     private String placeId;
 
     private Integer sequenceNumber;
-
-    // Additional methods to access sequenceNumber directly
-    @JsonIgnore
-    public Integer getSequenceNumber() {
-        return sequenceNumber;
-    }
-
-    public void setSequenceNumber(Integer sequenceNumber) {
-        this.sequenceNumber = sequenceNumber;
-    }
 }
