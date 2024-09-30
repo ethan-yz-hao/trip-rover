@@ -11,6 +11,7 @@ interface PlanComponentProps {
 const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     const [plan, setPlan] = useState<Plan | null>(null);
+    const planRef = useRef<Plan | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
     const [newPlaceId, setNewPlaceId] = useState<string>('');
 
@@ -30,12 +31,20 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             .catch(error => console.error('Error fetching plan:', error));
     }, [planId, backendUrl]);
 
+    // Store the plan data in a ref
+    useEffect(() => {
+        if (plan) {
+            planRef.current = plan;
+        }
+    }, [plan]);
+
     // Initialize and manage WebSocket connection
     useEffect(() => {
         const webSocketService = new WebSocketService(planId);
         webSocketServiceRef.current = webSocketService;
 
         webSocketService.connect((updateMessage: PlanUpdateMessage) => {
+            console.log('WebSocket message received:', updateMessage);
             handleUpdateMessage(updateMessage);
         });
 
@@ -45,7 +54,11 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     }, [planId]);
 
     const handleUpdateMessage = (updateMessage: PlanUpdateMessage) => {
-        if (!plan) return;
+        const plan = planRef.current;
+        if (!plan) {
+            console.error('Plan not loaded');
+            return;
+        }
 
         switch (updateMessage.action) {
             case 'REORDER':
