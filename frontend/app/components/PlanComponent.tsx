@@ -126,8 +126,6 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        setPlan({...plan, places: [...plan.places, {placeId: newPlaceId}]});
-
         // Send update to the server via WebSocket
         const updateMessage: PlanUpdateMessage = {
             action: 'ADD',
@@ -143,10 +141,6 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             console.error('Place not found:', placeId);
             return;
         }
-
-        const updatedPlaces = Array.from(plan.places);
-        updatedPlaces.splice(index, 1);
-        setPlan({...plan, places: updatedPlaces});
 
         // Send update to the server via WebSocket
         const updateMessage: PlanUpdateMessage = {
