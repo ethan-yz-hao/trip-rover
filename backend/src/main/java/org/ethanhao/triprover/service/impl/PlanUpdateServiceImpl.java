@@ -84,6 +84,9 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
         newPlanPlace.setPlan(plan);
         newPlanPlace.setPlaceId(newPlaceId);
         newPlanPlace.setSequenceNumber(newSequenceNumber);
+
+        // Add the new place to the plan
+        plan.getPlaces().add(newPlanPlace);
     }
 
     private void removePlace(Plan plan, PlanUpdateMessage updateMessage) {
