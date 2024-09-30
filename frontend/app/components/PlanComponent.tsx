@@ -1,7 +1,8 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import {Plan} from "@/app/model";
+import React, { useState, useEffect, useRef } from 'react';
+import { Plan, PlanUpdateMessage } from '@/app/model';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import WebSocketService from '@/app/webSocketService';
 
 interface PlanComponentProps {
     planId: number;
@@ -10,6 +11,7 @@ interface PlanComponentProps {
 const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     const [plan, setPlan] = useState<Plan | null>(null);
+    const webSocketServiceRef = useRef<WebSocketService | null>(null);
 
     // Load the plan data
     useEffect(() => {
@@ -17,10 +19,62 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
         fetch(`${backendUrl}/api/plan/${planId}`, {
             credentials: 'include', // Include cookies in the request
         })
-            .then(response => response.json())
-            .then(data => setPlan(data))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch plan');
+                }
+                return response.json();
+            })
+            .then((data: Plan) => setPlan(data))
             .catch(error => console.error('Error fetching plan:', error));
+    }, [planId, backendUrl]);
+
+    // Initialize and manage WebSocket connection
+    useEffect(() => {
+        const webSocketService = new WebSocketService(planId);
+        webSocketServiceRef.current = webSocketService;
+
+        webSocketService.connect((updateMessage: PlanUpdateMessage) => {
+            handleUpdateMessage(updateMessage);
+        });
+
+        return () => {
+            webSocketService.disconnect();
+        };
     }, [planId]);
+
+    const handleUpdateMessage = (updateMessage: PlanUpdateMessage) => {
+        if (!plan) return;
+
+        switch (updateMessage.action) {
+            case 'REORDER':
+                const { fromIndex, toIndex } = updateMessage;
+                if (fromIndex === undefined || toIndex === undefined) return;
+
+                const reorderedPlaces = Array.from(plan.places);
+                const [movedPlace] = reorderedPlaces.splice(fromIndex, 1);
+                reorderedPlaces.splice(toIndex, 0, movedPlace);
+
+                setPlan({ ...plan, places: reorderedPlaces });
+                break;
+
+            case 'ADD':
+                if (updateMessage.place) {
+                    setPlan({ ...plan, places: [...plan.places, updateMessage.place] });
+                }
+                break;
+
+            case 'REMOVE':
+                if (updateMessage.index !== undefined) {
+                    const updatedPlaces = plan.places.filter((_, idx) => idx !== updateMessage.index);
+                    setPlan({ ...plan, places: updatedPlaces });
+                }
+                break;
+
+            default:
+                console.error('Unknown action:', updateMessage.action);
+        }
+    };
 
     // Handle drag and drop
     const onDragEnd = (result: DropResult) => {
@@ -41,14 +95,14 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
 
         setPlan({ ...plan, places: updatedPlaces });
 
-        // // Send update to the server via WebSocket
-        // const updateMessage: PlanUpdateMessage = {
-        //     action: 'REORDER',
-        //     fromIndex: sourceIndex,
-        //     toIndex: destinationIndex,
-        // };
-        //
-        // webSocketService.sendUpdate(planId, updateMessage);
+        // Send update to the server via WebSocket
+        const updateMessage: PlanUpdateMessage = {
+            action: 'REORDER',
+            fromIndex: sourceIndex,
+            toIndex: destinationIndex,
+        };
+
+        webSocketServiceRef.current?.sendUpdate(updateMessage);
     };
 
     if (!plan || !plan.places) {
@@ -60,15 +114,15 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
             <Droppable droppableId="places">
                 {(provided) => (
                     <ul {...provided.droppableProps} ref={provided.innerRef}>
-                        {plan.places.map((Place, index) => (
-                            <Draggable key={Place.placeId} draggableId={Place.placeId} index={index}>
+                        {plan.places.map((place, index) => (
+                            <Draggable key={place.placeId} draggableId={place.placeId} index={index}>
                                 {(provided) => (
                                     <li
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
                                     >
-                                        {Place.placeId} {Place.name}
+                                        {place.placeId} {place.name}
                                     </li>
                                 )}
                             </Draggable>
