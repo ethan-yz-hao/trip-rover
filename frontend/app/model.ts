@@ -2,7 +2,6 @@
 
 export interface Place {
     placeId: string;
-    name?: string;
     // Other optional fields
 }
 
@@ -19,6 +18,5 @@ export interface PlanUpdateMessage {
     index?: number;          // For REMOVE action
     fromIndex?: number;      // For REORDER action
     toIndex?: number;        // For REORDER action
-    place?: Place;           // For ADD action
     // Additional fields as needed
 }

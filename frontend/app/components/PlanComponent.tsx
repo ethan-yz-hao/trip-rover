@@ -1,17 +1,18 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
-import { Plan, PlanUpdateMessage } from '@/app/model';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import React, {useState, useEffect, useRef} from 'react';
+import {Plan, PlanUpdateMessage} from '@/app/model';
+import {DragDropContext, Droppable, Draggable, DropResult} from '@hello-pangea/dnd';
 import WebSocketService from '@/app/webSocketService';
 
 interface PlanComponentProps {
     planId: number;
 }
 
-const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
+const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     const [plan, setPlan] = useState<Plan | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
+    const [newPlaceId, setNewPlaceId] = useState<string>('');
 
     // Load the plan data
     useEffect(() => {
@@ -48,26 +49,26 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
 
         switch (updateMessage.action) {
             case 'REORDER':
-                const { fromIndex, toIndex } = updateMessage;
+                const {fromIndex, toIndex} = updateMessage;
                 if (fromIndex === undefined || toIndex === undefined) return;
 
                 const reorderedPlaces = Array.from(plan.places);
                 const [movedPlace] = reorderedPlaces.splice(fromIndex, 1);
                 reorderedPlaces.splice(toIndex, 0, movedPlace);
 
-                setPlan({ ...plan, places: reorderedPlaces });
+                setPlan({...plan, places: reorderedPlaces});
                 break;
 
             case 'ADD':
-                if (updateMessage.place) {
-                    setPlan({ ...plan, places: [...plan.places, updateMessage.place] });
+                if (updateMessage.placeId) {
+                    setPlan({...plan, places: [...plan.places, {placeId: updateMessage.placeId}]});
                 }
                 break;
 
             case 'REMOVE':
                 if (updateMessage.index !== undefined) {
                     const updatedPlaces = plan.places.filter((_, idx) => idx !== updateMessage.index);
-                    setPlan({ ...plan, places: updatedPlaces });
+                    setPlan({...plan, places: updatedPlaces});
                 }
                 break;
 
@@ -93,7 +94,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
         const [movedPlace] = updatedPlaces.splice(sourceIndex, 1);
         updatedPlaces.splice(destinationIndex, 0, movedPlace);
 
-        setPlan({ ...plan, places: updatedPlaces });
+        setPlan({...plan, places: updatedPlaces});
 
         // Send update to the server via WebSocket
         const updateMessage: PlanUpdateMessage = {
@@ -109,29 +110,58 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
         return <div>Loading...</div>;
     }
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        setPlan({...plan, places: [...plan.places, {placeId: newPlaceId}]});
+
+        // Send update to the server via WebSocket
+        const updateMessage: PlanUpdateMessage = {
+            action: 'ADD',
+            placeId: newPlaceId,
+        };
+
+        webSocketServiceRef.current?.sendUpdate(updateMessage);
+    }
+
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="places">
-                {(provided) => (
-                    <ul {...provided.droppableProps} ref={provided.innerRef}>
-                        {plan.places.map((place, index) => (
-                            <Draggable key={place.placeId} draggableId={place.placeId} index={index}>
-                                {(provided) => (
-                                    <li
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                    >
-                                        {place.placeId} {place.name}
-                                    </li>
-                                )}
-                            </Draggable>
-                        ))}
-                        {provided.placeholder}
-                    </ul>
-                )}
-            </Droppable>
-        </DragDropContext>
+        <>
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label htmlFor="newPlaceId">New Place Index:</label>
+                    <input
+                        type="text"
+                        id="newPlaceId"
+                        value={newPlaceId}
+                        onChange={(e) => setNewPlaceId(e.target.value)}
+                        required
+                    />
+                </div>
+                <button type="submit">Add New Place Index</button>
+            </form>
+            <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="places">
+                    {(provided) => (
+                        <ul {...provided.droppableProps} ref={provided.innerRef}>
+                            {plan.places.map((place, index) => (
+                                <Draggable key={place.placeId} draggableId={place.placeId} index={index}>
+                                    {(provided) => (
+                                        <li
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                        >
+                                            {place.placeId}
+                                        </li>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </ul>
+                    )}
+                </Droppable>
+            </DragDropContext>
+        </>
     );
 };
 
