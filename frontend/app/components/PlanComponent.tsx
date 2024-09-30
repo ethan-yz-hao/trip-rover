@@ -124,6 +124,26 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         webSocketServiceRef.current?.sendUpdate(updateMessage);
     }
 
+    const handleDelete = async (placeId: string) => {
+        const index = plan.places.findIndex(place => place.placeId === placeId);
+        if (index === -1) {
+            console.error('Place not found:', placeId);
+            return;
+        }
+
+        const updatedPlaces = Array.from(plan.places);
+        updatedPlaces.splice(index, 1);
+        setPlan({...plan, places: updatedPlaces});
+
+        // Send update to the server via WebSocket
+        const updateMessage: PlanUpdateMessage = {
+            action: 'REMOVE',
+            index,
+        };
+
+        webSocketServiceRef.current?.sendUpdate(updateMessage);
+    }
+
     return (
         <>
             <form onSubmit={handleSubmit}>
@@ -151,7 +171,8 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
                                         >
-                                            {place.placeId}
+                                            {place.placeId}{' '}
+                                            <button onClick={() => handleDelete(place.placeId)}>Delete</button>
                                         </li>
                                     )}
                                 </Draggable>
