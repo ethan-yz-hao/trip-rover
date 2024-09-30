@@ -17,7 +17,7 @@ public class PlanUpdateMessage {
 
     private ActionType action;
     private String placeId;     // For ADD action
-    private int index;          // For ADD and REMOVE actions
+    private int index;          // For REMOVE actions
     private int fromIndex;      // For REORDER action
     private int toIndex;        // For REORDER action
 }
