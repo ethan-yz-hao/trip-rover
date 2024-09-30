@@ -40,6 +40,8 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
 
     // Initialize and manage WebSocket connection
     useEffect(() => {
+        if (webSocketServiceRef.current) return;  // avoid re-initializing
+
         const webSocketService = new WebSocketService(planId);
         webSocketServiceRef.current = webSocketService;
 
