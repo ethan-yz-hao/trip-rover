@@ -69,8 +69,6 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
         // Update sequence numbers
         for (int i = 0; i < places.size(); i++) {
             PlanPlace place = places.get(i);
-            // log in server console
-            System.out.println("Place: " + place.getPlaceId());
             place.setSequenceNumber(i);
         }
     }
