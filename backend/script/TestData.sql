@@ -29,12 +29,12 @@ INSERT INTO plans (plan_name, version) VALUES
 
 -- Inserting PlanPlaces
 INSERT INTO plan_places (plan_id, sequence_number, place_id) VALUES
-                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Trip to New York'), 1, 'NYC001'),
-                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Trip to New York'), 2, 'NYC002'),
-                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Trip to New York'), 3, 'NYC003'),
-                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Road Trip across California'), 1, 'CA001'),
-                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Road Trip across California'), 2, 'CA002'),
-                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Road Trip across California'), 3, 'CA003');
+                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Trip to New York'), 0, 'NYC001'),
+                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Trip to New York'), 1, 'NYC002'),
+                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Trip to New York'), 2, 'NYC003'),
+                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Road Trip across California'), 0, 'CA001'),
+                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Road Trip across California'), 1, 'CA002'),
+                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Road Trip across California'), 2, 'CA003');
 
 -- Associating Users with Plans
 INSERT INTO user_plans (plan_id, user_id) VALUES
