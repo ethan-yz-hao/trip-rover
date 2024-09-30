@@ -13,25 +13,26 @@ import lombok.NoArgsConstructor;
 @Table(name = "plan_places")
 public class PlanPlace {
 
-    @JsonIgnore
-    @EmbeddedId
-    private PlanPlaceId id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @JsonIgnore
     @ManyToOne
-    @MapsId("planId")
     @JoinColumn(name = "plan_id")
     private Plan plan;
 
     private String placeId;
 
+    private Integer sequenceNumber;
+
     // Additional methods to access sequenceNumber directly
     @JsonIgnore
     public Integer getSequenceNumber() {
-        return id.getSequenceNumber();
+        return sequenceNumber;
     }
 
     public void setSequenceNumber(Integer sequenceNumber) {
-        id.setSequenceNumber(sequenceNumber);
+        this.sequenceNumber = sequenceNumber;
     }
 }

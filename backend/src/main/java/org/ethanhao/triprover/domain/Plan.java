@@ -34,6 +34,6 @@ public class Plan {
     private Set<User> users;
 
     @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("id.sequenceNumber ASC")
+    @OrderBy("sequenceNumber ASC")
     private List<PlanPlace> places;
 }
