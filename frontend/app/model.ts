@@ -13,6 +13,8 @@ export interface Plan {
 }
 
 export interface PlanUpdateMessage {
+    clientId: string;
+    updateId: string;
     action: 'ADD' | 'REMOVE' | 'REORDER';
     placeId?: string;        // For ADD action
     index?: number;          // For REMOVE action

@@ -15,6 +15,8 @@ public class PlanUpdateMessage {
         REORDER
     }
 
+    private String clientId;
+    private String updateId;
     private ActionType action;
     private String placeId;     // For ADD action
     private int index;          // For REMOVE actions

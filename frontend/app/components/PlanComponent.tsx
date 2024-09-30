@@ -3,6 +3,7 @@ import React, {useState, useEffect, useRef} from 'react';
 import {Plan, PlanUpdateMessage} from '@/app/model';
 import {DragDropContext, Droppable, Draggable, DropResult} from '@hello-pangea/dnd';
 import WebSocketService from '@/app/webSocketService';
+import {v4 as uuidv4} from 'uuid';
 
 interface PlanComponentProps {
     planId: number;
@@ -14,6 +15,9 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const planRef = useRef<Plan | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
     const [newPlaceId, setNewPlaceId] = useState<string>('');
+
+    // Track pending optimistic updates
+    const pendingUpdatesRef = useRef<Map<string, PlanUpdateMessage>>(new Map());
 
     // Load the plan data
     useEffect(() => {
@@ -59,6 +63,14 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         const plan = planRef.current;
         if (!plan) {
             console.error('Plan not loaded');
+            return;
+        }
+
+        const {clientId, updateId} = updateMessage;
+
+        // If the update originated from this client, remove it from pending updates and do not re-apply
+        if (clientId === webSocketServiceRef.current?.getClientId()) {
+            pendingUpdatesRef.current.delete(updateId);
             return;
         }
 
@@ -113,12 +125,18 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
 
         // Send update to the server via WebSocket
         const updateMessage: PlanUpdateMessage = {
+            clientId: webSocketServiceRef.current?.getClientId() || '',
+            updateId: uuidv4(),
             action: 'REORDER',
             fromIndex: sourceIndex,
             toIndex: destinationIndex,
         };
 
-        webSocketServiceRef.current?.sendUpdate(updateMessage);
+        const updateId = webSocketServiceRef.current?.sendUpdate(updateMessage);
+        if (updateId) {
+            // Track the pending optimistic update
+            pendingUpdatesRef.current.set(updateId, updateMessage);
+        }
     };
 
     if (!plan || !plan.places) {
@@ -130,12 +148,22 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
 
         // Send update to the server via WebSocket
         const updateMessage: PlanUpdateMessage = {
+            clientId: webSocketServiceRef.current?.getClientId() || '',
+            updateId: uuidv4(),
             action: 'ADD',
             placeId: newPlaceId,
         };
 
-        webSocketServiceRef.current?.sendUpdate(updateMessage);
-    }
+        const updateId = webSocketServiceRef.current?.sendUpdate(updateMessage);
+        if (updateId) {
+            // Track the pending optimistic update
+            pendingUpdatesRef.current.set(updateId, updateMessage);
+
+            // Optimistically update the UI
+            setPlan({...plan, places: [...plan.places, {placeId: newPlaceId}]});
+            setNewPlaceId('');
+        }
+    };
 
     const handleDelete = async (placeId: string) => {
         const index = plan.places.findIndex(place => place.placeId === placeId);
@@ -146,12 +174,22 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
 
         // Send update to the server via WebSocket
         const updateMessage: PlanUpdateMessage = {
+            clientId: webSocketServiceRef.current?.getClientId() || '',
+            updateId: uuidv4(),
             action: 'REMOVE',
             index,
         };
 
-        webSocketServiceRef.current?.sendUpdate(updateMessage);
-    }
+        const updateId = webSocketServiceRef.current?.sendUpdate(updateMessage);
+        if (updateId) {
+            // Track the pending optimistic update
+            pendingUpdatesRef.current.set(updateId, updateMessage);
+
+            // Optimistically update the UI
+            const updatedPlaces = plan.places.filter((_, idx) => idx !== index);
+            setPlan({...plan, places: updatedPlaces});
+        }
+    };
 
     return (
         <>
