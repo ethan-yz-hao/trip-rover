@@ -16,9 +16,6 @@ export interface PlanUpdateMessage {
     clientId: string;
     updateId: string;
     action: 'ADD' | 'REMOVE' | 'REORDER';
-    placeId?: string;        // For ADD action
-    index?: number;          // For REMOVE action
-    fromIndex?: number;      // For REORDER action
-    toIndex?: number;        // For REORDER action
-    // Additional fields as needed
+    placeId: string;              // For ADD and REMOVE actions
+    targetPlaceId?: string;       // For REORDER action
 }

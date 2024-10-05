@@ -1,12 +1,18 @@
 'use client';
 import React, {useState, useEffect, useRef} from 'react';
-import {Plan, PlanUpdateMessage} from '@/app/model';
+import {Place, Plan, PlanUpdateMessage} from '@/app/model';
 import {DragDropContext, Droppable, Draggable, DropResult} from '@hello-pangea/dnd';
 import WebSocketService from '@/app/webSocketService';
 import {v4 as uuidv4} from 'uuid';
+import axios from "axios";
 
 interface PlanComponentProps {
     planId: number;
+}
+
+interface PendingUpdate {
+    updateId: string;
+    updateMessage: PlanUpdateMessage;
 }
 
 const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
@@ -16,31 +22,26 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
     const [newPlaceId, setNewPlaceId] = useState<string>('');
 
-    // Track pending optimistic updates
-    const pendingUpdatesRef = useRef<Map<string, PlanUpdateMessage>>(new Map());
+    // Ordered queue of pending updates
+    const pendingUpdatesRef = useRef<PendingUpdate[]>([]);
 
     // Load the plan data
     useEffect(() => {
-        // Fetch plan data from the server
-        fetch(`${backendUrl}/api/plan/${planId}`, {
-            credentials: 'include', // Include cookies in the request
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch plan');
-                }
-                return response.json();
-            })
-            .then((data: Plan) => setPlan(data))
-            .catch(error => console.error('Error fetching plan:', error));
-    }, [planId, backendUrl]);
+        const fetchPlan = async () => {
+            try {
+                const response = await axios.get<Plan>(`${backendUrl}/api/plan/${planId}`, {
+                    withCredentials: true,
+                });
+                setPlan(response.data);
+                planRef.current = response.data;
+            } catch (error) {
+                console.error('Error fetching plan:', error);
+                alert('Failed to load the plan. Please try again.');
+            }
+        };
 
-    // Store the plan data in a ref
-    useEffect(() => {
-        if (plan) {
-            planRef.current = plan;
-        }
-    }, [plan]);
+        fetchPlan();
+    }, [planId, backendUrl]);
 
     // Initialize and manage WebSocket connection
     useEffect(() => {
@@ -59,6 +60,19 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         };
     }, [planId]);
 
+    // Send an update message
+    const sendUpdate = (updateMessage: PlanUpdateMessage) => {
+        const updateId = uuidv4();
+        pendingUpdatesRef.current.push({ updateId, updateMessage });
+
+        // Optimistically apply the update to the local state
+        applyUpdateLocally(updateMessage);
+
+        // Send the update via WebSocket
+        webSocketServiceRef.current?.sendUpdate(updateMessage, updateId);
+    };
+
+    // Handle incoming plan updates from other clients
     const handleUpdateMessage = (updateMessage: PlanUpdateMessage) => {
         const plan = planRef.current;
         if (!plan) {
@@ -70,37 +84,85 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
 
         // If the update originated from this client, remove it from pending updates and do not re-apply
         if (clientId === webSocketServiceRef.current?.getClientId()) {
-            pendingUpdatesRef.current.delete(updateId);
+            const pendingIndex = pendingUpdatesRef.current.findIndex(update => update.updateId === updateId);
+            if (pendingIndex !== -1) {
+                pendingUpdatesRef.current.splice(pendingIndex, 1);
+            }
             return;
         }
 
+        // Apply the update from other clients
+        setPlan(prevPlan => {
+            if (!prevPlan) return prevPlan;
+
+            const updatedPlan = applyUpdate(prevPlan, updateMessage);
+            planRef.current = updatedPlan;
+            return updatedPlan;
+        });
+    };
+
+    // Optimistically apply updates to the local state
+    const applyUpdateLocally = (updateMessage: PlanUpdateMessage) => {
+        setPlan(prevPlan => {
+            if (!prevPlan) return prevPlan;
+
+            const updatedPlan = applyUpdate(prevPlan, updateMessage);
+            planRef.current = updatedPlan;
+            return updatedPlan;
+        });
+    };
+
+    // Apply update to the plan
+    const applyUpdate = (currentPlan: Plan, updateMessage: PlanUpdateMessage): Plan => {
         switch (updateMessage.action) {
             case 'REORDER':
-                const {fromIndex, toIndex} = updateMessage;
-                if (fromIndex === undefined || toIndex === undefined) return;
+                const { placeId, targetPlaceId } = updateMessage;
+                const placeToMoveIndex = currentPlan.places.findIndex(place => place.placeId === placeId);
+                if (placeToMoveIndex === -1) {
+                    console.error(`Place with ID ${placeId} not found for REORDER`);
+                    return currentPlan;
+                }
 
-                const reorderedPlaces = Array.from(plan.places);
-                const [movedPlace] = reorderedPlaces.splice(fromIndex, 1);
-                reorderedPlaces.splice(toIndex, 0, movedPlace);
+                const placeToMove = currentPlan.places[placeToMoveIndex];
+                const updatedPlaces = Array.from(currentPlan.places);
+                updatedPlaces.splice(placeToMoveIndex, 1); // Remove the place
 
-                setPlan({...plan, places: reorderedPlaces});
-                break;
+                let targetIndex = updatedPlaces.length; // Default to end
+                if (targetPlaceId) {
+                    const targetPlace = updatedPlaces.find(place => place.placeId === targetPlaceId);
+                    if (targetPlace) {
+                        targetIndex = updatedPlaces.indexOf(targetPlace); // Insert before the targetIndex
+                    }
+                }
+
+                // Adjust target index (insert after the targetIndex) if moving down
+                if (targetIndex >= placeToMoveIndex) {
+                    targetIndex += 1;
+                }
+
+                updatedPlaces.splice(targetIndex, 0, placeToMove); // Insert at new position
+
+                return { ...currentPlan, places: updatedPlaces };
 
             case 'ADD':
                 if (updateMessage.placeId) {
-                    setPlan({...plan, places: [...plan.places, {placeId: updateMessage.placeId}]});
+                    const newPlace: Place = {
+                        placeId: updateMessage.placeId,
+                    };
+                    return { ...currentPlan, places: [...currentPlan.places, newPlace] };
                 }
-                break;
+                return currentPlan;
 
             case 'REMOVE':
-                if (updateMessage.index !== undefined) {
-                    const updatedPlaces = plan.places.filter((_, idx) => idx !== updateMessage.index);
-                    setPlan({...plan, places: updatedPlaces});
+                if (updateMessage.placeId) {
+                    const filteredPlaces = currentPlan.places.filter(place => place.placeId !== updateMessage.placeId);
+                    return { ...currentPlan, places: filteredPlaces };
                 }
-                break;
+                return currentPlan;
 
             default:
                 console.error('Unknown action:', updateMessage.action);
+                return currentPlan;
         }
     };
 
@@ -117,26 +179,19 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             return;
         }
 
-        const updatedPlaces = Array.from(plan.places);
-        const [movedPlace] = updatedPlaces.splice(sourceIndex, 1);
-        updatedPlaces.splice(destinationIndex, 0, movedPlace);
-
-        setPlan({...plan, places: updatedPlaces});
+        const movedPlace = plan.places[sourceIndex];
+        const targetPlace = plan.places[destinationIndex];
 
         // Send update to the server via WebSocket
         const updateMessage: PlanUpdateMessage = {
+            action: 'REORDER',
+            placeId: movedPlace.placeId,
+            targetPlaceId: targetPlace.placeId,
             clientId: webSocketServiceRef.current?.getClientId() || '',
             updateId: uuidv4(),
-            action: 'REORDER',
-            fromIndex: sourceIndex,
-            toIndex: destinationIndex,
         };
 
-        const updateId = webSocketServiceRef.current?.sendUpdate(updateMessage);
-        if (updateId) {
-            // Track the pending optimistic update
-            pendingUpdatesRef.current.set(updateId, updateMessage);
-        }
+        sendUpdate(updateMessage);
     };
 
     if (!plan || !plan.places) {
@@ -154,15 +209,9 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             placeId: newPlaceId,
         };
 
-        const updateId = webSocketServiceRef.current?.sendUpdate(updateMessage);
-        if (updateId) {
-            // Track the pending optimistic update
-            pendingUpdatesRef.current.set(updateId, updateMessage);
+        sendUpdate(updateMessage);
 
-            // Optimistically update the UI
-            setPlan({...plan, places: [...plan.places, {placeId: newPlaceId}]});
-            setNewPlaceId('');
-        }
+        setNewPlaceId('');
     };
 
     const handleDelete = async (placeId: string) => {
@@ -177,18 +226,10 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             clientId: webSocketServiceRef.current?.getClientId() || '',
             updateId: uuidv4(),
             action: 'REMOVE',
-            index,
+            placeId,
         };
 
-        const updateId = webSocketServiceRef.current?.sendUpdate(updateMessage);
-        if (updateId) {
-            // Track the pending optimistic update
-            pendingUpdatesRef.current.set(updateId, updateMessage);
-
-            // Optimistically update the UI
-            const updatedPlaces = plan.places.filter((_, idx) => idx !== index);
-            setPlan({...plan, places: updatedPlaces});
-        }
+        sendUpdate(updateMessage);
     };
 
     return (

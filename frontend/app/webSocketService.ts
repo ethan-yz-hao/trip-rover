@@ -48,13 +48,19 @@ class WebSocketService {
         }
     }
 
-    sendUpdate(updateMessage: PlanUpdateMessage) {
+    sendUpdate(updateMessage: PlanUpdateMessage, updateId: string) {
         if (this.connected) {
+            const messageWithId = {
+                ...updateMessage,
+                clientId: this.clientId,
+                updateId,
+            };
+
             this.client.publish({
                 destination: `/app/plan/${this.planId}/update`,
-                body: JSON.stringify(updateMessage),
+                body: JSON.stringify(messageWithId),
             });
-            return updateMessage.updateId; // Return updateId for tracking
+            return updateId; // Return updateId for tracking
         } else {
             console.error('WebSocket is not connected.');
             return null;
