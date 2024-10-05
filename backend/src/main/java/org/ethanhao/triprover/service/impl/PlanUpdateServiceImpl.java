@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 public class PlanUpdateServiceImpl implements PlanUpdateService {
@@ -53,22 +52,39 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
     // Private helper methods
 
     private void reorderPlaces(Plan plan, PlanUpdateMessage updateMessage) {
-        int fromIndex = updateMessage.getFromIndex();
-        int toIndex = updateMessage.getToIndex();
+        String placeId = updateMessage.getPlaceId();
+        String targetPlaceId = updateMessage.getTargetPlaceId();
 
-        List<PlanPlace> places = plan.getPlaces();
+        PlanPlace placeToMove = plan.getPlaces().stream()
+                .filter(place -> place.getPlaceId().equals(placeId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid placeId for reorder: " + placeId));
+        plan.getPlaces().remove(placeToMove);
 
-        if (fromIndex < 0 || fromIndex >= places.size() || toIndex < 0 || toIndex >= places.size()) {
-            throw new IllegalArgumentException("Invalid indices for reordering");
+        if (targetPlaceId != null && !targetPlaceId.isEmpty()) {
+            int targetIndex = plan.getPlaces().stream()
+                    .map(PlanPlace::getPlaceId)
+                    .toList()
+                    .indexOf(targetPlaceId);
+
+            // Adjust target index (insert after the targetIndex) if moving down
+            if (targetIndex >= placeToMove.getSequenceNumber()) {
+                targetIndex++;
+            }
+
+            if (targetIndex == -1) {
+                throw new IllegalArgumentException("Invalid targetPlaceId for reorder: " + targetPlaceId);
+            }
+
+            plan.getPlaces().add(targetIndex, placeToMove);
+        } else {
+            // If targetPlaceId is not provided, place at the end
+            plan.getPlaces().add(placeToMove);
         }
 
-        // Move the place
-        PlanPlace movedPlace = places.remove(fromIndex);
-        places.add(toIndex, movedPlace);
-
         // Update sequence numbers
-        for (int i = 0; i < places.size(); i++) {
-            PlanPlace place = places.get(i);
+        for (int i = 0; i < plan.getPlaces().size(); i++) {
+            PlanPlace place = plan.getPlaces().get(i);
             place.setSequenceNumber(i);
         }
     }
@@ -77,7 +93,7 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
         String newPlaceId = updateMessage.getPlaceId();
         int newSequenceNumber = plan.getPlaces().size();
 
-        // Create a new PlanPlace instance
+        // Create and add the new place
         PlanPlace newPlanPlace = new PlanPlace();
         newPlanPlace.setPlan(plan);
         newPlanPlace.setPlaceId(newPlaceId);
@@ -88,19 +104,18 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
     }
 
     private void removePlace(Plan plan, PlanUpdateMessage updateMessage) {
-        int index = updateMessage.getIndex();
+        String placeId = updateMessage.getPlaceId();
 
-        List<PlanPlace> places = plan.getPlaces();
+        PlanPlace placeToRemove = plan.getPlaces().stream()
+                .filter(place -> place.getPlaceId().equals(placeId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid placeId for removal: " + placeId));
 
-        if (index < 0 || index >= places.size()) {
-            throw new IllegalArgumentException("Invalid index for removal");
-        }
-
-        places.remove(index);
+        plan.getPlaces().remove(placeToRemove);
 
         // Update sequence numbers
-        for (int i = 0; i < places.size(); i++) {
-            PlanPlace place = places.get(i);
+        for (int i = 0; i < plan.getPlaces().size(); i++) {
+            PlanPlace place = plan.getPlaces().get(i);
             place.setSequenceNumber(i);
         }
     }
