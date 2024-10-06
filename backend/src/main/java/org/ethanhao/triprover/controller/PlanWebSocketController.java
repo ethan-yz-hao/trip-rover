@@ -4,6 +4,7 @@ import jakarta.persistence.OptimisticLockException;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.PlanAckMessage;
 import org.ethanhao.triprover.domain.PlanUpdateMessage;
+import org.ethanhao.triprover.domain.PlanUserRole;
 import org.ethanhao.triprover.service.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public class PlanWebSocketController {
         Long userId = loginUser.getUser().getId();
 
         // Check if the user is authorized
-        if (!planService.isUserAuthorized(planId, userId)) {
+        if (!planService.hasRole(planId, userId, PlanUserRole.RoleType.EDITOR)) {
             // Send an error message to the user
             logger.info("User {} is not authorized to update plan {}", userId, planId);
             PlanAckMessage ackMessage = new PlanAckMessage(updateMessage.getUpdateId(), PlanAckMessage.StatusType.ERROR, "User not authorized");
