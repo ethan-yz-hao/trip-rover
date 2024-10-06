@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "plan_places")
 public class PlanPlace {
 
+    @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,5 +25,6 @@ public class PlanPlace {
 
     private String placeId;
 
+    @JsonIgnore
     private Integer sequenceNumber;
 }
