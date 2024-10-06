@@ -1,5 +1,6 @@
 package org.ethanhao.triprover.service.impl;
 
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import org.ethanhao.triprover.domain.Plan;
 import org.ethanhao.triprover.domain.PlanPlace;
@@ -7,16 +8,15 @@ import org.ethanhao.triprover.domain.PlanUpdateMessage;
 import org.ethanhao.triprover.handler.ResourceNotFoundException;
 import org.ethanhao.triprover.repository.PlanRepository;
 import org.ethanhao.triprover.service.PlanUpdateService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 
 @Service
 public class PlanUpdateServiceImpl implements PlanUpdateService {
 
-    private static final Logger log = LoggerFactory.getLogger(PlanUpdateServiceImpl.class);
     private final PlanRepository planRepository;
 
     @Autowired
@@ -26,9 +26,14 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
 
     @Override
     @Transactional
-    public void updatePlanWithMessage(Long planId, PlanUpdateMessage updateMessage) {
+    public Long updatePlanWithMessage(Long planId, PlanUpdateMessage updateMessage) {
         Plan plan = planRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId));
+
+        // Validate version
+        if (!Objects.equals(plan.getVersion(), updateMessage.getVersion())) {
+            throw new OptimisticLockException("Version mismatch. Current version: " + plan.getVersion());
+        }
 
         // Apply the update message to the plan
         switch (updateMessage.getAction()) {
@@ -45,8 +50,13 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
                 throw new IllegalArgumentException("Unknown action: " + updateMessage.getAction());
         }
 
+        // Increment the version
+        plan.setVersion(plan.getVersion() + 1);
+
         // Save the updated plan
-        planRepository.save(plan);
+        Plan savedPlan = planRepository.save(plan);
+
+        return savedPlan.getVersion();
     }
 
     // Private helper methods

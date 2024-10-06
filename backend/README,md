@@ -2,6 +2,8 @@ Spring Security
 Redis Caching authentication (authenticated user) to improve verification efficiency (when authenticated user access resources)
 RBAC authorization
 JWT based authentication
+socket based update
+optimistic update, versioning + acknowledgement + re-fetching
 
 ## Local Development
 Start the application

@@ -20,4 +20,5 @@ public class PlanUpdateMessage {
     private ActionType action;
     private String placeId;           // For ADD and REMOVE actions
     private String targetPlaceId;     // For REORDER action: the place after which to move
+    private Long version;
 }

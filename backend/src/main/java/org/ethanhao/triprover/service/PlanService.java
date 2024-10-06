@@ -8,5 +8,5 @@ public interface PlanService {
 
     boolean isUserAuthorized(Long planId, Long userId);
 
-    void applyUpdate(Long planId, PlanUpdateMessage updateMessage);
+    Long applyUpdate(Long planId, PlanUpdateMessage updateMessage);
 }
