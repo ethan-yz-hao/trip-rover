@@ -1,10 +1,11 @@
 'use client';
 import React, {useState, useEffect, useRef} from 'react';
-import {Place, Plan, PlanUpdateMessage} from '@/app/model';
+import {Place, Plan, PlanAckMessage, PlanUpdateMessage} from '@/app/model';
 import {DragDropContext, Droppable, Draggable, DropResult} from '@hello-pangea/dnd';
 import WebSocketService from '@/app/webSocketService';
 import {v4 as uuidv4} from 'uuid';
 import axios from "axios";
+import log from "@/app/log";
 
 interface PlanComponentProps {
     planId: number;
@@ -25,22 +26,23 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     // Ordered queue of pending updates
     const pendingUpdatesRef = useRef<PendingUpdate[]>([]);
 
+    // fetch the plan data
+    const fetchPlanData = async () => {
+        try {
+            const response = await axios.get<Plan>(`${backendUrl}/api/plan/${planId}`, {
+                withCredentials: true,
+            });
+            setPlan(response.data);
+            planRef.current = response.data;
+        } catch (error) {
+            log.error('Error fetching plan:', error);
+            alert('Failed to load the plan. Please try again.');
+        }
+    };
+
     // Load the plan data
     useEffect(() => {
-        const fetchPlan = async () => {
-            try {
-                const response = await axios.get<Plan>(`${backendUrl}/api/plan/${planId}`, {
-                    withCredentials: true,
-                });
-                setPlan(response.data);
-                planRef.current = response.data;
-            } catch (error) {
-                console.error('Error fetching plan:', error);
-                alert('Failed to load the plan. Please try again.');
-            }
-        };
-
-        fetchPlan();
+        fetchPlanData();
     }, [planId, backendUrl]);
 
     // Initialize and manage WebSocket connection
@@ -50,44 +52,39 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         const webSocketService = new WebSocketService(planId);
         webSocketServiceRef.current = webSocketService;
 
-        webSocketService.connect((updateMessage: PlanUpdateMessage) => {
-            console.log('WebSocket message received:', updateMessage);
+        webSocketService.connect(
+            (updateMessage: PlanUpdateMessage) => {
+            log.info('WebSocket update message received:', updateMessage);
             handleUpdateMessage(updateMessage);
-        });
+        },
+        (ackMessage: PlanAckMessage) => {
+            log.log('WebSocket ack message received:', ackMessage);
+            handleAckMessage(ackMessage);
+        }
+        );
 
         return () => {
             webSocketService.disconnect();
         };
     }, [planId]);
 
-    // Send an update message
-    const sendUpdate = (updateMessage: PlanUpdateMessage) => {
-        const updateId = uuidv4();
-        pendingUpdatesRef.current.push({ updateId, updateMessage });
-
-        // Optimistically apply the update to the local state
-        applyUpdateLocally(updateMessage);
-
-        // Send the update via WebSocket
-        webSocketServiceRef.current?.sendUpdate(updateMessage, updateId);
-    };
-
     // Handle incoming plan updates from other clients
     const handleUpdateMessage = (updateMessage: PlanUpdateMessage) => {
-        const plan = planRef.current;
-        if (!plan) {
-            console.error('Plan not loaded');
-            return;
-        }
+        const {clientId, updateId, version} = updateMessage;
 
-        const {clientId, updateId} = updateMessage;
-
-        // If the update originated from this client, remove it from pending updates and do not re-apply
+        // If the update originated from this client, remove it from pending updates and do not re-apply, but update the plan version
         if (clientId === webSocketServiceRef.current?.getClientId()) {
             const pendingIndex = pendingUpdatesRef.current.findIndex(update => update.updateId === updateId);
             if (pendingIndex !== -1) {
                 pendingUpdatesRef.current.splice(pendingIndex, 1);
             }
+
+            // Update the plan version
+            setPlan(prevPlan => {
+                if (!prevPlan) return prevPlan;
+                return {...prevPlan, version};
+            });
+
             return;
         }
 
@@ -96,10 +93,28 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             if (!prevPlan) return prevPlan;
 
             const updatedPlan = applyUpdate(prevPlan, updateMessage);
+            updatedPlan.version = version
             planRef.current = updatedPlan;
             return updatedPlan;
         });
     };
+
+    // Handle incoming ack messages
+    const handleAckMessage = (ackMessage: PlanAckMessage) => {
+        const {updateId, status, errorMessage} = ackMessage;
+
+        // Remove the update from the pending updates
+        const pendingIndex = pendingUpdatesRef.current.findIndex(update => update.updateId === updateId);
+        if (pendingIndex !== -1) {
+            pendingUpdatesRef.current.splice(pendingIndex, 1);
+        }
+
+        if (status === 'ERROR') {
+            log.error('Update failed:', errorMessage);
+            alert('Update failed: ' + errorMessage);
+            fetchPlanData(); // Reload the plan
+        }
+    }
 
     // Optimistically apply updates to the local state
     const applyUpdateLocally = (updateMessage: PlanUpdateMessage) => {
@@ -119,7 +134,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                 const { placeId, targetPlaceId } = updateMessage;
                 const placeToMoveIndex = currentPlan.places.findIndex(place => place.placeId === placeId);
                 if (placeToMoveIndex === -1) {
-                    console.error(`Place with ID ${placeId} not found for REORDER`);
+                    log.error(`Place with ID ${placeId} not found for REORDER`);
                     return currentPlan;
                 }
 
@@ -161,9 +176,21 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                 return currentPlan;
 
             default:
-                console.error('Unknown action:', updateMessage.action);
+                log.error('Unknown action:', updateMessage.action);
                 return currentPlan;
         }
+    };
+
+    // Send an update message
+    const sendUpdate = (updateMessage: PlanUpdateMessage) => {
+        const updateId = uuidv4();
+        pendingUpdatesRef.current.push({ updateId, updateMessage });
+
+        // Optimistically apply the update to the local state
+        applyUpdateLocally(updateMessage);
+
+        // Send the update via WebSocket
+        webSocketServiceRef.current?.sendUpdate(updateMessage, updateId);
     };
 
     // Handle drag and drop
@@ -189,6 +216,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             targetPlaceId: targetPlace.placeId,
             clientId: webSocketServiceRef.current?.getClientId() || '',
             updateId: uuidv4(),
+            version: plan.version,
         };
 
         sendUpdate(updateMessage);
@@ -207,6 +235,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             updateId: uuidv4(),
             action: 'ADD',
             placeId: newPlaceId,
+            version: plan.version,
         };
 
         sendUpdate(updateMessage);
@@ -217,7 +246,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const handleDelete = async (placeId: string) => {
         const index = plan.places.findIndex(place => place.placeId === placeId);
         if (index === -1) {
-            console.error('Place not found:', placeId);
+            log.error('Place not found:', placeId);
             return;
         }
 
@@ -227,6 +256,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             updateId: uuidv4(),
             action: 'REMOVE',
             placeId,
+            version: plan.version,
         };
 
         sendUpdate(updateMessage);

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import log from "@/app/log";
 
 const LoginForm: React.FC = () => {
     // State to hold form data
@@ -31,12 +32,12 @@ const LoginForm: React.FC = () => {
             // Handle success or failure
             if (response.ok) {
                 setMessage(data.msg);
-                console.log('Success:', data);
+                log.log('Success:', data);
             } else {
                 setMessage(`Login failed: ${data.msg || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error('Error:', error);
+            log.error('Error:', error);
             setMessage('Login failed due to network or server error.');
         }
     };

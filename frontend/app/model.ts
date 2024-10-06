@@ -18,4 +18,11 @@ export interface PlanUpdateMessage {
     action: 'ADD' | 'REMOVE' | 'REORDER';
     placeId: string;              // For ADD and REMOVE actions
     targetPlaceId?: string;       // For REORDER action
+    version: number;
+}
+
+export interface PlanAckMessage {
+    updateId: string;
+    status: 'OK' | 'ERROR';
+    errorMessage?: string;
 }

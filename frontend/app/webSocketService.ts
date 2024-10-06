@@ -1,7 +1,8 @@
 import {Client, IMessage} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import {PlanUpdateMessage} from '@/app/model';
+import {PlanAckMessage, PlanUpdateMessage} from '@/app/model';
 import {v4 as uuidv4} from 'uuid';
+import log from "@/app/log";
 
 class WebSocketService {
     private client: Client;
@@ -18,12 +19,15 @@ class WebSocketService {
             webSocketFactory: () => new SockJS(`${backendUrl}/ws`),
             reconnectDelay: 5000,
             debug: (str) => {
-                console.log(str);
+                log.info(str);
             },
         });
     }
 
-    connect(onMessageReceived: (message: PlanUpdateMessage) => void) {
+    connect(
+        onMessageReceived: (message: PlanUpdateMessage) => void,
+        onAckReceived: (message: PlanAckMessage) => void
+    ) {
         this.client.onConnect = () => {
             this.connected = true;
             // Subscribe to plan updates
@@ -31,11 +35,16 @@ class WebSocketService {
                 const updateMessage: PlanUpdateMessage = JSON.parse(message.body);
                 onMessageReceived(updateMessage);
             });
+            // Subscribe to client-specific ack messages
+            this.client.subscribe(`/topic/plan/${this.planId}/ack/${this.clientId}`, (message: IMessage) => {
+                const ackMessage: PlanAckMessage = JSON.parse(message.body);
+                onAckReceived(ackMessage);
+            });
         };
 
         this.client.onStompError = (frame) => {
-            console.error('Broker reported error: ' + frame.headers['message']);
-            console.error('Additional details: ' + frame.body);
+            log.error('Broker reported error: ' + frame.headers['message']);
+            log.error('Additional details: ' + frame.body);
         };
 
         this.client.activate();
@@ -62,7 +71,7 @@ class WebSocketService {
             });
             return updateId; // Return updateId for tracking
         } else {
-            console.error('WebSocket is not connected.');
+            log.error('WebSocket is not connected.');
             return null;
         }
     }
