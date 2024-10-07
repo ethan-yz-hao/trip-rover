@@ -1,5 +1,3 @@
-// models.ts
-
 export interface Place {
     placeId: string;
     googlePlaceId: string;
