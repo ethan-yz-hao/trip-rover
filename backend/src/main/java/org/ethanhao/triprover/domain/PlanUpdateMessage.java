@@ -21,4 +21,6 @@ public class PlanUpdateMessage {
     private String placeId;           // For ADD and REMOVE actions
     private String targetPlaceId;     // For REORDER action: the place after which to move
     private Long version;
+    private String googlePlaceId;     // For ADD action
+    private Long staySeconds;         // For ADD and UPDATE actions
 }

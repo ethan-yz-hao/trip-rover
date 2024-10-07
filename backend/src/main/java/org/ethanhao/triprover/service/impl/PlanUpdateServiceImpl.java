@@ -108,6 +108,8 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
         newPlanPlace.setPlan(plan);
         newPlanPlace.setPlaceId(newPlaceId);
         newPlanPlace.setSequenceNumber(newSequenceNumber);
+        newPlanPlace.setGooglePlaceId(updateMessage.getGooglePlaceId());
+        newPlanPlace.setStaySeconds(updateMessage.getStaySeconds());
 
         // Add the new place to the plan
         plan.getPlaces().add(newPlanPlace);
