@@ -2,7 +2,8 @@
 
 export interface Place {
     placeId: string;
-    // Other optional fields
+    googlePlaceId: string;
+    staySeconds: number;
 }
 
 export interface Plan {
