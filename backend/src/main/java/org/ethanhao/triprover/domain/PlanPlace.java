@@ -2,6 +2,7 @@ package org.ethanhao.triprover.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,12 +24,20 @@ public class PlanPlace {
     @JoinColumn(name = "plan_id")
     private Plan plan;
 
+    @NotNull
+    @Column(nullable = false)
     private String placeId;
 
     @JsonIgnore
+    @NotNull
+    @Column(nullable = false)
     private Integer sequenceNumber;
 
+    @NotNull
+    @Column(nullable = false)
     private String googlePlaceId;
 
+    @NotNull
+    @Column(nullable = false)
     private Long staySeconds;
 }
