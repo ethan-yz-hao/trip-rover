@@ -27,4 +27,8 @@ public class PlanPlace {
 
     @JsonIgnore
     private Integer sequenceNumber;
+
+    private String googlePlaceId;
+
+    private Long staySeconds;
 }
