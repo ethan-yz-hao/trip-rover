@@ -21,7 +21,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const [plan, setPlan] = useState<Plan | null>(null);
     const planRef = useRef<Plan | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
-    const [newPlaceId, setNewPlaceId] = useState<string>('');
+    const [newGooglePlaceId, setNewGooglePlaceId] = useState<string>('');
 
     // Ordered queue of pending updates
     const pendingUpdatesRef = useRef<PendingUpdate[]>([]);
@@ -160,9 +160,12 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                 return { ...currentPlan, places: updatedPlaces };
 
             case 'ADD':
-                if (updateMessage.placeId) {
+                if (updateMessage.placeId && updateMessage.googlePlaceId) {
                     const newPlace: Place = {
                         placeId: updateMessage.placeId,
+                        googlePlaceId: updateMessage.googlePlaceId,
+                        staySeconds: updateMessage.staySeconds || 1800,
+
                     };
                     return { ...currentPlan, places: [...currentPlan.places, newPlace] };
                 }
@@ -234,13 +237,15 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             clientId: webSocketServiceRef.current?.getClientId() || '',
             updateId: uuidv4(),
             action: 'ADD',
-            placeId: newPlaceId,
+            placeId: uuidv4(),
             version: plan.version,
+            googlePlaceId: newGooglePlaceId,
+            staySeconds: 1800,
         };
 
         sendUpdate(updateMessage);
 
-        setNewPlaceId('');
+        setNewGooglePlaceId('');
     };
 
     const handleDelete = async (placeId: string) => {
@@ -266,12 +271,12 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         <>
             <form onSubmit={handleSubmit}>
                 <div>
-                    <label htmlFor="newPlaceId">New Place Index:</label>
+                    <label htmlFor="newGooglePlaceId">New Google Place Id:</label>
                     <input
                         type="text"
-                        id="newPlaceId"
-                        value={newPlaceId}
-                        onChange={(e) => setNewPlaceId(e.target.value)}
+                        id="newGooglePlaceId"
+                        value={newGooglePlaceId}
+                        onChange={(e) => setNewGooglePlaceId(e.target.value)}
                         required
                     />
                 </div>
@@ -289,7 +294,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
                                         >
-                                            {place.placeId}{' '}
+                                            {place.placeId}{' '}{place.googlePlaceId}{' '}{place.staySeconds}{' '}
                                             <button onClick={() => handleDelete(place.placeId)}>Delete</button>
                                         </li>
                                     )}

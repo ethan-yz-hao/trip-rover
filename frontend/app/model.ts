@@ -18,6 +18,8 @@ export interface PlanUpdateMessage {
     placeId: string;              // For ADD and REMOVE actions
     targetPlaceId?: string;       // For REORDER action
     version: number;
+    googlePlaceId?: string;       // For ADD action
+    staySeconds?: number;         // For ADD and UPDATE actions
 }
 
 export interface PlanAckMessage {
