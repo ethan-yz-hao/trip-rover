@@ -229,7 +229,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         return <div>Loading...</div>;
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
 
         // Send update to the server via WebSocket
@@ -269,7 +269,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
 
     return (
         <>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleAdd}>
                 <div>
                     <label htmlFor="newGooglePlaceId">New Google Place Id:</label>
                     <input
