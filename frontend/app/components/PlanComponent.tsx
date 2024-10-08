@@ -6,6 +6,7 @@ import WebSocketService from '@/app/webSocketService';
 import {v4 as uuidv4} from 'uuid';
 import axios from "axios";
 import log from "@/app/log";
+import StaySecondsEditor from "@/app/components/StaySecondEditor";
 
 interface PlanComponentProps {
     planId: number;
@@ -127,7 +128,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         });
     };
 
-    // Apply update to the plan
+    // Apply update to the plan locally
     const applyUpdate = (currentPlan: Plan, updateMessage: PlanUpdateMessage): Plan => {
         switch (updateMessage.action) {
             case 'REORDER':
@@ -178,6 +179,21 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                 }
                 return currentPlan;
 
+            case 'UPDATE':
+                if (updateMessage.placeId && updateMessage.googlePlaceId && updateMessage.staySeconds) {
+                    const updatedPlaces = currentPlan.places.map(place => {
+                        if (place.placeId === updateMessage.placeId) {
+                            return {
+                                ...place,
+                                googlePlaceId: updateMessage.googlePlaceId!,
+                                staySeconds: updateMessage.staySeconds!,
+                            };
+                        }
+                        return place;
+                    });
+                    return { ...currentPlan, places: updatedPlaces };
+                }
+                return currentPlan;
             default:
                 log.error('Unknown action:', updateMessage.action);
                 return currentPlan;
@@ -267,6 +283,27 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         sendUpdate(updateMessage);
     };
 
+    const handleStaySecondsUpdate = async (placeId: string, newStaySeconds: number) => {
+        const place = plan.places.find(place => place.placeId === placeId);
+        if (!place) {
+            log.error('Place not found:', placeId);
+            return;
+        }
+
+        // Send update to the server via WebSocket
+        const updateMessage: PlanUpdateMessage = {
+            clientId: webSocketServiceRef.current?.getClientId() || '',
+            updateId: uuidv4(),
+            action: 'UPDATE',
+            placeId,
+            version: plan.version,
+            googlePlaceId: place.googlePlaceId,
+            staySeconds: newStaySeconds,
+        };
+
+        sendUpdate(updateMessage);
+    }
+
     return (
         <>
             <form onSubmit={handleAdd}>
@@ -295,6 +332,11 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                                             {...provided.dragHandleProps}
                                         >
                                             {place.placeId}{' '}{place.googlePlaceId}{' '}{place.staySeconds}{' '}
+                                            <StaySecondsEditor
+                                                placeId={place.placeId}
+                                                currentStaySeconds={place.staySeconds}
+                                                onSubmit={handleStaySecondsUpdate}
+                                            />
                                             <button onClick={() => handleDelete(place.placeId)}>Delete</button>
                                         </li>
                                     )}

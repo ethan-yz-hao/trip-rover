@@ -14,11 +14,11 @@ export interface Plan {
 export interface PlanUpdateMessage {
     clientId: string;
     updateId: string;
-    action: 'ADD' | 'REMOVE' | 'REORDER';
+    action: 'ADD' | 'REMOVE' | 'REORDER' | 'UPDATE';
     placeId: string;              // For ADD and REMOVE actions
     targetPlaceId?: string;       // For REORDER action
     version: number;
-    googlePlaceId?: string;       // For ADD action
+    googlePlaceId?: string;       // For ADD and UPDATE actions
     staySeconds?: number;         // For ADD and UPDATE actions
 }
 
