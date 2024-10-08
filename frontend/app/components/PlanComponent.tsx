@@ -117,26 +117,15 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         }
     }
 
-    // Optimistically apply updates to the local state
-    const applyUpdateLocally = (updateMessage: PlanUpdateMessage) => {
-        setPlan(prevPlan => {
-            if (!prevPlan) return prevPlan;
-
-            const updatedPlan = applyUpdate(prevPlan, updateMessage);
-            planRef.current = updatedPlan;
-            return updatedPlan;
-        });
-    };
-
-    // Apply update to the plan locally
-    const applyUpdate = (currentPlan: Plan, updateMessage: PlanUpdateMessage): Plan => {
+    // Apply update to the plan locally (used by both optimistic updates and incoming updates from other clients)
+    const applyLocalUpdate = (currentPlan: Plan, updateMessage: PlanUpdateMessage): Plan | null => {
         switch (updateMessage.action) {
             case 'REORDER':
                 const { placeId, targetPlaceId } = updateMessage;
                 const placeToMoveIndex = currentPlan.places.findIndex(place => place.placeId === placeId);
                 if (placeToMoveIndex === -1) {
                     log.error(`Place with ID ${placeId} not found for REORDER`);
-                    return currentPlan;
+                    return null;
                 }
 
                 const placeToMove = currentPlan.places[placeToMoveIndex];
@@ -170,14 +159,14 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                     };
                     return { ...currentPlan, places: [...currentPlan.places, newPlace] };
                 }
-                return currentPlan;
+                return null;
 
             case 'REMOVE':
                 if (updateMessage.placeId) {
                     const filteredPlaces = currentPlan.places.filter(place => place.placeId !== updateMessage.placeId);
                     return { ...currentPlan, places: filteredPlaces };
                 }
-                return currentPlan;
+                return null;
 
             case 'UPDATE':
                 if (updateMessage.placeId && updateMessage.googlePlaceId && updateMessage.staySeconds) {
@@ -193,22 +182,33 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                     });
                     return { ...currentPlan, places: updatedPlaces };
                 }
-                return currentPlan;
+                return null;
             default:
                 log.error('Unknown action:', updateMessage.action);
-                return currentPlan;
+                return null;
         }
     };
 
     // Send an update message
     const sendUpdate = (updateMessage: PlanUpdateMessage) => {
         const updateId = uuidv4();
-        pendingUpdatesRef.current.push({ updateId, updateMessage });
+
+        if (!planRef.current) {
+            log.error('Plan not loaded');
+            return
+        }
 
         // Optimistically apply the update to the local state
-        applyUpdateLocally(updateMessage);
+        const updatedPlan = applyLocalUpdate(planRef.current, updateMessage);
+        if (!updatedPlan) {
+            log.error('Local update failed');
+            return;
+        }
+        planRef.current = updatedPlan;
+        setPlan(updatedPlan);
 
         // Send the update via WebSocket
+        pendingUpdatesRef.current.push({ updateId, updateMessage });
         webSocketServiceRef.current?.sendUpdate(updateMessage, updateId);
     };
 
