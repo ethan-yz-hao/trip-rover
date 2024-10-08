@@ -90,14 +90,18 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         }
 
         // Apply the update from other clients
-        setPlan(prevPlan => {
-            if (!prevPlan) return prevPlan;
-
-            const updatedPlan = applyUpdate(prevPlan, updateMessage);
-            updatedPlan.version = version
+        if (!planRef.current) {
+            log.error('Plan not loaded');
+            return;
+        }
+        const updatedPlan = applyLocalUpdate(planRef.current, updateMessage);
+        if (!updatedPlan) {
+            log.error('Failed to apply incoming update locally. Refetching plan data');
+            fetchPlanData(); // Reload the plan
+        } else {
             planRef.current = updatedPlan;
-            return updatedPlan;
-        });
+            setPlan(updatedPlan);
+        }
     };
 
     // Handle incoming ack messages
