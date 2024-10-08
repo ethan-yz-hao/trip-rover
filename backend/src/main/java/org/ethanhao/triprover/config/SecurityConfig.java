@@ -58,7 +58,6 @@ public class SecurityConfig {
                 // Configure authorization rules, specify the user/login path, allow anonymous access (cannot access after login), and other paths require authentication
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/user/login", "/api/user/register", "/oauth2/**", "/testCors")
                         .anonymous()
-                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated())
                 // OAuth2 login configuration
                 .oauth2Login(oauth2 -> oauth2
