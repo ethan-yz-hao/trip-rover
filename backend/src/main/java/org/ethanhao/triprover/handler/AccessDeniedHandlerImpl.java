@@ -18,8 +18,20 @@ public class AccessDeniedHandlerImpl implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        ResponseResult result = new ResponseResult(HttpStatus.FORBIDDEN.value(), "Authorization failed, insufficient permissions");
-        String json = JSON.toJSONString(result);
-        WebUtils.renderString(response, json);
+        if (isWebSocketHandshake(request)) {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setContentType("text/plain");
+            response.getWriter().write("Authorization failed, insufficient permissions");
+            response.getWriter().flush();
+        } else {
+            ResponseResult result = new ResponseResult(HttpStatus.FORBIDDEN.value(), "Authorization failed, insufficient permissions");
+            String json = JSON.toJSONString(result);
+            WebUtils.renderString(response, json);
+        }
+    }
+
+    private boolean isWebSocketHandshake(HttpServletRequest request) {
+        String upgradeHeader = request.getHeader("Upgrade");
+        return "websocket".equalsIgnoreCase(upgradeHeader);
     }
 }
