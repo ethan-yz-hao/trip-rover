@@ -8,6 +8,8 @@ import org.ethanhao.triprover.service.DBUserDetailsManager;
 import org.ethanhao.triprover.service.LoginService;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +27,9 @@ import java.util.Objects;
 
 @Service
 public class LoginServiceImpl implements LoginService {
+
+    private static final Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
+
     @Autowired
     AuthenticationManager authenticationManager;
 
@@ -67,7 +72,10 @@ public class LoginServiceImpl implements LoginService {
                 .sameSite("Lax") // Adjust as needed (Strict, Lax, None)
                 .build();
 
+        // Set the cookie in the response header
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        logger.info("User {} logged in", loginUser.getUser().getUserName());
         return new ResponseResult(HttpStatus.OK.value(), "Login successful");
     }
 
