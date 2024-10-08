@@ -46,6 +46,9 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
             case REMOVE:
                 removePlace(plan, updateMessage);
                 break;
+            case UPDATE:
+                updatePlace(plan, updateMessage);
+                break;
             default:
                 throw new IllegalArgumentException("Unknown action: " + updateMessage.getAction());
         }
@@ -130,5 +133,17 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
             PlanPlace place = plan.getPlaces().get(i);
             place.setSequenceNumber(i);
         }
+    }
+
+    private void updatePlace(Plan plan, PlanUpdateMessage updateMessage) {
+        String placeId = updateMessage.getPlaceId();
+
+        PlanPlace placeToUpdate = plan.getPlaces().stream()
+                .filter(place -> place.getPlaceId().equals(placeId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid placeId for update: " + placeId));
+
+        placeToUpdate.setGooglePlaceId(updateMessage.getGooglePlaceId());
+        placeToUpdate.setStaySeconds(updateMessage.getStaySeconds());
     }
 }

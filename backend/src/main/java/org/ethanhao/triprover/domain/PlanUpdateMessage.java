@@ -12,7 +12,8 @@ public class PlanUpdateMessage {
     public enum ActionType {
         ADD,
         REMOVE,
-        REORDER
+        REORDER,
+        UPDATE
     }
 
     private String clientId;
@@ -21,6 +22,6 @@ public class PlanUpdateMessage {
     private String placeId;           // For ADD and REMOVE actions
     private String targetPlaceId;     // For REORDER action: the place after which to move
     private Long version;
-    private String googlePlaceId;     // For ADD action
+    private String googlePlaceId;     // For ADD and UPDATE actions
     private Long staySeconds;         // For ADD and UPDATE actions
 }
