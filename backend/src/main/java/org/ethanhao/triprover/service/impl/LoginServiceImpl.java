@@ -63,7 +63,7 @@ public class LoginServiceImpl implements LoginService {
                 .httpOnly(true)
                 .secure(false) // Need to use HTTPS in production
                 .path("/")
-                .maxAge(Duration.ofHours(1)) // 1 hour expiration time
+                .maxAge(Duration.ofMillis(jwtTtl)) // The cookie will expire after the JWT token expires
                 .sameSite("Lax") // Adjust as needed (Strict, Lax, None)
                 .build();
 

@@ -8,7 +8,6 @@ import org.ethanhao.triprover.repository.MenuRepository;
 import org.ethanhao.triprover.repository.RoleRepository;
 import org.ethanhao.triprover.repository.UserRepository;
 import org.ethanhao.triprover.service.CustomOAuth2UserService;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;

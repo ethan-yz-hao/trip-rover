@@ -3,24 +3,19 @@ package org.ethanhao.triprover.handler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.ethanhao.triprover.domain.LoginUser;
-import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -47,7 +42,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 .httpOnly(true)
                 .secure(false) // Need to use HTTPS in production
                 .path("/")
-                .maxAge(Duration.ofHours(1)) // 1 hour expiration time
+                .maxAge(Duration.ofMillis(jwtTtl)) // The cookie will expire after the JWT token expires
                 .sameSite("Lax") // Adjust as needed (Strict, Lax, None)
                 .build();
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
