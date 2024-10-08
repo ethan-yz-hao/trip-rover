@@ -3,7 +3,7 @@ package org.ethanhao.triprover.config;
 import org.ethanhao.triprover.filter.JwtAuthenticationTokenFilter;
 import org.ethanhao.triprover.handler.AccessDeniedHandlerImpl;
 import org.ethanhao.triprover.handler.AuthenticationEntryPointImpl;
-import org.ethanhao.triprover.handler.OAuth2LoginSuccessHandler;
+import org.ethanhao.triprover.filter.OAuth2LoginSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

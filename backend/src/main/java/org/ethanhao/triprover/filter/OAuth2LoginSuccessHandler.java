@@ -1,4 +1,4 @@
-package org.ethanhao.triprover.handler;
+package org.ethanhao.triprover.filter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
