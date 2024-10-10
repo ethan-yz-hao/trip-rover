@@ -5,7 +5,7 @@ import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.domain.User;
 import org.ethanhao.triprover.service.DBUserDetailsManager;
-import org.ethanhao.triprover.service.LoginService;
+import org.ethanhao.triprover.service.AuthService;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
 import org.slf4j.Logger;
@@ -26,9 +26,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Service
-public class LoginServiceImpl implements LoginService {
+public class AuthServiceImpl implements AuthService {
 
-    private static final Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     @Autowired
     AuthenticationManager authenticationManager;

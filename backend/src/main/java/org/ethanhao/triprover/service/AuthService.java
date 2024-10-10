@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.domain.User;
 
-public interface LoginService {
+public interface AuthService {
     ResponseResult login(User user, HttpServletResponse response);
 
     ResponseResult logout(HttpServletResponse response);
