@@ -18,8 +18,8 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
-        ResponseResult result = new
-                ResponseResult(HttpStatus.UNAUTHORIZED.value(), "Authentication failed, please log in again");
+        ResponseResult<Object> result = new
+                ResponseResult<>(HttpStatus.UNAUTHORIZED.value(), "Authentication failed, please log in again");
         String json = JSON.toJSONString(result);
         WebUtils.renderString(response, json);
     }

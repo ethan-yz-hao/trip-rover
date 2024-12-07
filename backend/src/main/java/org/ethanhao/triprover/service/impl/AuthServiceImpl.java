@@ -46,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
     private Long jwtTtl;
 
     @Override
-    public ResponseResult login(User user, HttpServletResponse response) {
+    public ResponseResult<Object> login(User user, HttpServletResponse response) {
         // Encapsulate the Authentication object
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword());
@@ -76,11 +76,11 @@ public class AuthServiceImpl implements AuthService {
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         logger.info("User {} logged in", loginUser.getUser().getUserName());
-        return new ResponseResult(HttpStatus.OK.value(), "Login successful");
+        return new ResponseResult<>(HttpStatus.OK.value(), "Login successful");
     }
 
     @Override
-    public ResponseResult logout(HttpServletResponse response) {
+    public ResponseResult<Object> logout(HttpServletResponse response) {
         // Get the user id from SecurityContextHolder
         UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
@@ -96,26 +96,26 @@ public class AuthServiceImpl implements AuthService {
                 .sameSite("Lax") // Adjust as needed (Strict, Lax, None)
                 .build();
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        return new ResponseResult(HttpStatus.OK.value(), "Logout successful");
+        return new ResponseResult<>(HttpStatus.OK.value(), "Logout successful");
     }
 
     @Override
-    public ResponseResult register(User user) {
+    public ResponseResult<Object> register(User user) {
         try {
             dbUserDetailsManager.createUserWithRole(user, Arrays.asList("user"));
         } catch  (Exception e) {
-            return new ResponseResult(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Failed to register user: " + e.getMessage());
+            return new ResponseResult<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Failed to register user: " + e.getMessage());
         }
-        return new ResponseResult(HttpStatus.OK.value(), "Register successful");
+        return new ResponseResult<>(HttpStatus.OK.value(), "Register successful");
     }
 
     @Override
-    public ResponseResult updateUser(User user) {
+    public ResponseResult<Object> updateUser(User user) {
         return null;
     }
 
     @Override
-    public ResponseResult deleteUser(User user) {
+    public ResponseResult<Object> deleteUser(User user) {
         // set status and delete flag to 1
         return null;
     }

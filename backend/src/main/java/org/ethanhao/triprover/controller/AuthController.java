@@ -19,29 +19,29 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public ResponseResult login(@RequestBody User user, HttpServletResponse response) {
+    public ResponseResult<Object> login(@RequestBody User user, HttpServletResponse response) {
         return authService.login(user, response);
     }
 
     @PostMapping("/logout")
-    public ResponseResult logout(HttpServletResponse response) {
+    public ResponseResult<Object> logout(HttpServletResponse response) {
         return authService.logout(response);
     }
 
     @PostMapping("/register")
-    public ResponseResult register(@RequestBody User user) {
+    public ResponseResult<Object> register(@RequestBody User user) {
         return authService.register(user);
     }
 
     @PostMapping("/update")
     @PreAuthorize("hasAuthority('system:user:update')")
-    public ResponseResult updatePassword(@RequestBody User user) {
+    public ResponseResult<Object> updatePassword(@RequestBody User user) {
         return authService.updateUser(user);
     }
 
     @PostMapping("/user/delete")
     @PreAuthorize("hasAuthority('system:user:delete')")
-    public ResponseResult deleteUser(@RequestBody User user) {
+    public ResponseResult<Object> deleteUser(@RequestBody User user) {
         return authService.deleteUser(user);
     }
 }

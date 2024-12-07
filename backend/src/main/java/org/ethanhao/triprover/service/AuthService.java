@@ -5,13 +5,13 @@ import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.domain.User;
 
 public interface AuthService {
-    ResponseResult login(User user, HttpServletResponse response);
+    ResponseResult<Object> login(User user, HttpServletResponse response);
 
-    ResponseResult logout(HttpServletResponse response);
+    ResponseResult<Object> logout(HttpServletResponse response);
 
-    ResponseResult register(User user);
+    ResponseResult<Object> register(User user);
 
-    ResponseResult updateUser(User user);
+    ResponseResult<Object> updateUser(User user);
 
-    ResponseResult deleteUser(User user);
+    ResponseResult<Object> deleteUser(User user);
 }

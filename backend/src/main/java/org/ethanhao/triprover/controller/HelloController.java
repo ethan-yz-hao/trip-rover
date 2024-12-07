@@ -16,8 +16,8 @@ public class HelloController {
     }
 
     @PostMapping("/testCors")
-    public ResponseResult test(){
+    public ResponseResult<Object> test(){
         System.out.println("testCors");
-        return new ResponseResult(200,"testCors");
+        return new ResponseResult<>(200,"testCors");
     }
 }
