@@ -26,7 +26,7 @@ public class AccessDeniedHandlerImpl implements AccessDeniedHandler {
         } else {
             ResponseResult<Object> result = new ResponseResult<>(HttpStatus.FORBIDDEN.value(), "Authorization failed, insufficient permissions");
             String json = JSON.toJSONString(result);
-            WebUtils.renderString(response, json);
+            WebUtils.renderString(response, HttpStatus.FORBIDDEN.value(), json);
         }
     }
 

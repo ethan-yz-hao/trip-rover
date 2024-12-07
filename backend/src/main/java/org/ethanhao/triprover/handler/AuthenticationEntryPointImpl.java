@@ -21,6 +21,6 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
         ResponseResult<Object> result = new
                 ResponseResult<>(HttpStatus.UNAUTHORIZED.value(), "Authentication failed, please log in again");
         String json = JSON.toJSONString(result);
-        WebUtils.renderString(response, json);
+        WebUtils.renderString(response, HttpStatus.UNAUTHORIZED.value(), json);
     }
 }
