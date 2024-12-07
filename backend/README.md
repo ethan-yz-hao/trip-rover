@@ -1,4 +1,3 @@
-Spring Security
 JWT based authentication
     Redis Caching authentication (authenticated user) to improve verification efficiency (when authenticated user access resources)
     Authenticate User at websocket handshake
