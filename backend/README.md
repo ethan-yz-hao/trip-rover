@@ -14,6 +14,8 @@ RESTful
     Plan
         get plan
         check role
+    User
+        get plans and roles of user (projection interface)
 
 
 ## Local Development
