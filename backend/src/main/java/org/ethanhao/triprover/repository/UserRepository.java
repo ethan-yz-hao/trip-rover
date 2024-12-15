@@ -9,5 +9,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     User findByUserName(String userName);
     User findByUserNameAndDelFlag(String userName, Integer delFlag);
     @Query("SELECT u FROM User u JOIN FETCH u.roles WHERE u.email = :email AND u.delFlag = :delFlag")
-    User findByEmailAndDelFlag(@Param("email") String email, @Param("delFlag") int delFlag);;
+    User findByEmailAndDelFlag(@Param("email") String email, @Param("delFlag") int delFlag);
 }
