@@ -1,8 +1,8 @@
 package org.ethanhao.triprover.controller;
 
 import org.ethanhao.triprover.domain.LoginUser;
-import org.ethanhao.triprover.domain.Plan;
 import org.ethanhao.triprover.domain.PlanUserRole;
+import org.ethanhao.triprover.dto.PlanDTO;
 import org.ethanhao.triprover.service.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ public class PlanController {
 
     @GetMapping("/{planId}")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseEntity<Plan> getPlanPlace(
+    public ResponseEntity<PlanDTO> getPlanPlace(
             @PathVariable Long planId,
             Authentication authentication
     ) {
@@ -44,7 +44,7 @@ public class PlanController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Forbidden
         }
 
-        Plan plan = planService.getPlan(planId);
+        PlanDTO plan = planService.getPlan(planId);
         return ResponseEntity.ok(plan);
     }
 }

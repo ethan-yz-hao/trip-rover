@@ -1,9 +1,9 @@
 package org.ethanhao.triprover.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -28,7 +28,7 @@ public class Plan {
     @Version
     private Long version; // Version field for optimistic locking
 
-    @JsonIgnore
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "id.plan", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PlanUserRole> planUserRoles = new HashSet<>();
 
@@ -36,12 +36,10 @@ public class Plan {
     @OrderBy("sequenceNumber ASC")
     private List<PlanPlace> places;
 
-    @JsonIgnore
     @CreationTimestamp
     @Column(columnDefinition = "timestamp default CURRENT_TIMESTAMP")
     private LocalDateTime createTime;
 
-    @JsonIgnore
     @UpdateTimestamp
     @Column(columnDefinition = "timestamp default CURRENT_TIMESTAMP")
     private LocalDateTime updateTime;
