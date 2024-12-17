@@ -22,14 +22,4 @@ public class PlanPlaces {
         dto.setPlaces(plan.getPlaces());
         return dto;
     }
-
-    // Method to convert back to Plan entity
-    public Plan toEntity() {
-        Plan plan = new Plan();
-        plan.setPlanId(this.planId);
-        plan.setPlanName(this.planName);
-        plan.setVersion(this.version);
-        plan.setPlaces(this.places);
-        return plan;
-    }
 } 
