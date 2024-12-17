@@ -11,6 +11,14 @@ export interface Plan {
     places: Place[];
 }
 
+export interface PlanDTO {
+    planId: number;
+    planName: string;
+    role: 'OWNER' | 'EDITOR' | 'VIEWER';
+    createTime: Date;
+    updateTime: Date;
+}
+
 export interface PlanUpdateMessage {
     clientId: string;
     updateId: string;
