@@ -14,6 +14,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 
 @Component
 public class JwtChannelInterceptor implements ChannelInterceptor {
@@ -28,8 +29,13 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
     }
 
     @Override
-    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+    public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        if (accessor == null) {
+            logger.error("Failed to get StompHeaderAccessor from message");
+            throw new AccessDeniedException("Invalid message format");
+        }
+        
         if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
             String destination = accessor.getDestination();
 
