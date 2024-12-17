@@ -13,7 +13,7 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
            "p.createTime as createTime, p.updateTime as updateTime, " +
            "pur.role as role " +
            "FROM Plan p " +
-           "JOIN p.planUserRoles pur " +
+           "JOIN p.planMembers pur " +
            "WHERE pur.id.user.id = :userId")
     List<PlanSummary> findPlanSummaryByUserId(@Param("userId") Long userId);
 }

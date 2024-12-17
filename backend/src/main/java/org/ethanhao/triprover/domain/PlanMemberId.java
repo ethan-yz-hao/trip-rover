@@ -15,7 +15,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @EqualsAndHashCode
 @Embeddable
-public class PlanUserRoleId implements Serializable {
+public class PlanMemberId implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "plan_id", nullable = false)

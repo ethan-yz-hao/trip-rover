@@ -30,7 +30,7 @@ public class Plan {
 
     @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "id.plan", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<PlanUserRole> planUserRoles = new HashSet<>();
+    private Set<PlanMember> planMembers = new HashSet<>();
 
     @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sequenceNumber ASC")

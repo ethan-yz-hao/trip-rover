@@ -3,8 +3,8 @@ package org.ethanhao.triprover.service.impl;
 import org.ethanhao.triprover.dto.PlanCreation;
 import org.ethanhao.triprover.dto.PlanSummary;
 import org.ethanhao.triprover.domain.Plan;
-import org.ethanhao.triprover.domain.PlanUserRole;
-import org.ethanhao.triprover.domain.PlanUserRoleId;
+import org.ethanhao.triprover.domain.PlanMember;
+import org.ethanhao.triprover.domain.PlanMemberId;
 import org.ethanhao.triprover.domain.User;
 import org.ethanhao.triprover.repository.PlanRepository;
 import org.ethanhao.triprover.repository.UserRepository;
@@ -48,14 +48,14 @@ public class UserServiceImpl implements UserService {
 
         Plan plan = new Plan();
         plan.setPlanName(request.getPlanName());
-        plan.setPlanUserRoles(new HashSet<>());
+        plan.setPlanMembers(new HashSet<>());
         
-        // Create PlanUserRole with OWNER role
-        PlanUserRole planUserRole = new PlanUserRole();
-        planUserRole.setId(new PlanUserRoleId(plan, user));
-        planUserRole.setRole(PlanUserRole.RoleType.OWNER);
+        // Create PlanMember with OWNER role
+        PlanMember planMember = new PlanMember();
+        planMember.setId(new PlanMemberId(plan, user));
+        planMember.setRole(PlanMember.RoleType.OWNER);
         
-        plan.getPlanUserRoles().add(planUserRole);
+        plan.getPlanMembers().add(planMember);
         
         Plan savedPlan = planRepository.save(plan);
         

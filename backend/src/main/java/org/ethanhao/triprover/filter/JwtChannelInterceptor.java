@@ -1,7 +1,7 @@
 package org.ethanhao.triprover.filter;
 
 import org.ethanhao.triprover.domain.LoginUser;
-import org.ethanhao.triprover.domain.PlanUserRole;
+import org.ethanhao.triprover.domain.PlanMember;
 import org.ethanhao.triprover.service.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 Long userId = loginUser.getUser().getId();
 
                 // Check if the user is authorized for this planId
-                if (!planService.hasRole(planId, userId, PlanUserRole.RoleType.EDITOR)) {
+                if (!planService.hasRole(planId, userId, PlanMember.RoleType.EDITOR)) {
                     // User is not authorized, reject the subscription
                     throw new AccessDeniedException("User not authorized to subscribe to this plan");
                 }

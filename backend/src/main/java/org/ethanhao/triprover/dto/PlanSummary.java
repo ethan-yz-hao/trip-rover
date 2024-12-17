@@ -1,7 +1,7 @@
 package org.ethanhao.triprover.dto;
 
 import java.time.LocalDateTime;
-import org.ethanhao.triprover.domain.PlanUserRole.RoleType;
+import org.ethanhao.triprover.domain.PlanMember.RoleType;
 
 public interface PlanSummary {
     Long getPlanId();

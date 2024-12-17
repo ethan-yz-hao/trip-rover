@@ -104,5 +104,5 @@ public class User implements Serializable {
 
     // User's plan role
     @OneToMany(mappedBy = "id.user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<PlanUserRole> planUserRoles = new HashSet<>();
+    private Set<PlanMember> planMembers = new HashSet<>();
 }

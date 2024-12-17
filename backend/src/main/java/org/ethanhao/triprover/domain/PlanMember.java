@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "plan_user_roles")
-public class PlanUserRole {
+@Table(name = "plan_members")
+public class PlanMember {
 
     @EmbeddedId
-    private PlanUserRoleId id;
+    private PlanMemberId id;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

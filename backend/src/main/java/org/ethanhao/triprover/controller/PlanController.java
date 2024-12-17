@@ -1,7 +1,7 @@
 package org.ethanhao.triprover.controller;
 
 import org.ethanhao.triprover.domain.LoginUser;
-import org.ethanhao.triprover.domain.PlanUserRole;
+import org.ethanhao.triprover.domain.PlanMember;
 import org.ethanhao.triprover.dto.PlanPlaces;
 import org.ethanhao.triprover.service.PlanService;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ public class PlanController {
         Long userId = loginUser.getUser().getId();
 
         logger.info("User {} fetching plan {}", userId, planId);
-        if (!planService.hasRole(planId, userId, PlanUserRole.RoleType.VIEWER)) {
+        if (!planService.hasRole(planId, userId, PlanMember.RoleType.VIEWER)) {
             logger.info("User {} is not authorized to fetch plan {}", userId, planId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Forbidden
         }

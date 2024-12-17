@@ -38,8 +38,8 @@ INSERT INTO plan_places (plan_id, sequence_number, place_id, google_place_id, st
                                                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Road Trip across California'), 1, '550e8400-e29b-41d4-a716-446655440004', 'ChIJneqLZyq7j4ARf2j8RBrwzSk', 6000),
                                                                                                 ((SELECT plan_id FROM plans WHERE plan_name = 'Road Trip across California'), 2, '550e8400-e29b-41d4-a716-446655440005', 'ChIJ_Yjh6Za1j4AR8IgGUZGDDTs', 3000);
 
--- Associating Users with Plans via PlanUserRole (including specific roles)
-INSERT INTO plan_user_roles (plan_id, user_id, role) VALUES
+-- Associating Users with Plans via PlanMembers (including specific roles)
+INSERT INTO plan_members (plan_id, user_id, role) VALUES
                                                          ((SELECT plan_id FROM plans WHERE plan_name = 'Trip to New York'), (SELECT id FROM sys_user WHERE user_name = 'admin'), 'OWNER'),
                                                          ((SELECT plan_id FROM plans WHERE plan_name = 'Road Trip across California'), (SELECT id FROM sys_user WHERE user_name = 'admin'), 'EDITOR'),
                                                          ((SELECT plan_id FROM plans WHERE plan_name = 'Trip to New York'), (SELECT id FROM sys_user WHERE user_name = 'johndoe'), 'EDITOR'),
