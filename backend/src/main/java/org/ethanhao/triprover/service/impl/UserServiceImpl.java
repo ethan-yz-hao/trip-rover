@@ -1,7 +1,7 @@
 package org.ethanhao.triprover.service.impl;
 
-import org.ethanhao.triprover.dto.PostPlan;
-import org.ethanhao.triprover.dto.GetPlan;
+import org.ethanhao.triprover.dto.PlanCreation;
+import org.ethanhao.triprover.dto.PlanSummary;
 import org.ethanhao.triprover.domain.Plan;
 import org.ethanhao.triprover.domain.PlanUserRole;
 import org.ethanhao.triprover.domain.PlanUserRoleId;
@@ -32,17 +32,17 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<GetPlan> getUserPlans(Long userId) {
+    public List<PlanSummary> getUserPlans(Long userId) {
         
-        List<GetPlan> planDTOs = planRepository.findPlansWithRolesByUserId(userId);
-        logger.info("Fetched {} plans for user ID: {}", planDTOs.size(), userId);
+        List<PlanSummary> planSummaries = planRepository.findPlanSummaryByUserId(userId);
+        logger.info("Fetched {} plans for user ID: {}", planSummaries.size(), userId);
 
-        return planDTOs;
+        return planSummaries;
     }
 
     @Transactional
     @Override
-    public GetPlan createPlan(Long userId, PostPlan request) {
+    public PlanSummary createPlan(Long userId, PlanCreation request) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UserNotFoundException(userId));
 
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
         Plan savedPlan = planRepository.save(plan);
         
         // Use the same query method to return the DTO
-        return planRepository.findPlansWithRolesByUserId(userId).stream()
+        return planRepository.findPlanSummaryByUserId(userId).stream()
             .filter(p -> p.getPlanId().equals(savedPlan.getPlanId()))
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Failed to retrieve created plan"));

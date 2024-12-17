@@ -7,15 +7,15 @@ import org.ethanhao.triprover.domain.PlanPlace;
 import java.util.List;
 
 @Data
-public class PlanDTO {
+public class PlanPlaces {
     private Long planId;
     private String planName;
     private Long version;
     private List<PlanPlace> places;
 
     // Constructor to convert from Plan entity
-    public static PlanDTO fromEntity(Plan plan) {
-        PlanDTO dto = new PlanDTO();
+    public static PlanPlaces fromEntity(Plan plan) {
+        PlanPlaces dto = new PlanPlaces();
         dto.setPlanId(plan.getPlanId());
         dto.setPlanName(plan.getPlanName());
         dto.setVersion(plan.getVersion());

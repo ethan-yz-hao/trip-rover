@@ -2,7 +2,7 @@ package org.ethanhao.triprover.service.impl;
 
 import org.ethanhao.triprover.domain.PlanUpdateMessage;
 import org.ethanhao.triprover.domain.PlanUserRole;
-import org.ethanhao.triprover.dto.PlanDTO;
+import org.ethanhao.triprover.dto.PlanPlaces;
 import org.ethanhao.triprover.handler.ResourceNotFoundException;
 import org.ethanhao.triprover.repository.PlanRepository;
 import org.ethanhao.triprover.repository.PlanUserRoleRepository;
@@ -29,8 +29,8 @@ public class PlanServiceImpl implements PlanService {
     }
 
     @Override
-    public PlanDTO getPlan(Long planId) {
-        return PlanDTO.fromEntity(planRepository.findById(planId)
+    public PlanPlaces getPlanPlaces(Long planId) {
+        return PlanPlaces.fromEntity(planRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId)));
     }
 

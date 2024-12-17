@@ -1,10 +1,10 @@
 package org.ethanhao.triprover.service;
 
-import org.ethanhao.triprover.dto.PostPlan;
-import org.ethanhao.triprover.dto.GetPlan;
+import org.ethanhao.triprover.dto.PlanCreation;
+import org.ethanhao.triprover.dto.PlanSummary;
 import java.util.List;
 
 public interface UserService {
-    List<GetPlan> getUserPlans(Long userId);
-    GetPlan createPlan(Long userId, PostPlan request);
+    List<PlanSummary> getUserPlans(Long userId);
+    PlanSummary createPlan(Long userId, PlanCreation request);
 } 

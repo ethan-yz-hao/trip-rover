@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostPlan {
+public class PlanCreation {
     @NotBlank(message = "Plan name is required")
     private String planName;
 } 

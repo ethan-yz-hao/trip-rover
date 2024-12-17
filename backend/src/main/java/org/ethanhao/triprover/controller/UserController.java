@@ -1,7 +1,7 @@
 package org.ethanhao.triprover.controller;
 
 import org.ethanhao.triprover.domain.LoginUser;
-import org.ethanhao.triprover.dto.GetPlan;
+import org.ethanhao.triprover.dto.PlanSummary;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.service.UserService;
 import org.slf4j.Logger;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.ethanhao.triprover.dto.PostPlan;
+import org.ethanhao.triprover.dto.PlanCreation;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -30,7 +30,7 @@ public class UserController {
 
     @GetMapping("/plans")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<Object> getUserPlans(Authentication authentication) {
+    public ResponseResult<Object> getPlanSummaries(Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
         
@@ -39,8 +39,8 @@ public class UserController {
             userId);
         
         try {
-            List<GetPlan> plans = userService.getUserPlans(userId);
-            return new ResponseResult<>(200, "Success", plans);
+            List<PlanSummary> planSummaries = userService.getUserPlans(userId);
+            return new ResponseResult<>(200, "Success", planSummaries);
         } catch (Exception e) {
             logger.error("Failed to retrieve user plans", e);
             return new ResponseResult<>(500, 
@@ -50,8 +50,8 @@ public class UserController {
     
     @PostMapping("/plans")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<GetPlan> createPlan(
-            @Valid @RequestBody PostPlan request,
+    public ResponseResult<PlanSummary> createPlan(
+            @Valid @RequestBody PlanCreation request,
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
@@ -62,8 +62,8 @@ public class UserController {
             userId);
         
         try {
-            GetPlan plan = userService.createPlan(userId, request);
-            return new ResponseResult<>(200, "Success", plan);
+            PlanSummary planSummary = userService.createPlan(userId, request);
+            return new ResponseResult<>(200, "Success", planSummary);
         } catch (Exception e) {
             logger.error("Failed to create plan", e);
             return new ResponseResult<>(500, 

@@ -1,7 +1,7 @@
 package org.ethanhao.triprover.repository;
 
 import org.ethanhao.triprover.domain.Plan;
-import org.ethanhao.triprover.dto.GetPlan;
+import org.ethanhao.triprover.dto.PlanSummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,5 +15,5 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
            "FROM Plan p " +
            "JOIN p.planUserRoles pur " +
            "WHERE pur.id.user.id = :userId")
-    List<GetPlan> findPlansWithRolesByUserId(@Param("userId") Long userId);
+    List<PlanSummary> findPlanSummaryByUserId(@Param("userId") Long userId);
 }
