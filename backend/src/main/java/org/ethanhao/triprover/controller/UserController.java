@@ -1,7 +1,7 @@
 package org.ethanhao.triprover.controller;
 
 import org.ethanhao.triprover.domain.LoginUser;
-import org.ethanhao.triprover.dto.PlanDTO;
+import org.ethanhao.triprover.dto.GetPlan;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.service.UserService;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ public class UserController {
             userId);
         
         try {
-            List<PlanDTO> plans = userService.getUserPlans(userId);
+            List<GetPlan> plans = userService.getUserPlans(userId);
             return new ResponseResult<>(200, "Success", plans);
         } catch (Exception e) {
             logger.error("Failed to retrieve user plans", e);
@@ -43,4 +43,5 @@ public class UserController {
                 "Failed to retrieve user plans: " + e.getMessage());
         }
     }
+    
 }

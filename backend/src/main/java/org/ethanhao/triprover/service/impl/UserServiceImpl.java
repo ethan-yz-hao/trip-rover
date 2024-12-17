@@ -1,6 +1,6 @@
 package org.ethanhao.triprover.service.impl;
 
-import org.ethanhao.triprover.dto.PlanDTO;
+import org.ethanhao.triprover.dto.GetPlan;
 import org.ethanhao.triprover.repository.PlanRepository;
 import org.ethanhao.triprover.service.UserService;
 import org.slf4j.Logger;
@@ -20,9 +20,9 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<PlanDTO> getUserPlans(Long userId) {
+    public List<GetPlan> getUserPlans(Long userId) {
         
-        List<PlanDTO> planDTOs = planRepository.findPlansWithRolesByUserId(userId);
+        List<GetPlan> planDTOs = planRepository.findPlansWithRolesByUserId(userId);
         logger.info("Fetched {} plans for user ID: {}", planDTOs.size(), userId);
 
         return planDTOs;
