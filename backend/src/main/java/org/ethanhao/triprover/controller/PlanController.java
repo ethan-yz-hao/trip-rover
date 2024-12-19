@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -97,6 +98,30 @@ public class PlanController {
             logger.error("Failed to create plan", e);
             return new ResponseResult<>(500, 
                 "Failed to create plan: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{planId}")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<Void> deletePlan(
+            @PathVariable Long planId,
+            Authentication authentication
+    ) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUser().getId();
+
+        try {       
+            if (!planService.hasRole(planId, userId, PlanMember.RoleType.OWNER)) {  
+                logger.info("User {} is not authorized to delete plan {}", userId, planId);
+                return new ResponseResult<>(403, "User is not authorized to delete plan", null);
+            }
+
+            planService.deletePlan(planId);
+            return new ResponseResult<>(200, "Success", null);
+        } catch (Exception e) {
+            logger.error("Failed to delete plan", e);
+            return new ResponseResult<>(500, 
+                "Failed to delete plan: " + e.getMessage());
         }
     }
 

@@ -84,6 +84,12 @@ public class PlanServiceImpl implements PlanService {
             .orElseThrow(() -> new RuntimeException("Failed to retrieve created plan"));
     }
 
+    @Transactional
+    @Override
+    public void deletePlan(Long planId) {
+        planRepository.deleteById(planId);
+    }
+
     @Override
     public PlanPlaces getPlanPlaces(Long planId) {
         return PlanPlaces.fromEntity(planRepository.findById(planId)
