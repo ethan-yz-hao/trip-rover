@@ -10,6 +10,7 @@ import org.ethanhao.triprover.domain.User;
 import org.ethanhao.triprover.dto.PlanCreation;
 import org.ethanhao.triprover.dto.PlanPlaces;
 import org.ethanhao.triprover.dto.PlanSummary;
+import org.ethanhao.triprover.dto.PlanUpdate;
 import org.ethanhao.triprover.handler.ResourceNotFoundException;
 import org.ethanhao.triprover.handler.UserNotFoundException;
 import org.ethanhao.triprover.repository.PlanMemberRepository;
@@ -86,6 +87,21 @@ public class PlanServiceImpl implements PlanService {
         planRepository.deleteById(planId);
     }
 
+    @Transactional
+    @Override
+    public PlanSummary updatePlan(Long userId, Long planId, PlanUpdate request) {
+        Plan plan = planRepository.findById(planId)
+                .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId));
+        
+        if (request.getPlanName() != null) {
+            plan.setPlanName(request.getPlanName());
+        }
+        
+        planRepository.save(plan);
+
+        return planRepository.findPlanSummaryByUserIdAndPlanId(userId, planId);
+    }
+
     @Override
     public PlanPlaces getPlanPlaces(Long planId) {
         return PlanPlaces.fromEntity(planRepository.findById(planId)
@@ -93,7 +109,7 @@ public class PlanServiceImpl implements PlanService {
     }
 
     @Override
-    public boolean hasRole(Long planId, Long userId, PlanMember.RoleType requiredRole) {
+    public boolean hasRole(Long userId, Long planId, PlanMember.RoleType requiredRole) {
         PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, userId);
         if (planMember == null) {
             return false;

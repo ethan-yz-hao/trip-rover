@@ -8,6 +8,7 @@ import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.dto.PlanCreation;
 import org.ethanhao.triprover.dto.PlanPlaces;
 import org.ethanhao.triprover.dto.PlanSummary;
+import org.ethanhao.triprover.dto.PlanUpdate;
 import org.ethanhao.triprover.service.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -122,6 +124,31 @@ public class PlanController {
             logger.error("Failed to delete plan", e);
             return new ResponseResult<>(500, 
                 "Failed to delete plan: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/{planId}")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<PlanSummary> updatePlan(
+            @PathVariable Long planId,
+            @Valid @RequestBody PlanUpdate request,
+            Authentication authentication
+    ) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUser().getId();
+
+        if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
+            logger.info("User {} is not authorized to update plan {}", userId, planId);
+            return new ResponseResult<>(403, "User is not authorized to update plan", null);
+        }
+
+        try {
+            PlanSummary planSummary = planService.updatePlan(userId, planId, request);
+            return new ResponseResult<>(200, "Success", planSummary);
+        } catch (Exception e) {
+            logger.error("Failed to update plan", e);
+            return new ResponseResult<>(500, 
+                "Failed to update plan: " + e.getMessage());
         }
     }
 
