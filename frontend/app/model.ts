@@ -4,14 +4,14 @@ export interface Place {
     staySeconds: number;
 }
 
-export interface Plan {
+export interface PlanPlaces {
     planId: number;
     planName: string;
     version: number;
     places: Place[];
 }
 
-export interface PlanDTO {
+export interface PlanSummary {
     planId: number;
     planName: string;
     role: 'OWNER' | 'EDITOR' | 'VIEWER';

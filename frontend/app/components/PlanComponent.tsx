@@ -1,6 +1,6 @@
 'use client';
 import React, {useState, useEffect, useRef} from 'react';
-import {Place, Plan, PlanAckMessage, PlanUpdateMessage} from '@/app/model';
+import {Place, PlanPlaces, PlanAckMessage, PlanUpdateMessage} from '@/app/model';
 import {DragDropContext, Droppable, Draggable, DropResult} from '@hello-pangea/dnd';
 import WebSocketService from '@/app/webSocketService';
 import {v4 as uuidv4} from 'uuid';
@@ -19,8 +19,8 @@ interface PendingUpdate {
 
 const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    const [plan, setPlan] = useState<Plan | null>(null);
-    const planRef = useRef<Plan | null>(null);
+    const [plan, setPlan] = useState<PlanPlaces | null>(null);
+    const planRef = useRef<PlanPlaces | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
     const [newGooglePlaceId, setNewGooglePlaceId] = useState<string>('');
 
@@ -30,7 +30,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     // fetch the plan data
     const fetchPlanData = async () => {
         try {
-            const response = await axios.get<Plan>(`${backendUrl}/api/plan/${planId}/places`, {
+            const response = await axios.get<PlanPlaces>(`${backendUrl}/api/plan/${planId}/places`, {
                 withCredentials: true,
             });
             setPlan(response.data);
@@ -122,7 +122,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     }
 
     // Apply update to the plan locally (used by both optimistic updates and incoming updates from other clients)
-    const applyLocalUpdate = (currentPlan: Plan, updateMessage: PlanUpdateMessage): Plan | null => {
+    const applyLocalUpdate = (currentPlan: PlanPlaces, updateMessage: PlanUpdateMessage): PlanPlaces | null => {
         switch (updateMessage.action) {
             case 'REORDER':
                 const { placeId, targetPlaceId } = updateMessage;

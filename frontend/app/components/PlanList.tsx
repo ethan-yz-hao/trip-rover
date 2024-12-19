@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import log from "@/app/log";
-import { PlanDTO } from '@/app/model';
+import { PlanSummary } from '@/app/model';
 import Link from 'next/link';
 
 const PlanList = () => {
-  const [plans, setPlans] = useState<PlanDTO[]>([]);
+  const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
@@ -21,7 +21,7 @@ const PlanList = () => {
         
         const data = await response.json();
         // Convert string dates to Date objects
-        const plansWithDates = data.data.map((plan: PlanDTO) => ({
+        const plansWithDates = data.data.map((plan: PlanSummary) => ({
           ...plan,
           createTime: new Date(plan.createTime),
           updateTime: new Date(plan.updateTime),
