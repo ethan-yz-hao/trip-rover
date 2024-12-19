@@ -5,7 +5,7 @@ import { PlanSummary } from '@/app/model';
 import Link from 'next/link';
 
 const PlanList = () => {
-  const [plans, setPlans] = useState<PlanSummary[]>([]);
+  const [planSummaries, setPlanSummaries] = useState<PlanSummary[]>([]);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
@@ -21,12 +21,12 @@ const PlanList = () => {
         
         const data = await response.json();
         // Convert string dates to Date objects
-        const plansWithDates = data.data.map((plan: PlanSummary) => ({
-          ...plan,
-          createTime: new Date(plan.createTime),
-          updateTime: new Date(plan.updateTime),
+        const plansWithDates = data.data.map((planSummary: PlanSummary) => ({
+          ...planSummary,
+          createTime: new Date(planSummary.createTime),
+          updateTime: new Date(planSummary.updateTime),
         }));
-        setPlans(plansWithDates);
+        setPlanSummaries(plansWithDates);
       } catch (error) {
         log.error('Error fetching plans:', error);
         setError(error instanceof Error ? error.message : 'Failed to load plans');
@@ -43,14 +43,14 @@ const PlanList = () => {
   return (
     <div>
       <h2>Your Plans</h2>
-      {plans.map(plan => (
-        <div key={plan.planId} className="plan-item">
-          <Link href={`/plan/${plan.planId}`}>
-            <h3 className="hover:underline cursor-pointer">{plan.planName}</h3>
+      {planSummaries.map(planSummary => (
+        <div key={planSummary.planId} className="plan-item">
+          <Link href={`/plan/${planSummary.planId}`}>
+            <h3 className="hover:underline cursor-pointer">{planSummary.planName}</h3>
           </Link>
-          <p>Role: {plan.role}</p>
-          <p>Created: {plan.createTime.toLocaleString()}</p>
-          <p>Last Modified: {plan.updateTime.toLocaleString()}</p>
+          <p>Role: {planSummary.role}</p>
+          <p>Created: {planSummary.createTime.toLocaleString()}</p>
+          <p>Last Modified: {planSummary.updateTime.toLocaleString()}</p>
         </div>
       ))}
     </div>
