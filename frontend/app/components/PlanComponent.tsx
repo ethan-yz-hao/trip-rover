@@ -27,7 +27,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     // Ordered queue of pending updates
     const pendingUpdatesRef = useRef<PendingUpdate[]>([]);
 
-    // fetch the plan data
+    // fetch the plan places data
     const fetchPlanData = async () => {
         try {
             const response = await axios.get<PlanPlaces>(`${backendUrl}/api/plan/${planId}/places`, {
@@ -41,7 +41,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
         }
     };
 
-    // Load the plan data
+    // Load the plan places data
     useEffect(() => {
         fetchPlanData();
     }, [planId, backendUrl]);
