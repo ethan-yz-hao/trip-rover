@@ -9,7 +9,7 @@ const PlanList = () => {
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    const fetchPlans = async () => {
+    const fetchPlanSummaries = async () => {
       try {
         const response = await fetch('http://localhost:8080/api/plan', {
           credentials: 'include',
@@ -33,7 +33,7 @@ const PlanList = () => {
       }
     };
 
-    fetchPlans();
+    fetchPlanSummaries();
   }, []);
 
   if (error) {
