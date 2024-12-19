@@ -77,11 +77,7 @@ public class PlanServiceImpl implements PlanService {
         
         Plan savedPlan = planRepository.save(plan);
         
-        // Use the same query method to return the DTO
-        return planRepository.findPlanSummaryByUserId(userId).stream()
-            .filter(p -> p.getPlanId().equals(savedPlan.getPlanId()))
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Failed to retrieve created plan"));
+        return planRepository.findPlanSummaryByUserIdAndPlanId(userId, savedPlan.getPlanId());
     }
 
     @Transactional
