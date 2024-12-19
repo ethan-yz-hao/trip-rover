@@ -30,7 +30,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     // fetch the plan data
     const fetchPlanData = async () => {
         try {
-            const response = await axios.get<Plan>(`${backendUrl}/api/plan/${planId}`, {
+            const response = await axios.get<Plan>(`${backendUrl}/api/plan/${planId}/places`, {
                 withCredentials: true,
             });
             setPlan(response.data);

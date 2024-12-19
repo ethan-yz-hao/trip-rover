@@ -1,11 +1,11 @@
 package org.ethanhao.triprover.controller;
 
-import jakarta.persistence.OptimisticLockException;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.PlanAckMessage;
-import org.ethanhao.triprover.domain.PlanUpdateMessage;
 import org.ethanhao.triprover.domain.PlanMember;
+import org.ethanhao.triprover.domain.PlanUpdateMessage;
 import org.ethanhao.triprover.service.PlanService;
+import org.ethanhao.triprover.service.PlanUpdateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,18 +16,22 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
+import jakarta.persistence.OptimisticLockException;
+
 
 @Controller
 public class PlanWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final PlanService planService;
+    private final PlanUpdateService planUpdateService;
     private static final Logger logger = LoggerFactory.getLogger(PlanWebSocketController.class);
 
     @Autowired
-    public PlanWebSocketController(SimpMessagingTemplate messagingTemplate, PlanService planService) {
+    public PlanWebSocketController(SimpMessagingTemplate messagingTemplate, PlanService planService, PlanUpdateService planUpdateService) {
         this.messagingTemplate = messagingTemplate;
         this.planService = planService;
+        this.planUpdateService = planUpdateService;
     }
 
     @MessageMapping("/plan/{planId}/update")
@@ -51,7 +55,7 @@ public class PlanWebSocketController {
         try {
             logger.info("User {} updating plan {} with message: {}", userId, planId, updateMessage);
             // Apply the update to the plan
-            Long newVersion = planService.applyUpdate(planId, updateMessage);
+            Long newVersion = planUpdateService.updatePlanWithMessage(planId, updateMessage);
 
             // Set the new version in the update message
             updateMessage.setVersion(newVersion);
