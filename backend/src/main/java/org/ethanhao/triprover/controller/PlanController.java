@@ -128,30 +128,6 @@ public class PlanController {
         }
     }
 
-    @PostMapping("/member")
-    @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummary> addPlanMember(
-            @Valid @RequestBody PlanMemberUpdate request,
-            Authentication authentication
-    ) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        Long userId = loginUser.getUser().getId();
-        Long planId = request.getPlanId();
-
-        if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
-            logger.info("User {} is not authorized to add member to plan {}", userId, planId);
-            return new ResponseResult<>(403, "User is not authorized to add member to plan", null);
-        }
-
-        try {
-            PlanSummary planSummary = planService.addPlanMember(userId, planId, request);
-            return new ResponseResult<>(200, "Success", planSummary);
-        } catch (Exception e) {
-            logger.error("Failed to add member to plan", e);
-            return new ResponseResult<>(500, "Failed to add member to plan: " + e.getMessage());
-        }
-    }
-
     @PutMapping("/{planId}")
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<PlanSummary> updatePlan(
@@ -176,6 +152,32 @@ public class PlanController {
                 "Failed to update plan: " + e.getMessage());
         }
     }
+
+    
+    @PostMapping("/member")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<PlanSummary> addPlanMember(
+            @Valid @RequestBody PlanMemberUpdate request,
+            Authentication authentication
+    ) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUser().getId();
+        Long planId = request.getPlanId();
+
+        if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
+            logger.info("User {} is not authorized to add member to plan {}", userId, planId);
+            return new ResponseResult<>(403, "User is not authorized to add member to plan", null);
+        }
+
+        try {
+            PlanSummary planSummary = planService.addPlanMember(userId, planId, request);
+            return new ResponseResult<>(200, "Success", planSummary);
+        } catch (Exception e) {
+            logger.error("Failed to add member to plan", e);
+            return new ResponseResult<>(500, "Failed to add member to plan: " + e.getMessage());
+        }
+    }
+
 
     @GetMapping("/{planId}/places")
     @PreAuthorize("hasAuthority('user:all')")
