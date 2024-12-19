@@ -153,7 +153,6 @@ public class PlanController {
         }
     }
 
-    
     @PostMapping("/member")
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<PlanSummary> addPlanMember(
@@ -177,7 +176,6 @@ public class PlanController {
             return new ResponseResult<>(500, "Failed to add member to plan: " + e.getMessage());
         }
     }
-
 
     @GetMapping("/{planId}/places")
     @PreAuthorize("hasAuthority('user:all')")
