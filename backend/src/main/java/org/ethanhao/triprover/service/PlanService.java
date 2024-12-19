@@ -8,7 +8,8 @@ import org.ethanhao.triprover.dto.PlanPlaces;
 import org.ethanhao.triprover.dto.PlanSummary;
 
 public interface PlanService {
-    List<PlanSummary> getUserPlans(Long userId);
+    List<PlanSummary> getPlanSummaries(Long userId);
+    PlanSummary getPlanSummary(Long userId, Long planId);
     PlanSummary createPlan(Long userId, PlanCreation request);
     PlanPlaces getPlanPlaces(Long planId);
     boolean hasRole(Long planId, Long userId, PlanMember.RoleType requiredRole);

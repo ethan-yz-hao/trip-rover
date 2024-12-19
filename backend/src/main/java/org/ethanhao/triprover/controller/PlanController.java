@@ -49,12 +49,31 @@ public class PlanController {
             userId);
         
         try {
-            List<PlanSummary> planSummaries = planService.getUserPlans(userId);
+            List<PlanSummary> planSummaries = planService.getPlanSummaries(userId);
             return new ResponseResult<>(200, "Success", planSummaries);
         } catch (Exception e) {
-            logger.error("Failed to retrieve user plans", e);
+            logger.error("Failed to retrieve user plan summaries", e);
             return new ResponseResult<>(500, 
-                "Failed to retrieve user plans: " + e.getMessage());
+                "Failed to retrieve user plan summaries: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{planId}")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<PlanSummary> getPlanSummary(
+            @PathVariable Long planId,
+            Authentication authentication
+    ) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUser().getId();
+
+        try  {
+            PlanSummary planSummary = planService.getPlanSummary(userId, planId);
+            return new ResponseResult<>(200, "Success", planSummary);
+        } catch (Exception e) {
+            logger.error("Failed to retrieve plan summary for user {} and plan {}", userId, planId, e);
+            return new ResponseResult<>(500, 
+                "Failed to retrieve plan summary: " + e.getMessage());
         }
     }
     

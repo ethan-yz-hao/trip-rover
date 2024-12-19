@@ -44,12 +44,18 @@ public class PlanServiceImpl implements PlanService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<PlanSummary> getUserPlans(Long userId) {
+    public List<PlanSummary> getPlanSummaries(Long userId) {
         
         List<PlanSummary> planSummaries = planRepository.findPlanSummaryByUserId(userId);
         logger.info("Fetched {} plans for user ID: {}", planSummaries.size(), userId);
 
         return planSummaries;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public PlanSummary getPlanSummary(Long userId, Long planId) {
+        return planRepository.findPlanSummaryByUserIdAndPlanId(userId, planId);
     }
 
     @Transactional

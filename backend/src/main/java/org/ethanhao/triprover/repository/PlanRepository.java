@@ -16,4 +16,12 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
            "JOIN p.planMembers pur " +
            "WHERE pur.id.user.id = :userId")
     List<PlanSummary> findPlanSummaryByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT p.planId as planId, p.planName as planName, " +
+           "p.createTime as createTime, p.updateTime as updateTime, " +
+           "pur.role as role " +
+           "FROM Plan p " +
+           "JOIN p.planMembers pur " +
+           "WHERE pur.id.user.id = :userId AND p.planId = :planId")
+    PlanSummary findPlanSummaryByUserIdAndPlanId(@Param("userId") Long userId, @Param("planId") Long planId);
 }
