@@ -19,8 +19,8 @@ interface PendingUpdate {
 
 const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    const [plan, setPlan] = useState<PlanPlaces | null>(null);
-    const planRef = useRef<PlanPlaces | null>(null);
+    const [planPlaces, setPlanPlaces] = useState<PlanPlaces | null>(null);
+    const planPlacesRef = useRef<PlanPlaces | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
     const [newGooglePlaceId, setNewGooglePlaceId] = useState<string>('');
 
@@ -33,8 +33,8 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             const response = await axios.get<PlanPlaces>(`${backendUrl}/api/plan/${planId}/places`, {
                 withCredentials: true,
             });
-            setPlan(response.data);
-            planRef.current = response.data;
+            setPlanPlaces(response.data);
+            planPlacesRef.current = response.data;
         } catch (error) {
             log.error('Error fetching plan:', error);
             alert('Failed to load the plan. Please try again.');
@@ -81,26 +81,26 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             }
 
             // Update the plan version
-            setPlan(prevPlan => {
-                if (!prevPlan) return prevPlan;
-                return {...prevPlan, version};
+            setPlanPlaces(prevPlanPlaces => {
+                if (!prevPlanPlaces) return prevPlanPlaces;
+                return {...prevPlanPlaces, version};
             });
 
             return;
         }
 
         // Apply the update from other clients
-        if (!planRef.current) {
+        if (!planPlacesRef.current) {
             log.error('Plan not loaded');
             return;
         }
-        const updatedPlan = applyLocalUpdate(planRef.current, updateMessage);
+        const updatedPlan = applyLocalUpdate(planPlacesRef.current, updateMessage);
         if (!updatedPlan) {
             log.error('Failed to apply incoming update locally. Refetching plan data');
             fetchPlanData(); // Reload the plan
         } else {
-            planRef.current = updatedPlan;
-            setPlan(updatedPlan);
+            planPlacesRef.current = updatedPlan;
+            setPlanPlaces(updatedPlan);
         }
     };
 
@@ -197,19 +197,19 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const sendUpdate = (updateMessage: PlanUpdateMessage) => {
         const updateId = uuidv4();
 
-        if (!planRef.current) {
+        if (!planPlacesRef.current) {
             log.error('Plan not loaded');
             return
         }
 
         // Optimistically apply the update to the local state
-        const updatedPlan = applyLocalUpdate(planRef.current, updateMessage);
+        const updatedPlan = applyLocalUpdate(planPlacesRef.current, updateMessage);
         if (!updatedPlan) {
             log.error('Local update failed');
             return;
         }
-        planRef.current = updatedPlan;
-        setPlan(updatedPlan);
+        planPlacesRef.current = updatedPlan;
+        setPlanPlaces(updatedPlan);
 
         // Send the update via WebSocket
         pendingUpdatesRef.current.push({ updateId, updateMessage });
@@ -218,7 +218,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
 
     // Handle drag and drop
     const onDragEnd = (result: DropResult) => {
-        if (!result.destination || !plan) {
+        if (!result.destination || !planPlaces) {
             return;
         }
 
@@ -229,8 +229,8 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             return;
         }
 
-        const movedPlace = plan.places[sourceIndex];
-        const targetPlace = plan.places[destinationIndex];
+        const movedPlace = planPlaces.places[sourceIndex];
+        const targetPlace = planPlaces.places[destinationIndex];
 
         // Send update to the server via WebSocket
         const updateMessage: PlanUpdateMessage = {
@@ -239,13 +239,13 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             targetPlaceId: targetPlace.placeId,
             clientId: webSocketServiceRef.current?.getClientId() || '',
             updateId: uuidv4(),
-            version: plan.version,
+            version: planPlaces.version,
         };
 
         sendUpdate(updateMessage);
     };
 
-    if (!plan || !plan.places) {
+    if (!planPlaces || !planPlaces.places) {
         return <div>Loading...</div>;
     }
 
@@ -258,7 +258,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             updateId: uuidv4(),
             action: 'ADD',
             placeId: uuidv4(),
-            version: plan.version,
+            version: planPlaces.version,
             googlePlaceId: newGooglePlaceId,
             staySeconds: 1800,
         };
@@ -269,7 +269,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     };
 
     const handleDelete = async (placeId: string) => {
-        const index = plan.places.findIndex(place => place.placeId === placeId);
+        const index = planPlaces.places.findIndex(place => place.placeId === placeId);
         if (index === -1) {
             log.error('Place not found:', placeId);
             return;
@@ -281,14 +281,14 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             updateId: uuidv4(),
             action: 'REMOVE',
             placeId,
-            version: plan.version,
+            version: planPlaces.version,
         };
 
         sendUpdate(updateMessage);
     };
 
     const handleStaySecondsUpdate = async (placeId: string, newStaySeconds: number) => {
-        const place = plan.places.find(place => place.placeId === placeId);
+        const place = planPlaces.places.find(place => place.placeId === placeId);
         if (!place) {
             log.error('Place not found:', placeId);
             return;
@@ -300,7 +300,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
             updateId: uuidv4(),
             action: 'UPDATE',
             placeId,
-            version: plan.version,
+            version: planPlaces.version,
             googlePlaceId: place.googlePlaceId,
             staySeconds: newStaySeconds,
         };
@@ -327,7 +327,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                 <Droppable droppableId="places">
                     {(provided) => (
                         <ul {...provided.droppableProps} ref={provided.innerRef}>
-                            {plan.places.map((place, index) => (
+                            {planPlaces.places.map((place, index) => (
                                 <Draggable key={place.placeId} draggableId={place.placeId} index={index}>
                                     {(provided) => (
                                         <li
