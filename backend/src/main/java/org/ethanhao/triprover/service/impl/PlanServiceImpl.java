@@ -42,22 +42,6 @@ public class PlanServiceImpl implements PlanService {
         this.userRepository = userRepository;
     }
 
-    @Override
-    public PlanPlaces getPlanPlaces(Long planId) {
-        return PlanPlaces.fromEntity(planRepository.findById(planId)
-                .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId)));
-    }
-
-    @Override
-    public boolean hasRole(Long planId, Long userId, PlanMember.RoleType requiredRole) {
-        PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, userId);
-        if (planMember == null) {
-            return false;
-        }
-        // Check if the user's role meets or exceeds the required role
-        return planMember.getRole().ordinal() <= requiredRole.ordinal();
-    }
-
     @Transactional(readOnly = true)
     @Override
     public List<PlanSummary> getUserPlans(Long userId) {
@@ -92,5 +76,21 @@ public class PlanServiceImpl implements PlanService {
             .filter(p -> p.getPlanId().equals(savedPlan.getPlanId()))
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Failed to retrieve created plan"));
+    }
+
+    @Override
+    public PlanPlaces getPlanPlaces(Long planId) {
+        return PlanPlaces.fromEntity(planRepository.findById(planId)
+                .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId)));
+    }
+
+    @Override
+    public boolean hasRole(Long planId, Long userId, PlanMember.RoleType requiredRole) {
+        PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, userId);
+        if (planMember == null) {
+            return false;
+        }
+        // Check if the user's role meets or exceeds the required role
+        return planMember.getRole().ordinal() <= requiredRole.ordinal();
     }
 }
