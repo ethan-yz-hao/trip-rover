@@ -18,6 +18,7 @@ public interface PlanService {
     PlanSummary updatePlan(Long userId, Long planId, PlanUpdate request);
     PlanSummary addPlanMember(Long userId, Long planId, PlanMemberUpdate request);
     PlanSummary removePlanMember(Long userId, Long planId, PlanMemberDelete request);
+    PlanSummary updatePlanMemberRole(Long userId, Long planId, PlanMemberUpdate request);
     PlanPlaces getPlanPlaces(Long planId);
     boolean hasRole(Long userId,Long planId, PlanMember.RoleType requiredRole);
 }

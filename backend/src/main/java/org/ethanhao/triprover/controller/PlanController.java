@@ -21,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -199,6 +200,30 @@ public class PlanController {
         } catch (Exception e) {
             logger.error("Failed to remove member from plan", e);
             return new ResponseResult<>(500, "Failed to remove member from plan: " + e.getMessage());
+        }
+    }
+
+    @PatchMapping("/member/role")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<PlanSummary> updatePlanMemberRole(
+            @Valid @RequestBody PlanMemberUpdate request,
+            Authentication authentication
+    ) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUser().getId();
+        Long planId = request.getPlanId();
+
+        if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
+            logger.info("User {} is not authorized to update member role in plan {}", userId, planId);
+            return new ResponseResult<>(403, "User is not authorized to update member role in plan", null);
+        }
+
+        try {
+            PlanSummary planSummary = planService.updatePlanMemberRole(userId, planId, request);
+            return new ResponseResult<>(200, "Success", planSummary);
+        } catch (Exception e) {
+            logger.error("Failed to update member role in plan", e);
+            return new ResponseResult<>(500, "Failed to update member role in plan: " + e.getMessage());
         }
     }
 

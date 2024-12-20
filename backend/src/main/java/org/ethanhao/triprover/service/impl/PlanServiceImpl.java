@@ -168,6 +168,39 @@ public class PlanServiceImpl implements PlanService {
         return planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId);
     }
 
+    @Transactional
+    @Override
+    public PlanSummary updatePlanMemberRole(Long userId, Long planId, PlanMemberUpdate request) {
+        planRepository.findById(planId)
+        .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId));
+
+        User targetUser = userRepository.findByUserName(request.getUserName());
+
+        if (targetUser == null) {
+            throw new UserNotFoundException(request.getUserName());
+        }
+
+        if (targetUser.getId().equals(userId)) {
+            throw new IllegalArgumentException("Cannot update oneself's role");
+        }
+
+        PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, targetUser.getId());
+
+        if (planMember == null) {
+            throw new IllegalArgumentException("User not exist in the plan");
+        }
+
+        if (request.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
+            throw new IllegalArgumentException("Cannot update role to owner or above");
+        }
+
+        planMember.setRole(request.getRole());
+
+        planMemberRepository.save(planMember);
+
+        return planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId);
+    }
+
     @Override
     public PlanPlaces getPlanPlaces(Long planId) {
         return PlanPlaces.fromEntity(planRepository.findById(planId)
