@@ -8,6 +8,7 @@ import org.ethanhao.triprover.domain.PlanMember;
 import org.ethanhao.triprover.domain.PlanMemberId;
 import org.ethanhao.triprover.domain.User;
 import org.ethanhao.triprover.dto.PlanCreation;
+import org.ethanhao.triprover.dto.PlanMemberDelete;
 import org.ethanhao.triprover.dto.PlanMemberUpdate;
 import org.ethanhao.triprover.dto.PlanPlaces;
 import org.ethanhao.triprover.dto.PlanSummary;
@@ -132,6 +133,37 @@ public class PlanServiceImpl implements PlanService {
         planMember.setRole(request.getRole());
 
         planMemberRepository.save(planMember);
+
+        return planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId);
+    }
+
+    @Transactional
+    @Override
+    public PlanSummary removePlanMember(Long userId, Long planId, PlanMemberDelete request) {
+        Plan targetPlan = planRepository.findById(planId)
+        .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId));
+
+        User targetUser = userRepository.findByUserName(request.getUserName());
+
+        if (targetUser == null) {
+            throw new UserNotFoundException(request.getUserName());
+        }
+
+        if (targetUser.getId().equals(userId)) {
+            throw new IllegalArgumentException("Cannot remove oneself from the plan");
+        }
+
+        PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, targetUser.getId());
+
+        if (planMember == null) {
+            throw new IllegalArgumentException("User not exist in the plan");
+        }
+
+        if (planMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
+            throw new IllegalArgumentException("Cannot remove owner or above from the plan");
+        }
+
+        planMemberRepository.deleteById(new PlanMemberId(targetPlan, targetUser));
 
         return planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId);
     }
