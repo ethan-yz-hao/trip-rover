@@ -57,7 +57,7 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 Long userId = loginUser.getUser().getId();
 
                 // Check if the user is authorized for this planId
-                if (!planService.hasRole(planId, userId, PlanMember.RoleType.EDITOR)) {
+                if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
                     // User is not authorized, reject the subscription
                     throw new AccessDeniedException("User not authorized to subscribe to this plan");
                 }

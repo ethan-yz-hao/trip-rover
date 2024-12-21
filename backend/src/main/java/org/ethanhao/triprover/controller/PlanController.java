@@ -116,7 +116,7 @@ public class PlanController {
         Long userId = loginUser.getUser().getId();
 
         try {       
-            if (!planService.hasRole(planId, userId, PlanMember.RoleType.OWNER)) {  
+            if (!planService.hasRole(userId, planId, PlanMember.RoleType.OWNER)) {  
                 logger.info("User {} is not authorized to delete plan {}", userId, planId);
                 return new ResponseResult<>(403, "User is not authorized to delete plan", null);
             }
@@ -237,7 +237,7 @@ public class PlanController {
         Long userId = loginUser.getUser().getId();
 
         logger.info("User {} fetching plan {}", userId, planId);
-        if (!planService.hasRole(planId, userId, PlanMember.RoleType.VIEWER)) {
+        if (!planService.hasRole(userId, planId, PlanMember.RoleType.VIEWER)) {
             logger.info("User {} is not authorized to fetch plan {}", userId, planId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Forbidden
         }

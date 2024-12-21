@@ -44,7 +44,7 @@ public class PlanWebSocketController {
         Long userId = loginUser.getUser().getId();
 
         // Check if the user is authorized
-        if (!planService.hasRole(planId, userId, PlanMember.RoleType.EDITOR)) {
+        if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
             // Send an error message to the user
             logger.info("User {} is not authorized to update plan {}", userId, planId);
             PlanAckMessage ackMessage = new PlanAckMessage(updateMessage.getUpdateId(), PlanAckMessage.StatusType.ERROR, "User not authorized");
