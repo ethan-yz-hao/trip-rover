@@ -1,9 +1,10 @@
 package org.ethanhao.triprover.config;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 import org.ethanhao.triprover.filter.JwtAuthenticationTokenFilter;
-import org.ethanhao.triprover.handler.AccessDeniedHandlerImpl;
-import org.ethanhao.triprover.handler.AuthenticationEntryPointImpl;
 import org.ethanhao.triprover.filter.OAuth2LoginSuccessHandler;
+import org.ethanhao.triprover.handler.SecurityFilterExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,8 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity()
@@ -30,9 +29,7 @@ public class SecurityConfig {
     @Autowired
     JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
     @Autowired
-    AccessDeniedHandlerImpl accessDeniedHandler;
-    @Autowired
-    AuthenticationEntryPointImpl authenticationEntryPoint;
+    SecurityFilterExceptionHandler securityFilterExceptionHandler;
     @Autowired
     OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
@@ -68,8 +65,9 @@ public class SecurityConfig {
                 // Add JWT authentication filter
                 .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 // Configure exception handling
-                .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler)
-                        .authenticationEntryPoint(authenticationEntryPoint));
+                .exceptionHandling(exception -> 
+                        exception.accessDeniedHandler(securityFilterExceptionHandler)
+                        .authenticationEntryPoint(securityFilterExceptionHandler));
 
         return http.build();
     }

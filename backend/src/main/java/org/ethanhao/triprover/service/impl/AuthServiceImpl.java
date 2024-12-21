@@ -1,11 +1,14 @@
 package org.ethanhao.triprover.service.impl;
 
-import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Objects;
+
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.domain.User;
-import org.ethanhao.triprover.service.DBUserDetailsManager;
 import org.ethanhao.triprover.service.AuthService;
+import org.ethanhao.triprover.service.DBUserDetailsManager;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
 import org.slf4j.Logger;
@@ -15,15 +18,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Objects;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -54,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         Authentication authenticated = authenticationManager.authenticate(authenticationToken);
         // If the authentication fails, throw an exception
         if (Objects.isNull(authenticated)) {
-            throw new RuntimeException("Login failed");
+            throw new AuthenticationCredentialsNotFoundException("Login failed");
         }
         // Get user information in Authentication
         LoginUser loginUser = (LoginUser) authenticated.getPrincipal();

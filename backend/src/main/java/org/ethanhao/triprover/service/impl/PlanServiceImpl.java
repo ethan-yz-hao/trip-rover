@@ -13,8 +13,7 @@ import org.ethanhao.triprover.dto.PlanMemberUpdate;
 import org.ethanhao.triprover.dto.PlanPlaces;
 import org.ethanhao.triprover.dto.PlanSummary;
 import org.ethanhao.triprover.dto.PlanUpdate;
-import org.ethanhao.triprover.handler.ResourceNotFoundException;
-import org.ethanhao.triprover.handler.UserNotFoundException;
+import org.ethanhao.triprover.exception.PlanOperationException;
 import org.ethanhao.triprover.repository.PlanMemberRepository;
 import org.ethanhao.triprover.repository.PlanRepository;
 import org.ethanhao.triprover.repository.UserRepository;
@@ -23,8 +22,10 @@ import org.ethanhao.triprover.service.PlanUpdateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.ResourceAccessException;
 
 
 @Service
@@ -65,7 +66,7 @@ public class PlanServiceImpl implements PlanService {
     @Override
     public PlanSummary createPlan(Long userId, PlanCreation request) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException(userId));
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + userId));
 
         Plan plan = new Plan();
         plan.setPlanName(request.getPlanName());

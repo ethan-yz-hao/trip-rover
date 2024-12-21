@@ -1,5 +1,8 @@
 package org.ethanhao.triprover.service;
 
+import java.util.List;
+import java.util.Objects;
+
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.Role;
 import org.ethanhao.triprover.domain.User;
@@ -13,9 +16,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Objects;
 
 @Service
 public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPasswordService {
@@ -40,7 +40,7 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
 
         // if user not found, throw exception
         if (Objects.isNull(user)) {
-            throw new RuntimeException("Username Not Found");
+            throw new UsernameNotFoundException("Username Not Found");
         }
 
         // encapsulate user information in UserDetails implementation class
@@ -61,7 +61,7 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
     public User createUserWithRole(User user, List<String> roles) {
         // no duplicate user with status 0
         if (userRepository.findByUserNameAndDelFlag(user.getUserName(), 0) != null) {
-            throw new RuntimeException("User with the same username already exists");
+            throw new IllegalArgumentException("User with the same username already exists");
         }
         // set user type and status
         user.setType(0);

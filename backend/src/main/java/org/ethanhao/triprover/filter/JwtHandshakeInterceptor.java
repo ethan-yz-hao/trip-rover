@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -58,42 +61,39 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         }
 
         if (!StringUtils.hasText(token)) {
-            logger.warn("WebSocket connection attempt without JWT token");
-            return false; // Reject the handshake
+            throw new AuthenticationCredentialsNotFoundException("Missing JWT token");
         }
 
+        // Parse JWT token
+        String userId;
         try {
-            // Parse JWT token
+            // parse token
             Claims claims = jwtUtil.parseJWT(token);
-            String userId = claims.getSubject();
-
-            // Retrieve user from Redis
-            String redisKey = "login:" + userId;
-            LoginUser loginUser = redisCache.getCacheObject(redisKey);
-
-            if (Objects.isNull(loginUser)) {
-                logger.warn("WebSocket connection attempt with invalid JWT token");
-                return false; // Reject the handshake
-            }
-
-            // Create Authentication token
-            UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());
-
-            // Set the authentication in SecurityContext
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-
-            logger.info("User {} connected to WebSocket", loginUser.getUser().getUserName());
-
-            return true; // Accept the handshake
-
+            userId = claims.getSubject();
         } catch (ExpiredJwtException e) {
-            logger.error("JWT token expired: {}", e.getMessage());
+            throw new CredentialsExpiredException("Access token expired");
         } catch (Exception e) {
-            logger.error("Invalid JWT token: {}", e.getMessage());
+            throw new BadCredentialsException("Invalid token");
         }
 
-        return false; // Reject the handshake on failure
+        // Retrieve user from Redis
+        String redisKey = "login:" + userId;
+        LoginUser loginUser = redisCache.getCacheObject(redisKey);
+
+        if (Objects.isNull(loginUser)) {
+            throw new AuthenticationCredentialsNotFoundException("User not logged in");
+        }
+
+        // Create Authentication token
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());
+
+        // Set the authentication in SecurityContext
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+        logger.info("User {} connected to WebSocket", loginUser.getUser().getUserName());
+
+        return true; // Accept the handshake
     }
 
     @Override

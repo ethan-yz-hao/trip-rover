@@ -1,27 +1,31 @@
 package org.ethanhao.triprover.filter;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.servlet.http.Cookie;
+import java.io.IOException;
+import java.util.Objects;
+
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
-import io.jsonwebtoken.Claims;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.lang.NonNull;
 
-import java.io.IOException;
-import java.util.Objects;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
@@ -66,9 +70,9 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             Claims claims = jwtUtil.parseJWT(token);
             userId = claims.getSubject();
         } catch (ExpiredJwtException e) {
-            throw new RuntimeException("Access token expired");
+            throw new CredentialsExpiredException("Access token expired");
         } catch (Exception e) {
-            throw new RuntimeException("Invalid token");
+            throw new BadCredentialsException("Invalid token");
         }
 
         // get user info from redis
@@ -77,7 +81,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
         // check if loginUser is empty
         if (Objects.isNull(loginUser)) {
-            throw new RuntimeException("User not logged in");
+            throw new AuthenticationCredentialsNotFoundException("User not logged in");
         }
 
         // store user info in SecurityContextHolder (user info, permission info)
