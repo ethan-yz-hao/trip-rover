@@ -19,7 +19,7 @@ import org.springframework.lang.NonNull;
 @Component
 public class JwtChannelInterceptor implements ChannelInterceptor {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtHandshakeInterceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(JwtChannelInterceptor.class);
 
     private final PlanService planService;
 
@@ -57,7 +57,7 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 Long userId = loginUser.getUser().getId();
 
                 // Check if the user is authorized for this planId
-                if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
+                if (!planService.hasRole(userId, planId, PlanMember.RoleType.VIEWER)) {
                     // User is not authorized, reject the subscription
                     throw new AccessDeniedException("User not authorized to subscribe to this plan");
                 }
