@@ -1,22 +1,29 @@
 package org.ethanhao.triprover.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.*;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
@@ -33,12 +40,10 @@ public class User implements Serializable {
     private Long id;
 
     // User Name
-    @NotEmpty
     @Column(nullable = false, columnDefinition = "varchar(64)")
     private String userName;
 
     // Nickname
-    @NotEmpty
     @Column(nullable = false, columnDefinition = "varchar(64)")
     private String nickName;
 
@@ -47,14 +52,12 @@ public class User implements Serializable {
     private String password;
 
     // User type (0 normal user 1 system user)
-    @NotNull
     @Min(value = 0)
     @Max(value = 1)
     @Column(nullable = false, columnDefinition = "int default 0")
     private Integer type;
 
     // User status (0 normal 1 disabled)
-    @NotNull
     @Min(value = 0)
     @Max(value = 1)
     @Column(nullable = false, columnDefinition = "int default 0")

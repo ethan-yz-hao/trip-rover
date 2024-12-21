@@ -6,6 +6,7 @@ import java.util.Objects;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.Role;
 import org.ethanhao.triprover.domain.User;
+import org.ethanhao.triprover.exception.AuthOperationException;
 import org.ethanhao.triprover.repository.MenuRepository;
 import org.ethanhao.triprover.repository.RoleRepository;
 import org.ethanhao.triprover.repository.UserRepository;
@@ -61,7 +62,7 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
     public User createUserWithRole(User user, List<String> roles) {
         // no duplicate user with status 0
         if (userRepository.findByUserNameAndDelFlag(user.getUserName(), 0) != null) {
-            throw new IllegalArgumentException("User with the same username already exists");
+            throw new AuthOperationException("User with the same username already exists");
         }
         // set user type and status
         user.setType(0);

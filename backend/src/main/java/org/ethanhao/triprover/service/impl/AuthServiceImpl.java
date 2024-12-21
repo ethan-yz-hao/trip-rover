@@ -7,6 +7,12 @@ import java.util.Objects;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.domain.User;
+import org.ethanhao.triprover.dto.user.UserAuthDTO;
+import org.ethanhao.triprover.dto.user.UserRegisterDTO;
+import org.ethanhao.triprover.dto.user.UserResponseDTO;
+import org.ethanhao.triprover.dto.user.UserUpdateDTO;
+import org.ethanhao.triprover.mapper.UserMapper;
+import org.ethanhao.triprover.repository.UserRepository;
 import org.ethanhao.triprover.service.AuthService;
 import org.ethanhao.triprover.service.DBUserDetailsManager;
 import org.ethanhao.triprover.utils.JwtUtil;
@@ -23,6 +29,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,6 +46,9 @@ public class AuthServiceImpl implements AuthService {
     DBUserDetailsManager dbUserDetailsManager;
 
     @Autowired
+    UserRepository userRepository;
+    
+    @Autowired
     RedisCache redisCache;
 
     @Autowired
@@ -47,8 +57,12 @@ public class AuthServiceImpl implements AuthService {
     @Value("${JWT_TTL}")
     private Long jwtTtl;
 
+    @Autowired
+    private UserMapper userMapper;
+
     @Override
-    public ResponseResult<Object> login(User user, HttpServletResponse response) {
+    public ResponseResult<Object> login(UserAuthDTO loginRequest, HttpServletResponse response) {
+        User user = userMapper.userAuthDtoToUser(loginRequest);
         // Encapsulate the Authentication object
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword());
@@ -102,18 +116,23 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseResult<Object> register(User user) {
-        try {
-            dbUserDetailsManager.createUserWithRole(user, Arrays.asList("user"));
-        } catch  (Exception e) {
-            return new ResponseResult<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Failed to register user: " + e.getMessage());
-        }
-        return new ResponseResult<>(HttpStatus.OK.value(), "Register successful");
+    public ResponseResult<UserResponseDTO> register(UserRegisterDTO registerRequest) {
+        User user = userMapper.userRegisterDtoToUser(registerRequest);
+        dbUserDetailsManager.createUserWithRole(user, Arrays.asList("user"));
+        return new ResponseResult<>(HttpStatus.OK.value(), "Register successful", userMapper.toResponseDto(user));
     }
 
     @Override
-    public ResponseResult<Object> updateUser(User user) {
-        return null;
+    public ResponseResult<UserResponseDTO> updateUser(Long userId, UserUpdateDTO updateRequest) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        userMapper.updateUserFromDto(updateRequest, user);
+        User updatedUser = userRepository.save(user);
+        return new ResponseResult<>(
+            HttpStatus.OK.value(),
+            "Update successful",
+            userMapper.toResponseDto(updatedUser)
+        );
     }
 
     @Override

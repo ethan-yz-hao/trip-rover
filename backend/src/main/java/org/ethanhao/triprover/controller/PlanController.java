@@ -15,8 +15,6 @@ import org.ethanhao.triprover.service.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -55,14 +53,8 @@ public class PlanController {
             loginUser.getUser().getUserName(), 
             userId);
         
-        try {
-            List<PlanSummary> planSummaries = planService.getPlanSummaries(userId);
-            return new ResponseResult<>(200, "Success", planSummaries);
-        } catch (Exception e) {
-            logger.error("Failed to retrieve user plan summaries", e);
-            return new ResponseResult<>(500, 
-                "Failed to retrieve user plan summaries: " + e.getMessage());
-        }
+        List<PlanSummary> planSummaries = planService.getPlanSummaries(userId);
+        return new ResponseResult<>(200, "Success", planSummaries);
     }
 
     @GetMapping("/{planId}")
@@ -74,14 +66,8 @@ public class PlanController {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
 
-        try  {
-            PlanSummary planSummary = planService.getPlanSummary(userId, planId);
-            return new ResponseResult<>(200, "Success", planSummary);
-        } catch (Exception e) {
-            logger.error("Failed to retrieve plan summary for user {} and plan {}", userId, planId, e);
-            return new ResponseResult<>(500, 
-                "Failed to retrieve plan summary: " + e.getMessage());
-        }
+        PlanSummary planSummary = planService.getPlanSummary(userId, planId);
+        return new ResponseResult<>(200, "Success", planSummary);
     }
     
     @PostMapping()
@@ -97,14 +83,8 @@ public class PlanController {
             loginUser.getUser().getUserName(), 
             userId);
         
-        try {
-            PlanSummary planSummary = planService.createPlan(userId, request);
-            return new ResponseResult<>(200, "Success", planSummary);
-        } catch (Exception e) {
-            logger.error("Failed to create plan", e);
-            return new ResponseResult<>(500, 
-                "Failed to create plan: " + e.getMessage());
-        }
+        PlanSummary planSummary = planService.createPlan(userId, request);
+        return new ResponseResult<>(200, "Success", planSummary);
     }
 
     @DeleteMapping("/{planId}")
@@ -116,19 +96,13 @@ public class PlanController {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
 
-        try {       
-            if (!planService.hasRole(userId, planId, PlanMember.RoleType.OWNER)) {  
-                logger.info("User {} is not authorized to delete plan {}", userId, planId);
-                return new ResponseResult<>(403, "User is not authorized to delete plan", null);
-            }
-
-            planService.deletePlan(planId);
-            return new ResponseResult<>(200, "Success", null);
-        } catch (Exception e) {
-            logger.error("Failed to delete plan", e);
-            return new ResponseResult<>(500, 
-                "Failed to delete plan: " + e.getMessage());
+        if (!planService.hasRole(userId, planId, PlanMember.RoleType.OWNER)) {  
+            logger.info("User {} is not authorized to delete plan {}", userId, planId);
+            throw new AccessDeniedException("User is not authorized to delete plan");
         }
+
+        planService.deletePlan(planId);
+        return new ResponseResult<>(200, "Success", null);
     }
 
     @PutMapping("/{planId}")
@@ -143,17 +117,11 @@ public class PlanController {
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
             logger.info("User {} is not authorized to update plan {}", userId, planId);
-            return new ResponseResult<>(403, "User is not authorized to update plan", null);
+            throw new AccessDeniedException("User is not authorized to delete plan");
         }
 
-        try {
-            PlanSummary planSummary = planService.updatePlan(userId, planId, request);
-            return new ResponseResult<>(200, "Success", planSummary);
-        } catch (Exception e) {
-            logger.error("Failed to update plan", e);
-            return new ResponseResult<>(500, 
-                "Failed to update plan: " + e.getMessage());
-        }
+        PlanSummary planSummary = planService.updatePlan(userId, planId, request);
+        return new ResponseResult<>(200, "Success", planSummary);
     }
 
     @PostMapping("/member")
@@ -168,16 +136,11 @@ public class PlanController {
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
             logger.info("User {} is not authorized to add member to plan {}", userId, planId);
-            return new ResponseResult<>(403, "User is not authorized to add member to plan", null);
+            throw new AccessDeniedException("User is not authorized to add member to plan");
         }
 
-        try {
-            PlanSummary planSummary = planService.addPlanMember(userId, planId, request);
-            return new ResponseResult<>(200, "Success", planSummary);
-        } catch (Exception e) {
-            logger.error("Failed to add member to plan", e);
-            return new ResponseResult<>(500, "Failed to add member to plan: " + e.getMessage());
-        }
+        PlanSummary planSummary = planService.addPlanMember(userId, planId, request);
+        return new ResponseResult<>(200, "Success", planSummary);
     }
 
     @DeleteMapping("/member")
@@ -192,16 +155,11 @@ public class PlanController {
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
             logger.info("User {} is not authorized to remove member from plan {}", userId, planId);
-            return new ResponseResult<>(403, "User is not authorized to remove member from plan", null);
+            throw new AccessDeniedException("User is not authorized to remove member from plan");
         }
 
-        try {
-            PlanSummary planSummary = planService.removePlanMember(userId, planId, request);
-            return new ResponseResult<>(200, "Success", planSummary);
-        } catch (Exception e) {
-            logger.error("Failed to remove member from plan", e);
-            return new ResponseResult<>(500, "Failed to remove member from plan: " + e.getMessage());
-        }
+        PlanSummary planSummary = planService.removePlanMember(userId, planId, request);
+        return new ResponseResult<>(200, "Success", planSummary);
     }
 
     @PatchMapping("/member/role")
@@ -216,21 +174,16 @@ public class PlanController {
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
             logger.info("User {} is not authorized to update member role in plan {}", userId, planId);
-            return new ResponseResult<>(403, "User is not authorized to update member role in plan", null);
+            throw new AccessDeniedException("User is not authorized to update member role in plan");
         }
 
-        try {
-            PlanSummary planSummary = planService.updatePlanMemberRole(userId, planId, request);
-            return new ResponseResult<>(200, "Success", planSummary);
-        } catch (Exception e) {
-            logger.error("Failed to update member role in plan", e);
-            return new ResponseResult<>(500, "Failed to update member role in plan: " + e.getMessage());
-        }
+        PlanSummary planSummary = planService.updatePlanMemberRole(userId, planId, request);
+        return new ResponseResult<>(200, "Success", planSummary);
     }
 
     @GetMapping("/{planId}/places")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseEntity<PlanPlaces> getPlanPlace(
+    public ResponseResult<PlanPlaces> getPlanPlace(
             @PathVariable Long planId,
             Authentication authentication
     ) {
@@ -240,11 +193,11 @@ public class PlanController {
         logger.info("User {} fetching plan {}", userId, planId);
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.VIEWER)) {
             logger.info("User {} is not authorized to fetch plan {}", userId, planId);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Forbidden
+            throw new AccessDeniedException("User is not authorized to fetch plan");
         }
 
         PlanPlaces planPlaces = planService.getPlanPlaces(planId);
-        return ResponseEntity.ok(planPlaces);
+        return new ResponseResult<>(200, "Success", planPlaces);
     }
 
 }

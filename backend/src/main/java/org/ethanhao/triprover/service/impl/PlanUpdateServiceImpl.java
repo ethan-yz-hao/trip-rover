@@ -1,17 +1,19 @@
 package org.ethanhao.triprover.service.impl;
 
-import jakarta.persistence.OptimisticLockException;
-import jakarta.transaction.Transactional;
+import java.util.Objects;
+
 import org.ethanhao.triprover.domain.Plan;
 import org.ethanhao.triprover.domain.PlanPlace;
 import org.ethanhao.triprover.domain.PlanUpdateMessage;
-import org.ethanhao.triprover.handler.ResourceNotFoundException;
+import org.ethanhao.triprover.exception.PlanOperationException;
 import org.ethanhao.triprover.repository.PlanRepository;
 import org.ethanhao.triprover.service.PlanUpdateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 
-import java.util.Objects;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.transaction.Transactional;
 
 
 @Service
@@ -28,7 +30,7 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
     @Transactional
     public Long updatePlanWithMessage(Long planId, PlanUpdateMessage updateMessage) {
         Plan plan = planRepository.findById(planId)
-                .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId));
+                .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
 
         // Validate version
         if (!Objects.equals(plan.getVersion(), updateMessage.getVersion())) {
@@ -50,7 +52,7 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
                 updatePlace(plan, updateMessage);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown action: " + updateMessage.getAction());
+                throw new PlanOperationException("Unknown action: " + updateMessage.getAction());
         }
 
         // Increment the version
@@ -71,7 +73,7 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
         PlanPlace placeToMove = plan.getPlaces().stream()
                 .filter(place -> place.getPlaceId().equals(placeId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid placeId for reorder: " + placeId));
+                .orElseThrow(() -> new PlanOperationException("Invalid placeId for reorder: " + placeId));
         plan.getPlaces().remove(placeToMove);
 
         if (targetPlaceId != null && !targetPlaceId.isEmpty()) {
@@ -86,7 +88,7 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
             }
 
             if (targetIndex == -1) {
-                throw new IllegalArgumentException("Invalid targetPlaceId for reorder: " + targetPlaceId);
+                throw new PlanOperationException("Invalid targetPlaceId for reorder: " + targetPlaceId);
             }
 
             plan.getPlaces().add(targetIndex, placeToMove);
@@ -124,7 +126,7 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
         PlanPlace placeToRemove = plan.getPlaces().stream()
                 .filter(place -> place.getPlaceId().equals(placeId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid placeId for removal: " + placeId));
+                .orElseThrow(() -> new PlanOperationException("Invalid placeId for removal: " + placeId));
 
         plan.getPlaces().remove(placeToRemove);
 
@@ -141,7 +143,7 @@ public class PlanUpdateServiceImpl implements PlanUpdateService {
         PlanPlace placeToUpdate = plan.getPlaces().stream()
                 .filter(place -> place.getPlaceId().equals(placeId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid placeId for update: " + placeId));
+                .orElseThrow(() -> new PlanOperationException("Invalid placeId for update: " + placeId));
 
         placeToUpdate.setGooglePlaceId(updateMessage.getGooglePlaceId());
         placeToUpdate.setStaySeconds(updateMessage.getStaySeconds());

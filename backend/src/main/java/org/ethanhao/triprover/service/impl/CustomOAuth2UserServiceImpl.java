@@ -1,6 +1,9 @@
 package org.ethanhao.triprover.service.impl;
 
-import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.Role;
 import org.ethanhao.triprover.domain.User;
@@ -15,9 +18,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
+import jakarta.transaction.Transactional;
 
 @Service
 public class CustomOAuth2UserServiceImpl implements CustomOAuth2UserService {

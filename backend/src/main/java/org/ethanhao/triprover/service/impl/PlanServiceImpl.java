@@ -94,7 +94,7 @@ public class PlanServiceImpl implements PlanService {
     @Override
     public PlanSummary updatePlan(Long userId, Long planId, PlanUpdate request) {
         Plan plan = planRepository.findById(planId)
-                .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId));
+                .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
         
         if (request.getPlanName() != null) {
             plan.setPlanName(request.getPlanName());
@@ -109,24 +109,24 @@ public class PlanServiceImpl implements PlanService {
     @Override
     public PlanSummary addPlanMember(Long userId, Long planId, PlanMemberUpdate request) {
         Plan targetPlan = planRepository.findById(planId)
-        .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId));
+        .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
 
         User targetUser = userRepository.findByUserName(request.getUserName());
 
         if (targetUser == null) {
-            throw new UserNotFoundException(request.getUserName());
+            throw new UsernameNotFoundException("User not found with username: " + request.getUserName());
         }
 
         if (targetUser.getId().equals(userId)) {
-            throw new IllegalArgumentException("Cannot update member of oneself");
+            throw new PlanOperationException("Cannot update member of oneself");
         }
 
         if (planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId) != null) {
-            throw new IllegalArgumentException("User already added to the plan");
+            throw new PlanOperationException("User already added to the plan");
         }
 
         if (request.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
-            throw new IllegalArgumentException("Cannot add owner or above to the plan");
+            throw new PlanOperationException("Cannot add owner or above to the plan");
         }
 
         PlanMember planMember = new PlanMember();
@@ -142,26 +142,26 @@ public class PlanServiceImpl implements PlanService {
     @Override
     public PlanSummary removePlanMember(Long userId, Long planId, PlanMemberDelete request) {
         Plan targetPlan = planRepository.findById(planId)
-        .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId));
+        .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
 
         User targetUser = userRepository.findByUserName(request.getUserName());
 
         if (targetUser == null) {
-            throw new UserNotFoundException(request.getUserName());
+            throw new UsernameNotFoundException("User not found with username: " + request.getUserName());
         }
 
         if (targetUser.getId().equals(userId)) {
-            throw new IllegalArgumentException("Cannot remove oneself from the plan");
+            throw new PlanOperationException("Cannot remove oneself from the plan");
         }
 
         PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, targetUser.getId());
 
         if (planMember == null) {
-            throw new IllegalArgumentException("User not exist in the plan");
+            throw new PlanOperationException("User not exist in the plan");
         }
 
         if (planMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
-            throw new IllegalArgumentException("Cannot remove owner or above from the plan");
+            throw new PlanOperationException("Cannot remove owner or above from the plan");
         }
 
         planMemberRepository.deleteById(new PlanMemberId(targetPlan, targetUser));
@@ -173,26 +173,26 @@ public class PlanServiceImpl implements PlanService {
     @Override
     public PlanSummary updatePlanMemberRole(Long userId, Long planId, PlanMemberUpdate request) {
         planRepository.findById(planId)
-        .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId));
+        .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
 
         User targetUser = userRepository.findByUserName(request.getUserName());
 
         if (targetUser == null) {
-            throw new UserNotFoundException(request.getUserName());
+            throw new UsernameNotFoundException("User not found with username: " + request.getUserName());
         }
 
         if (targetUser.getId().equals(userId)) {
-            throw new IllegalArgumentException("Cannot update oneself's role");
+            throw new PlanOperationException("Cannot update oneself's role");
         }
 
         PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, targetUser.getId());
 
         if (planMember == null) {
-            throw new IllegalArgumentException("User not exist in the plan");
+            throw new PlanOperationException("User not exist in the plan");
         }
 
         if (request.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
-            throw new IllegalArgumentException("Cannot update role to owner or above");
+            throw new PlanOperationException("Cannot update role to owner or above");
         }
 
         planMember.setRole(request.getRole());
@@ -205,7 +205,7 @@ public class PlanServiceImpl implements PlanService {
     @Override
     public PlanPlaces getPlanPlaces(Long planId) {
         return PlanPlaces.fromEntity(planRepository.findById(planId)
-                .orElseThrow(() -> new ResourceNotFoundException("Plan not found with ID: " + planId)));
+                .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId)));
     }
 
     @Override

@@ -35,3 +35,9 @@ export interface PlanAckMessage {
     status: 'OK' | 'ERROR';
     errorMessage?: string;
 }
+
+export interface ResponseResult<T> {
+    code: number;
+    msg: string;
+    data: T;
+}

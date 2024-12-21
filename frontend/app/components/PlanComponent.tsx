@@ -1,6 +1,6 @@
 'use client';
 import React, {useState, useEffect, useRef} from 'react';
-import {Place, PlanPlaces, PlanAckMessage, PlanUpdateMessage} from '@/app/model';
+import {Place, PlanPlaces, PlanAckMessage, PlanUpdateMessage, ResponseResult} from '@/app/model';
 import {DragDropContext, Droppable, Draggable, DropResult} from '@hello-pangea/dnd';
 import WebSocketService from '@/app/webSocketService';
 import {v4 as uuidv4} from 'uuid';
@@ -30,11 +30,11 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     // fetch the plan places data
     const fetchPlanData = async () => {
         try {
-            const response = await axios.get<PlanPlaces>(`${backendUrl}/api/plan/${planId}/places`, {
+            const response = await axios.get<ResponseResult<PlanPlaces>>(`${backendUrl}/api/plan/${planId}/places`, {
                 withCredentials: true,
             });
-            setPlanPlaces(response.data);
-            planPlacesRef.current = response.data;
+            setPlanPlaces(response.data.data);
+            planPlacesRef.current = response.data.data;
         } catch (error) {
             log.error('Error fetching plan:', error);
             alert('Failed to load the plan. Please try again.');

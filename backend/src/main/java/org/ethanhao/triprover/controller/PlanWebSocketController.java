@@ -4,6 +4,7 @@ import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.PlanAckMessage;
 import org.ethanhao.triprover.domain.PlanMember;
 import org.ethanhao.triprover.domain.PlanUpdateMessage;
+import org.ethanhao.triprover.exception.PlanOperationException;
 import org.ethanhao.triprover.service.PlanService;
 import org.ethanhao.triprover.service.PlanUpdateService;
 import org.slf4j.Logger;
@@ -73,7 +74,7 @@ public class PlanWebSocketController {
             // Send an error message to the user
             PlanAckMessage ackMessage = new PlanAckMessage(updateMessage.getUpdateId(), PlanAckMessage.StatusType.ERROR, "Version mismatch");
             messagingTemplate.convertAndSend("/topic/plan/" + planId + "/ack/" + updateMessage.getClientId(), ackMessage);
-        } catch (IllegalArgumentException e) {
+        } catch (PlanOperationException e) {
             // Handle illegal argument exceptions
             logger.error("Illegal argument exception when updating plan {} by user {}: {}", planId, userId, e.getMessage());
 

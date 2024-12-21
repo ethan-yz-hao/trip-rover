@@ -14,9 +14,10 @@ RESTful
     Plan
         get plan
         check role
-    User
         get plans and roles of user (projection interface)
-
+Exception with global exception handler and custom exception class
+DTO for validation
+    User
 
 ## Local Development
 Start the application
@@ -28,3 +29,9 @@ Down and remove volumes
 ```
 docker-compose down -v
 ```
+
+TODO:
+- user controller (RESTful): login, logout, register, update user, delete user
+- websocket connection limit
+- dual database: note on how to sync
+- spring cloud
