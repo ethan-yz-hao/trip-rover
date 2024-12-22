@@ -125,7 +125,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
     const applyLocalUpdate = (currentPlan: PlanPlaces, updateMessage: PlanUpdateMessage): PlanPlaces | null => {
         switch (updateMessage.action) {
             case 'REORDER':
-                const { placeId, targetPlaceId } = updateMessage;
+                const { placeId, targetPlaceId, version } = updateMessage;
                 const placeToMoveIndex = currentPlan.places.findIndex(place => place.placeId === placeId);
                 if (placeToMoveIndex === -1) {
                     log.error(`Place with ID ${placeId} not found for REORDER`);
@@ -151,7 +151,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
 
                 updatedPlaces.splice(targetIndex, 0, placeToMove); // Insert at new position
 
-                return { ...currentPlan, places: updatedPlaces };
+                return { ...currentPlan, places: updatedPlaces, version};
 
             case 'ADD':
                 if (updateMessage.placeId && updateMessage.googlePlaceId) {
@@ -161,14 +161,14 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                         staySeconds: updateMessage.staySeconds || 1800,
 
                     };
-                    return { ...currentPlan, places: [...currentPlan.places, newPlace] };
+                    return { ...currentPlan, places: [...currentPlan.places, newPlace], version: updateMessage.version };
                 }
                 return null;
 
             case 'REMOVE':
                 if (updateMessage.placeId) {
                     const filteredPlaces = currentPlan.places.filter(place => place.placeId !== updateMessage.placeId);
-                    return { ...currentPlan, places: filteredPlaces };
+                    return { ...currentPlan, places: filteredPlaces, version: updateMessage.version };
                 }
                 return null;
 
@@ -184,7 +184,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({planId}) => {
                         }
                         return place;
                     });
-                    return { ...currentPlan, places: updatedPlaces };
+                    return { ...currentPlan, places: updatedPlaces, version: updateMessage.version };
                 }
                 return null;
             default:
