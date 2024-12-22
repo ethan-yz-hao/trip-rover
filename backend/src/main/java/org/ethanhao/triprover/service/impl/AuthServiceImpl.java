@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -61,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
     private UserMapper userMapper;
 
     @Override
-    public ResponseResult<Object> login(UserAuthDTO loginRequest, HttpServletResponse response) {
+    public void login(UserAuthDTO loginRequest, HttpServletResponse response) {
         User user = userMapper.userAuthDtoToUser(loginRequest);
         // Encapsulate the Authentication object
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -92,11 +91,10 @@ public class AuthServiceImpl implements AuthService {
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         logger.info("User {} logged in", loginUser.getUser().getUserName());
-        return new ResponseResult<>(HttpStatus.OK.value(), "Login successful");
     }
 
     @Override
-    public ResponseResult<Object> logout(HttpServletResponse response) {
+    public void logout(HttpServletResponse response) {
         // Get the user id from SecurityContextHolder
         UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
@@ -112,27 +110,22 @@ public class AuthServiceImpl implements AuthService {
                 .sameSite("Lax") // Adjust as needed (Strict, Lax, None)
                 .build();
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        return new ResponseResult<>(HttpStatus.OK.value(), "Logout successful");
     }
 
     @Override
-    public ResponseResult<UserResponseDTO> register(UserRegisterDTO registerRequest) {
+    public UserResponseDTO register(UserRegisterDTO registerRequest) {
         User user = userMapper.userRegisterDtoToUser(registerRequest);
         dbUserDetailsManager.createUserWithRole(user, Arrays.asList("user"));
-        return new ResponseResult<>(HttpStatus.OK.value(), "Register successful", userMapper.toResponseDto(user));
+        return userMapper.toResponseDto(user);
     }
 
     @Override
-    public ResponseResult<UserResponseDTO> updateUser(Long userId, UserUpdateDTO updateRequest) {
+    public UserResponseDTO updateUser(Long userId, UserUpdateDTO updateRequest) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         userMapper.updateUserFromDto(updateRequest, user);
         User updatedUser = userRepository.save(user);
-        return new ResponseResult<>(
-            HttpStatus.OK.value(),
-            "Update successful",
-            userMapper.toResponseDto(updatedUser)
-        );
+        return userMapper.toResponseDto(updatedUser);
     }
 
     @Override

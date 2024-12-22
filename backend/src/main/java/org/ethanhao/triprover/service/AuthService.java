@@ -9,13 +9,13 @@ import org.ethanhao.triprover.dto.user.UserResponseDTO;
 import org.ethanhao.triprover.dto.user.UserUpdateDTO;
 
 public interface AuthService {
-    ResponseResult<Object> login(UserAuthDTO loginRequest, HttpServletResponse response);
+    void login(UserAuthDTO loginRequest, HttpServletResponse response);
 
-    ResponseResult<Object> logout(HttpServletResponse response);
+    void logout(HttpServletResponse response);
 
-    ResponseResult<UserResponseDTO> register(UserRegisterDTO registerRequest);
+    UserResponseDTO register(UserRegisterDTO registerRequest);
 
-    ResponseResult<UserResponseDTO> updateUser(Long userId, UserUpdateDTO updateRequest);
+    UserResponseDTO updateUser(Long userId, UserUpdateDTO updateRequest);
 
     ResponseResult<Object> deleteUser(User user);
 }
