@@ -5,12 +5,12 @@ import java.util.List;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.PlanMember;
 import org.ethanhao.triprover.domain.ResponseResult;
-import org.ethanhao.triprover.dto.PlanCreation;
-import org.ethanhao.triprover.dto.PlanMemberDelete;
-import org.ethanhao.triprover.dto.PlanMemberUpdate;
-import org.ethanhao.triprover.dto.PlanPlaces;
-import org.ethanhao.triprover.dto.PlanSummary;
-import org.ethanhao.triprover.dto.PlanUpdate;
+import org.ethanhao.triprover.dto.plan.PlanBaseDTO;
+import org.ethanhao.triprover.dto.plan.PlanPlacesResponseDTO;
+import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
+import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
+import org.ethanhao.triprover.dto.plan.member.PlanMemberBaseDTO;
+import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 import org.ethanhao.triprover.service.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,7 +44,7 @@ public class PlanController {
 
     @GetMapping()
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<List<PlanSummary>> getPlanSummaries(Authentication authentication) {
+    public ResponseResult<List<PlanSummaryResponseDTO>> getPlanSummaries(Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
         
@@ -53,27 +52,27 @@ public class PlanController {
             loginUser.getUser().getUserName(), 
             userId);
         
-        List<PlanSummary> planSummaries = planService.getPlanSummaries(userId);
+        List<PlanSummaryResponseDTO> planSummaries = planService.getPlanSummaries(userId);
         return new ResponseResult<>(200, "Success", planSummaries);
     }
 
     @GetMapping("/{planId}")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummary> getPlanSummary(
+    public ResponseResult<PlanSummaryResponseDTO> getPlanSummary(
             @PathVariable Long planId,
             Authentication authentication
     ) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
 
-        PlanSummary planSummary = planService.getPlanSummary(userId, planId);
+        PlanSummaryResponseDTO planSummary = planService.getPlanSummary(userId, planId);
         return new ResponseResult<>(200, "Success", planSummary);
     }
     
     @PostMapping()
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummary> createPlan(
-            @Valid @RequestBody PlanCreation request,
+    public ResponseResult<PlanSummaryResponseDTO> createPlan(
+            @Valid @RequestBody PlanBaseDTO request,
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
@@ -83,7 +82,7 @@ public class PlanController {
             loginUser.getUser().getUserName(), 
             userId);
         
-        PlanSummary planSummary = planService.createPlan(userId, request);
+        PlanSummaryResponseDTO planSummary = planService.createPlan(userId, request);
         return new ResponseResult<>(200, "Success", planSummary);
     }
 
@@ -105,11 +104,11 @@ public class PlanController {
         return new ResponseResult<>(200, "Success", null);
     }
 
-    @PutMapping("/{planId}")
+    @PatchMapping("/{planId}")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummary> updatePlan(
+    public ResponseResult<PlanSummaryResponseDTO> updatePlan(
             @PathVariable Long planId,
-            @Valid @RequestBody PlanUpdate request,
+            @Valid @RequestBody PlanUpdateDTO request,
             Authentication authentication
     ) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
@@ -120,14 +119,14 @@ public class PlanController {
             throw new AccessDeniedException("User is not authorized to delete plan");
         }
 
-        PlanSummary planSummary = planService.updatePlan(userId, planId, request);
+        PlanSummaryResponseDTO planSummary = planService.updatePlan(userId, planId, request);
         return new ResponseResult<>(200, "Success", planSummary);
     }
 
     @PostMapping("/member")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummary> addPlanMember(
-            @Valid @RequestBody PlanMemberUpdate request,
+    public ResponseResult<PlanSummaryResponseDTO> addPlanMember(
+            @Valid @RequestBody PlanMemberUpdateDTO request,
             Authentication authentication
     ) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
@@ -139,14 +138,14 @@ public class PlanController {
             throw new AccessDeniedException("User is not authorized to add member to plan");
         }
 
-        PlanSummary planSummary = planService.addPlanMember(userId, planId, request);
+        PlanSummaryResponseDTO planSummary = planService.addPlanMember(userId, request);
         return new ResponseResult<>(200, "Success", planSummary);
     }
 
     @DeleteMapping("/member")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummary> removePlanMember(
-            @Valid @RequestBody PlanMemberDelete request,
+    public ResponseResult<PlanSummaryResponseDTO> removePlanMember(
+            @Valid @RequestBody PlanMemberBaseDTO request,
             Authentication authentication
     ) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
@@ -158,14 +157,14 @@ public class PlanController {
             throw new AccessDeniedException("User is not authorized to remove member from plan");
         }
 
-        PlanSummary planSummary = planService.removePlanMember(userId, planId, request);
+        PlanSummaryResponseDTO planSummary = planService.removePlanMember(userId, request);
         return new ResponseResult<>(200, "Success", planSummary);
     }
 
     @PatchMapping("/member/role")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummary> updatePlanMemberRole(
-            @Valid @RequestBody PlanMemberUpdate request,
+    public ResponseResult<PlanSummaryResponseDTO> updatePlanMemberRole(
+            @Valid @RequestBody PlanMemberUpdateDTO request,
             Authentication authentication
     ) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
@@ -177,13 +176,13 @@ public class PlanController {
             throw new AccessDeniedException("User is not authorized to update member role in plan");
         }
 
-        PlanSummary planSummary = planService.updatePlanMemberRole(userId, planId, request);
+        PlanSummaryResponseDTO planSummary = planService.updatePlanMemberRole(userId, request);
         return new ResponseResult<>(200, "Success", planSummary);
     }
 
     @GetMapping("/{planId}/places")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanPlaces> getPlanPlace(
+    public ResponseResult<PlanPlacesResponseDTO> getPlanPlace(
             @PathVariable Long planId,
             Authentication authentication
     ) {
@@ -196,7 +195,7 @@ public class PlanController {
             throw new AccessDeniedException("User is not authorized to fetch plan");
         }
 
-        PlanPlaces planPlaces = planService.getPlanPlaces(planId);
+        PlanPlacesResponseDTO planPlaces = planService.getPlanPlaces(planId);
         return new ResponseResult<>(200, "Success", planPlaces);
     }
 

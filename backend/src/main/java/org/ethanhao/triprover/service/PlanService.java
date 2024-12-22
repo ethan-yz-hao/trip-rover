@@ -3,22 +3,22 @@ package org.ethanhao.triprover.service;
 import java.util.List;
 
 import org.ethanhao.triprover.domain.PlanMember;
-import org.ethanhao.triprover.dto.PlanCreation;
-import org.ethanhao.triprover.dto.PlanMemberDelete;
-import org.ethanhao.triprover.dto.PlanMemberUpdate;
-import org.ethanhao.triprover.dto.PlanPlaces;
-import org.ethanhao.triprover.dto.PlanSummary;
-import org.ethanhao.triprover.dto.PlanUpdate;
+import org.ethanhao.triprover.dto.plan.PlanBaseDTO;
+import org.ethanhao.triprover.dto.plan.PlanPlacesResponseDTO;
+import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
+import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
+import org.ethanhao.triprover.dto.plan.member.PlanMemberBaseDTO;
+import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 
 public interface PlanService {
-    List<PlanSummary> getPlanSummaries(Long userId);
-    PlanSummary getPlanSummary(Long userId, Long planId);
-    PlanSummary createPlan(Long userId, PlanCreation request);
+    List<PlanSummaryResponseDTO> getPlanSummaries(Long userId);
+    PlanSummaryResponseDTO getPlanSummary(Long userId, Long planId);
+    PlanSummaryResponseDTO createPlan(Long userId, PlanBaseDTO request);
     void deletePlan(Long planId);
-    PlanSummary updatePlan(Long userId, Long planId, PlanUpdate request);
-    PlanSummary addPlanMember(Long userId, Long planId, PlanMemberUpdate request);
-    PlanSummary removePlanMember(Long userId, Long planId, PlanMemberDelete request);
-    PlanSummary updatePlanMemberRole(Long userId, Long planId, PlanMemberUpdate request);
-    PlanPlaces getPlanPlaces(Long planId);
+    PlanSummaryResponseDTO updatePlan(Long userId, Long planId, PlanUpdateDTO request);
+    PlanSummaryResponseDTO addPlanMember(Long userId, PlanMemberUpdateDTO request);
+    PlanSummaryResponseDTO removePlanMember(Long userId, PlanMemberBaseDTO request);
+    PlanSummaryResponseDTO updatePlanMemberRole(Long userId, PlanMemberUpdateDTO request);
+    PlanPlacesResponseDTO getPlanPlaces(Long planId);
     boolean hasRole(Long userId,Long planId, PlanMember.RoleType requiredRole);
 }

@@ -1,19 +1,20 @@
 package org.ethanhao.triprover.service.impl;
 
-import java.util.HashSet;
 import java.util.List;
 
 import org.ethanhao.triprover.domain.Plan;
 import org.ethanhao.triprover.domain.PlanMember;
 import org.ethanhao.triprover.domain.PlanMemberId;
 import org.ethanhao.triprover.domain.User;
-import org.ethanhao.triprover.dto.PlanCreation;
-import org.ethanhao.triprover.dto.PlanMemberDelete;
-import org.ethanhao.triprover.dto.PlanMemberUpdate;
-import org.ethanhao.triprover.dto.PlanPlaces;
-import org.ethanhao.triprover.dto.PlanSummary;
-import org.ethanhao.triprover.dto.PlanUpdate;
+import org.ethanhao.triprover.dto.plan.PlanBaseDTO;
+import org.ethanhao.triprover.dto.plan.PlanPlacesResponseDTO;
+import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
+import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
+import org.ethanhao.triprover.dto.plan.member.PlanMemberBaseDTO;
+import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 import org.ethanhao.triprover.exception.PlanOperationException;
+import org.ethanhao.triprover.mapper.PlanMapper;
+import org.ethanhao.triprover.mapper.PlanMemberMapper;
 import org.ethanhao.triprover.repository.PlanMemberRepository;
 import org.ethanhao.triprover.repository.PlanRepository;
 import org.ethanhao.triprover.repository.UserRepository;
@@ -39,18 +40,24 @@ public class PlanServiceImpl implements PlanService {
 
     private final UserRepository userRepository;
 
+    private final PlanMapper planMapper;
+
+    private final PlanMemberMapper planMemberMapper;
+
     @Autowired
-    public PlanServiceImpl(PlanRepository planRepository, PlanUpdateService planUpdateService, PlanMemberRepository planMemberRepository, UserRepository userRepository) {
+    public PlanServiceImpl(PlanRepository planRepository, PlanUpdateService planUpdateService, PlanMemberRepository planMemberRepository, UserRepository userRepository, PlanMapper planMapper, PlanMemberMapper planMemberMapper) {
         this.planRepository = planRepository;
         this.planMemberRepository = planMemberRepository;
         this.userRepository = userRepository;
+        this.planMapper = planMapper;
+        this.planMemberMapper = planMemberMapper;
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<PlanSummary> getPlanSummaries(Long userId) {
+    public List<PlanSummaryResponseDTO> getPlanSummaries(Long userId) {
         
-        List<PlanSummary> planSummaries = planRepository.findPlanSummaryByUserId(userId);
+        List<PlanSummaryResponseDTO> planSummaries = planRepository.findPlanSummaryByUserId(userId);
         logger.info("Fetched {} plans for user ID: {}", planSummaries.size(), userId);
 
         return planSummaries;
@@ -58,19 +65,17 @@ public class PlanServiceImpl implements PlanService {
 
     @Transactional(readOnly = true)
     @Override
-    public PlanSummary getPlanSummary(Long userId, Long planId) {
+    public PlanSummaryResponseDTO getPlanSummary(Long userId, Long planId) {
         return planRepository.findPlanSummaryByUserIdAndPlanId(userId, planId);
     }
 
     @Transactional
     @Override
-    public PlanSummary createPlan(Long userId, PlanCreation request) {
+    public PlanSummaryResponseDTO createPlan(Long userId, PlanBaseDTO request) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + userId));
 
-        Plan plan = new Plan();
-        plan.setPlanName(request.getPlanName());
-        plan.setPlanMembers(new HashSet<>());
+        Plan plan = planMapper.planBaseDtoToPlan(request);
         
         // Create PlanMember with OWNER role
         PlanMember planMember = new PlanMember();
@@ -92,7 +97,7 @@ public class PlanServiceImpl implements PlanService {
 
     @Transactional
     @Override
-    public PlanSummary updatePlan(Long userId, Long planId, PlanUpdate request) {
+    public PlanSummaryResponseDTO updatePlan(Long userId, Long planId, PlanUpdateDTO request) {
         Plan plan = planRepository.findById(planId)
                 .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
         
@@ -107,15 +112,16 @@ public class PlanServiceImpl implements PlanService {
 
     @Transactional
     @Override
-    public PlanSummary addPlanMember(Long userId, Long planId, PlanMemberUpdate request) {
-        Plan targetPlan = planRepository.findById(planId)
-        .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
+    public PlanSummaryResponseDTO addPlanMember(Long userId, PlanMemberUpdateDTO request) {
+        PlanMember planMember = planMemberMapper.planMemberDTOToPlanMember(request);
 
-        User targetUser = userRepository.findByUserName(request.getUserName());
+        User targetUser = userRepository.findById(planMember.getId().getUser().getId())
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + planMember.getId().getUser().getId()));
 
-        if (targetUser == null) {
-            throw new UsernameNotFoundException("User not found with username: " + request.getUserName());
-        }
+        Long planId = planMember.getId().getPlan().getPlanId();
+
+        planRepository.findById(planId)
+            .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
 
         if (targetUser.getId().equals(userId)) {
             throw new PlanOperationException("Cannot update member of oneself");
@@ -125,13 +131,9 @@ public class PlanServiceImpl implements PlanService {
             throw new PlanOperationException("User already added to the plan");
         }
 
-        if (request.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
+        if (planMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
             throw new PlanOperationException("Cannot add owner or above to the plan");
         }
-
-        PlanMember planMember = new PlanMember();
-        planMember.setId(new PlanMemberId(targetPlan, targetUser));
-        planMember.setRole(request.getRole());
 
         planMemberRepository.save(planMember);
 
@@ -140,73 +142,57 @@ public class PlanServiceImpl implements PlanService {
 
     @Transactional
     @Override
-    public PlanSummary removePlanMember(Long userId, Long planId, PlanMemberDelete request) {
-        Plan targetPlan = planRepository.findById(planId)
-        .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
+    public PlanSummaryResponseDTO removePlanMember(Long userId, PlanMemberBaseDTO request) {
 
-        User targetUser = userRepository.findByUserName(request.getUserName());
+        PlanMemberId planMemberId = planMemberMapper.planMemberIdDTOToPlanMemberId(request);
 
-        if (targetUser == null) {
-            throw new UsernameNotFoundException("User not found with username: " + request.getUserName());
-        }
-
-        if (targetUser.getId().equals(userId)) {
-            throw new PlanOperationException("Cannot remove oneself from the plan");
-        }
-
-        PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, targetUser.getId());
-
-        if (planMember == null) {
-            throw new PlanOperationException("User not exist in the plan");
-        }
+        PlanMember planMember = planMemberRepository.findById(planMemberId)
+            .orElseThrow(() -> new ResourceAccessException("Plan member not found with ID: " + planMemberId));
 
         if (planMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
             throw new PlanOperationException("Cannot remove owner or above from the plan");
         }
 
-        planMemberRepository.deleteById(new PlanMemberId(targetPlan, targetUser));
+        planMemberRepository.deleteById(planMemberId);
 
-        return planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId);
+        return planRepository.findPlanSummaryByUserIdAndPlanId(
+            planMemberId.getUser().getId(), 
+            planMemberId.getPlan().getPlanId()
+        );
     }
 
     @Transactional
     @Override
-    public PlanSummary updatePlanMemberRole(Long userId, Long planId, PlanMemberUpdate request) {
-        planRepository.findById(planId)
-        .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
+    public PlanSummaryResponseDTO updatePlanMemberRole(Long userId, PlanMemberUpdateDTO request) {
+        PlanMember planMember = planMemberMapper.planMemberDTOToPlanMember(request);
 
-        User targetUser = userRepository.findByUserName(request.getUserName());
+        PlanMember targetPlanMember = planMemberRepository.findById(planMember.getId())
+            .orElseThrow(() -> new ResourceAccessException("Plan member not found with ID: " + planMember.getId()));
 
-        if (targetUser == null) {
-            throw new UsernameNotFoundException("User not found with username: " + request.getUserName());
-        }
-
-        if (targetUser.getId().equals(userId)) {
+        if (targetPlanMember.getId().getUser().getId().equals(userId)) {
             throw new PlanOperationException("Cannot update oneself's role");
         }
 
-        PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, targetUser.getId());
-
-        if (planMember == null) {
-            throw new PlanOperationException("User not exist in the plan");
-        }
-
-        if (request.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
+        if (planMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
             throw new PlanOperationException("Cannot update role to owner or above");
         }
 
-        planMember.setRole(request.getRole());
+        targetPlanMember.setRole(planMember.getRole());
 
-        planMemberRepository.save(planMember);
+        planMemberRepository.save(targetPlanMember);
 
-        return planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId);
+        return planRepository.findPlanSummaryByUserIdAndPlanId(
+            planMember.getId().getUser().getId(), 
+            planMember.getId().getPlan().getPlanId()
+        );
     }
 
     @Transactional(readOnly = true)
     @Override
-    public PlanPlaces getPlanPlaces(Long planId) {
-        return PlanPlaces.fromEntity(planRepository.findById(planId)
-                .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId)));
+    public PlanPlacesResponseDTO getPlanPlaces(Long planId) {
+        Plan plan = planRepository.findById(planId)
+                .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
+        return planMapper.planToPlanPlacesResponseDto(plan);
     }
 
     @Override

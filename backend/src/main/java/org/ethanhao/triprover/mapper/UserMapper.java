@@ -43,6 +43,24 @@ public interface UserMapper {
     @Mapping(target = "roles", ignore = true)
     void updateUserFromDto(UserUpdateDTO dto, @MappingTarget User user);
 
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "userName", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "type", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "email", ignore = true)
+    @Mapping(target = "phoneNumber", ignore = true)
+    @Mapping(target = "avatar", ignore = true)
+    @Mapping(target = "createBy", ignore = true)
+    @Mapping(target = "createTime", ignore = true)
+    @Mapping(target = "updateBy", ignore = true)
+    @Mapping(target = "updateTime", ignore = true)
+    @Mapping(target = "delFlag", ignore = true)
+    @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "planMembers", ignore = true)
+    @Mapping(target = "nickName", ignore = true)
+    User idToUser(Long id);
+
     @AfterMapping
     default void setDefaults(@MappingTarget User user) {
         if (user.getStatus() == null) user.setStatus(0);
