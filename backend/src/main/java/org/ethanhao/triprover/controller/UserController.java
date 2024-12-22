@@ -26,23 +26,23 @@ import jakarta.validation.Valid;
 public class UserController {
 
     @Autowired
-    private UserService authService;
+    private UserService userService;
 
     @PostMapping("/login")
     public ResponseResult<Object> login(@Valid @RequestBody UserAuthDTO loginRequest, HttpServletResponse response) {
-        authService.login(loginRequest, response);
+        userService.login(loginRequest, response);
         return new ResponseResult<>(HttpStatus.OK.value(), "Login successful");
     }
 
     @PostMapping("/logout")
     public ResponseResult<Object> logout(HttpServletResponse response) {
-        authService.logout(response);
+        userService.logout(response);
         return new ResponseResult<>(HttpStatus.OK.value(), "Logout successful");
     }
 
     @PostMapping("/register")
     public ResponseResult<UserResponseDTO> register(@Valid @RequestBody UserRegisterDTO registerRequest) {
-        UserResponseDTO userResponseDTO = authService.register(registerRequest);
+        UserResponseDTO userResponseDTO = userService.register(registerRequest);
         return new ResponseResult<>(HttpStatus.OK.value(), "Register successful", userResponseDTO);
     }
 
@@ -51,14 +51,14 @@ public class UserController {
     public ResponseResult<UserResponseDTO> updatePassword(@RequestBody UserUpdateDTO updateRequest, Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
-        UserResponseDTO userResponseDTO = authService.updateUser(userId, updateRequest);
+        UserResponseDTO userResponseDTO = userService.updateUser(userId, updateRequest);
         return new ResponseResult<>(HttpStatus.OK.value(), "User update successful", userResponseDTO);
     }
 
     @PostMapping("/user/delete")
     @PreAuthorize("hasAuthority('system:user:delete')")
     public ResponseResult<Object> deleteUser(@RequestBody User user) {
-        authService.deleteUser(user);
+        userService.deleteUser(user);
         return new ResponseResult<>(HttpStatus.OK.value(), "User delete successful");
     }
 }
