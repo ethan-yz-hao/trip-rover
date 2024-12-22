@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.ethanhao.triprover.domain.ResponseResult;
-import org.ethanhao.triprover.exception.AuthOperationException;
+import org.ethanhao.triprover.exception.UserOperationException;
 import org.ethanhao.triprover.exception.PlanOperationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -67,9 +67,9 @@ public class GlobalExceptionHandler {
         return new ResponseResult<>(HttpStatus.BAD_REQUEST.value(), "Validation failed", errors);
     }
 
-    @ExceptionHandler(AuthOperationException.class)
+    @ExceptionHandler(UserOperationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseResult<Object> handleAuthOperationException(AuthOperationException ex) {
+    public ResponseResult<Object> handleUserOperationException(UserOperationException ex) {
         return new ResponseResult<>(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
     }
 

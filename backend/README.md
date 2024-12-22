@@ -31,7 +31,6 @@ docker-compose down -v
 ```
 
 TODO:
-- move ResponseResult wrapp in auth service to auth controller
 - user controller (RESTful): login, logout, register, update user, delete user
 - autocomplete search for user name and plan name
 - websocket connection limit
