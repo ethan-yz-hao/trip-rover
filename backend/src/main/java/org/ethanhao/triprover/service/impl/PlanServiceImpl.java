@@ -202,6 +202,7 @@ public class PlanServiceImpl implements PlanService {
         return planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public PlanPlaces getPlanPlaces(Long planId) {
         return PlanPlaces.fromEntity(planRepository.findById(planId)
