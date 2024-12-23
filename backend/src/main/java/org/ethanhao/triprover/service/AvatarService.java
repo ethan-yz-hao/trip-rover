@@ -1,6 +1,7 @@
 package org.ethanhao.triprover.service;
 
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -46,10 +47,12 @@ public class AvatarService {
     private String defaultAvatarUrl;
 
     private static final int MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    private static final int TARGET_SIZE = 500;
+    private static final int TARGET_SIZE = 200;
 
     public UserResponseDTO uploadAvatar(MultipartFile file, Long userId) {
         validateFile(file);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         BufferedImage originalImage;
         try {
@@ -82,8 +85,6 @@ public class AvatarService {
         amazonS3.putObject(avatarBucketName, filename, new ByteArrayInputStream(imageBytes), metadata);
 
         // Update user's avatar URL
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         String avatarUrl = String.format("https://%s/%s", avatarBucketDomain, filename);
         user.setAvatar(avatarUrl);
         userRepository.save(user);
@@ -120,11 +121,14 @@ public class AvatarService {
     }
 
     private void validateImageDimensions(BufferedImage image) {
-        if (image.getWidth() < 200 || image.getHeight() < 200) {
-            throw new UserOperationException("Image dimensions too small");
+        if (image == null) {
+            throw new UserOperationException("Invalid image file");
         }
-        if (image.getWidth() > 2000 || image.getHeight() > 2000) {
-            throw new UserOperationException("Image dimensions too large");
+        
+        if (image.getWidth() < TARGET_SIZE || image.getHeight() < TARGET_SIZE) {
+            throw new UserOperationException(
+                String.format("Image dimensions must be at least %dx%d pixels", TARGET_SIZE, TARGET_SIZE)
+            );
         }
     }
 
@@ -133,18 +137,33 @@ public class AvatarService {
         int height = original.getHeight();
         
         // Calculate dimensions for center crop
-        int size = Math.min(width, height);
-        int x = (width - size) / 2;
-        int y = (height - size) / 2;
+        int x, y, size;
+        
+        if (width > height) {
+            size = height;
+            x = (width - height) / 2;
+            y = 0;
+        } else {
+            size = width;
+            x = 0;
+            y = (height - width) / 2;
+        }
         
         // Crop to square
         BufferedImage cropped = original.getSubimage(x, y, size, size);
         
         // Resize to target size
         BufferedImage resized = new BufferedImage(TARGET_SIZE, TARGET_SIZE, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = resized.createGraphics();
-        g.drawImage(cropped, 0, 0, TARGET_SIZE, TARGET_SIZE, null);
-        g.dispose();
+        Graphics2D g2d = resized.createGraphics();
+        try {
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            g2d.drawImage(cropped, 0, 0, TARGET_SIZE, TARGET_SIZE, null);
+        } finally {
+            g2d.dispose();
+        }
         
         return resized;
     }
