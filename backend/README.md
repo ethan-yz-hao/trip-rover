@@ -15,9 +15,11 @@ RESTful
         get plan
         check role
         get plan summaries of user (projection interface)
+        upload avatar / delete avatar
 Exception with global exception handler and custom exception class
 DTO for validation
     User
+S3 storage for avatar
 
 ## Local Development
 Start the application
