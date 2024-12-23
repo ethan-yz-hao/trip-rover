@@ -37,7 +37,7 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         // search User by username
-        User user = userRepository.findByUserName(username);
+        User user = userRepository.findByUserNameAndDelFlag(username, 0);
 
         // if user not found, throw exception
         if (Objects.isNull(user)) {
