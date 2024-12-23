@@ -37,6 +37,9 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private String defaultAvatarUrl;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
@@ -63,6 +66,8 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
         if (userExists(user.getUserName())) {
             throw new UserOperationException("User with the same username already exists");
         }
+        // set default avatar
+        user.setAvatar(defaultAvatarUrl);
         // set user type and status
         user.setType(0);
         user.setStatus(0);

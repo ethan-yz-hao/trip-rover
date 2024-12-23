@@ -39,3 +39,13 @@ resource "aws_s3_bucket_policy" "avatar_bucket" {
     ]
   })
 }
+
+# Upload default avatar
+resource "aws_s3_object" "default_avatar" {
+  bucket = aws_s3_bucket.avatar_bucket.id
+  key    = "default-avatar.png"
+  source = "${path.module}/assets/default-avatar.png"  # Store default avatar in module assets
+  etag   = filemd5("${path.module}/assets/default-avatar.png")
+
+  content_type = "image/png"
+}

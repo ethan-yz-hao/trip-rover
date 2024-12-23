@@ -38,7 +38,8 @@ aws:
   region: us-west-2
   s3:
     avatar-bucket-name: trip-rover-avatars-dev
-    avatar-bucket-domain: https://trip-rover-avatars-dev.s3.us-west-2.amazonaws.com
+    avatar-bucket-domain: trip-rover-avatars-dev.s3.us-west-2.amazonaws.com
+    default-avatar-key: default-avatar.png
 
 logging:
   level:

@@ -42,9 +42,11 @@ public class AvatarService {
     @Autowired
     private String avatarBucketDomain;
 
+    @Autowired
+    private String defaultAvatarUrl;
+
     private static final int MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final int TARGET_SIZE = 500;
-    private static final String DEFAULT_AVATAR = "default-avatar.png";
 
     public UserResponseDTO uploadAvatar(MultipartFile file, Long userId) {
         validateFile(file);
@@ -82,7 +84,7 @@ public class AvatarService {
         // Update user's avatar URL
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        String avatarUrl = String.format("%s/%s", avatarBucketDomain, filename);
+        String avatarUrl = String.format("https://%s/%s", avatarBucketDomain, filename);
         user.setAvatar(avatarUrl);
         userRepository.save(user);
 
@@ -93,12 +95,12 @@ public class AvatarService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (user.getAvatar() != null && !user.getAvatar().endsWith(DEFAULT_AVATAR)) {
+        if (user.getAvatar() != null && !user.getAvatar().endsWith(defaultAvatarUrl)) {
             String filename = user.getAvatar().substring(user.getAvatar().lastIndexOf('/') + 1);
             amazonS3.deleteObject(avatarBucketName, filename);
         }
 
-        user.setAvatar(String.format("%s/%s", avatarBucketDomain, DEFAULT_AVATAR));
+        user.setAvatar(defaultAvatarUrl);
         userRepository.save(user);
 
         return userMapper.toResponseDto(user);
@@ -106,23 +108,23 @@ public class AvatarService {
 
     private void validateFile(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("File is empty");
+            throw new UserOperationException("File is empty");
         }
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("File size exceeds 5MB limit");
+            throw new UserOperationException("File size exceeds 5MB limit");
         }
         String contentType = file.getContentType();
         if (contentType == null || !contentType.matches("image/(jpeg|png|gif)")) {
-            throw new IllegalArgumentException("Invalid file type");
+            throw new UserOperationException("Invalid file type");
         }
     }
 
     private void validateImageDimensions(BufferedImage image) {
         if (image.getWidth() < 200 || image.getHeight() < 200) {
-            throw new IllegalArgumentException("Image dimensions too small");
+            throw new UserOperationException("Image dimensions too small");
         }
         if (image.getWidth() > 2000 || image.getHeight() > 2000) {
-            throw new IllegalArgumentException("Image dimensions too large");
+            throw new UserOperationException("Image dimensions too large");
         }
     }
 

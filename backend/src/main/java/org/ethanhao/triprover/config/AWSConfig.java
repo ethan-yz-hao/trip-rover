@@ -29,6 +29,10 @@ public class AWSConfig {
     @Value("${aws.s3.avatar-bucket-domain}")
     private String avatarBucketDomain;
 
+    @Value("${aws.s3.default-avatar-key}")
+    private String defaultAvatarKey;
+    
+
     @Bean
     public AmazonS3 amazonS3() {
         log.info("Initializing AWS S3 client for bucket: {}", avatarBucketName);
@@ -38,9 +42,24 @@ public class AWSConfig {
                 .withRegion(region)
                 .build();
     }
+    
+    @Bean
+    public String avatarBucketName() {
+        return avatarBucketName;
+    }
 
     @Bean
     public String avatarBucketDomain() {
         return avatarBucketDomain;
+    }
+
+    @Bean
+    public String defaultAvatarKey() {
+        return defaultAvatarKey;
+    }
+
+    @Bean
+    public String defaultAvatarUrl() {
+        return String.format("https://%s/%s", avatarBucketDomain, defaultAvatarKey);
     }
 } 

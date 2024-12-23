@@ -5,9 +5,9 @@ INSERT INTO sys_role (role_name, role_key, role_sort, status) VALUES
 
 -- Inserting Users
 INSERT INTO sys_user (user_name, nick_name, password, type, status, email, phone_number, avatar) VALUES
-                                                                                                     ('admin', 'Admin', '$2a$10$NEgAp4igmIoz6iOUTGB34ehY0aHNHblMZOobvmT44Pyq9rVuiwRlS', 1, 0, 'admin@example.com', '1234567890', 'path/to/avatar'),
-                                                                                                     ('johndoe', 'John Doe', '$2a$10$NEgAp4igmIoz6iOUTGB34ehY0aHNHblMZOobvmT44Pyq9rVuiwRlS', 0, 0, 'john@example.com', '0987654321', 'path/to/avatar'),
-                                                                                                     ('ethanhao', 'Ethan Hao', '$2a$10$NEgAp4igmIoz6iOUTGB34ehY0aHNHblMZOobvmT44Pyq9rVuiwRlS', 0, 0, 'ethan@example.com', '1112223333', 'path/to/avatar');
+                                                                                                     ('admin', 'Admin', '$2a$10$NEgAp4igmIoz6iOUTGB34ehY0aHNHblMZOobvmT44Pyq9rVuiwRlS', 1, 0, 'admin@example.com', '1234567890', 'https://trip-rover-avatars-dev.s3.us-west-2.amazonaws.com/default-avatar.png'),
+                                                                                                     ('johndoe', 'John Doe', '$2a$10$NEgAp4igmIoz6iOUTGB34ehY0aHNHblMZOobvmT44Pyq9rVuiwRlS', 0, 0, 'john@example.com', '0987654321', 'https://trip-rover-avatars-dev.s3.us-west-2.amazonaws.com/default-avatar.png'),
+                                                                                                     ('ethanhao', 'Ethan Hao', '$2a$10$NEgAp4igmIoz6iOUTGB34ehY0aHNHblMZOobvmT44Pyq9rVuiwRlS', 0, 0, 'ethan@example.com', '1112223333', 'https://trip-rover-avatars-dev.s3.us-west-2.amazonaws.com/default-avatar.png');
 
 -- Inserting Menus
 INSERT INTO sys_menu (menu_name, order_num, path, component, visible, status, perms) VALUES
