@@ -1,6 +1,5 @@
 package org.ethanhao.triprover.service;
 
-import org.ethanhao.triprover.domain.User;
 import org.ethanhao.triprover.dto.user.UserAuthDTO;
 import org.ethanhao.triprover.dto.user.UserRegisterDTO;
 import org.ethanhao.triprover.dto.user.UserResponseDTO;
@@ -17,5 +16,5 @@ public interface UserService {
 
     UserResponseDTO updateUser(Long userId, UserUpdateDTO updateRequest);
 
-    void deleteUser(User user);
+    void deleteUser(String username);
 }

@@ -128,7 +128,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(User user) {
-        // set status and delete flag to 1
+    public void deleteUser(String username) {
+        dbUserDetailsManager.deleteUser(username);
     }
 }

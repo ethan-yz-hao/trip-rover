@@ -84,7 +84,15 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
 
     @Override
     public void deleteUser(String username) {
+        User user = userRepository.findByUserName(username);
+        
+        if (Objects.isNull(user)) {
+            throw new UsernameNotFoundException("Username Not Found");
+        }
 
+        user.setStatus(1); // set status to 1
+        user.setDelFlag(1); // set delete flag to 1
+        userRepository.save(user);
     }
 
     @Override

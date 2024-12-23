@@ -2,7 +2,6 @@ package org.ethanhao.triprover.controller;
 
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.ResponseResult;
-import org.ethanhao.triprover.domain.User;
 import org.ethanhao.triprover.dto.user.UserAuthDTO;
 import org.ethanhao.triprover.dto.user.UserRegisterDTO;
 import org.ethanhao.triprover.dto.user.UserResponseDTO;
@@ -12,11 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -47,7 +46,7 @@ public class UserController {
     }
 
     @PostMapping("/update")
-    @PreAuthorize("hasAuthority('system:user:update')")
+    @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<UserResponseDTO> updatePassword(@RequestBody UserUpdateDTO updateRequest, Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
@@ -55,10 +54,11 @@ public class UserController {
         return new ResponseResult<>(HttpStatus.OK.value(), "User update successful", userResponseDTO);
     }
 
-    @PostMapping("/user/delete")
-    @PreAuthorize("hasAuthority('system:user:delete')")
-    public ResponseResult<Object> deleteUser(@RequestBody User user) {
-        userService.deleteUser(user);
+    @DeleteMapping("/delete")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<Object> deleteUser(Authentication authentication) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        userService.deleteUser(loginUser.getUser().getUserName());
         return new ResponseResult<>(HttpStatus.OK.value(), "User delete successful");
     }
 }
