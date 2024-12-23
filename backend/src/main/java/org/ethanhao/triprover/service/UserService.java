@@ -8,6 +8,7 @@ import org.ethanhao.triprover.dto.user.UserUpdateDTO;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface UserService {
+
     void login(UserAuthDTO loginRequest, HttpServletResponse response);
 
     void logout(HttpServletResponse response);
@@ -17,4 +18,7 @@ public interface UserService {
     UserResponseDTO updateUser(Long userId, UserUpdateDTO updateRequest);
 
     void deleteUser(String username);
+
+    void changePassword(String oldPassword, String newPassword);
+
 }

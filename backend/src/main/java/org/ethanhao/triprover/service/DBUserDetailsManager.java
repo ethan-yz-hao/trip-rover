@@ -11,6 +11,10 @@ import org.ethanhao.triprover.repository.MenuRepository;
 import org.ethanhao.triprover.repository.RoleRepository;
 import org.ethanhao.triprover.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -87,7 +91,6 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
 
     @Override
     public void updateUser(UserDetails user) {
-
     }
 
     @Override
@@ -97,7 +100,22 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
 
     @Override
     public void changePassword(String oldPassword, String newPassword) {
-
+        Authentication currentUser = SecurityContextHolder.getContext().getAuthentication();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Can't change password as no Authentication object found in context");
+        }
+        
+        String username = currentUser.getName();
+        User user = userRepository.findByUserNameAndDelFlag(username, 0);
+        
+        // Check if old password matches
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BadCredentialsException("Invalid old password");
+        }
+        
+        // Update to new password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     @Override

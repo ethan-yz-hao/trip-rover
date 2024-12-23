@@ -2,6 +2,7 @@ package org.ethanhao.triprover.controller;
 
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.ResponseResult;
+import org.ethanhao.triprover.dto.user.ChangePasswordDTO;
 import org.ethanhao.triprover.dto.user.UserAuthDTO;
 import org.ethanhao.triprover.dto.user.UserRegisterDTO;
 import org.ethanhao.triprover.dto.user.UserResponseDTO;
@@ -60,5 +61,12 @@ public class UserController {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         userService.deleteUser(loginUser.getUser().getUserName());
         return new ResponseResult<>(HttpStatus.OK.value(), "User delete successful");
+    }
+
+    @PostMapping("/change-password")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<Object> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
+        userService.changePassword(changePasswordDTO.getOldPassword(), changePasswordDTO.getNewPassword());
+        return new ResponseResult<>(HttpStatus.OK.value(), "Password change successful");
     }
 }

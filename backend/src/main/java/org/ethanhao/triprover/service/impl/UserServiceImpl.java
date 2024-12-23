@@ -131,4 +131,9 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(String username) {
         dbUserDetailsManager.deleteUser(username);
     }
+
+    @Override
+    public void changePassword(String oldPassword, String newPassword) {
+        dbUserDetailsManager.changePassword(oldPassword, newPassword);
+    }
 }
