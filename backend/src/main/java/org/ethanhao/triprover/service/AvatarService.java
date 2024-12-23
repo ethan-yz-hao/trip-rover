@@ -1,26 +1,26 @@
 package org.ethanhao.triprover.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.UUID;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
+import javax.imageio.ImageIO;
+
 import org.ethanhao.triprover.domain.User;
 import org.ethanhao.triprover.dto.user.UserResponseDTO;
 import org.ethanhao.triprover.exception.UserOperationException;
 import org.ethanhao.triprover.mapper.UserMapper;
 import org.ethanhao.triprover.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,11 +36,11 @@ public class AvatarService {
     @Autowired
     private UserMapper userMapper;
 
-    @Value("${aws.s3.avatar-bucket-name}")
-    private String bucketName;
+    @Autowired
+    private String avatarBucketName;
 
-    @Value("${aws.s3.avatar-bucket-domain}")
-    private String bucketDomain;
+    @Autowired
+    private String avatarBucketDomain;
 
     private static final int MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final int TARGET_SIZE = 500;
@@ -77,12 +77,12 @@ public class AvatarService {
         metadata.setContentType("image/png");
         metadata.setContentLength(imageBytes.length);
 
-        amazonS3.putObject(bucketName, filename, new ByteArrayInputStream(imageBytes), metadata);
+        amazonS3.putObject(avatarBucketName, filename, new ByteArrayInputStream(imageBytes), metadata);
 
         // Update user's avatar URL
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        String avatarUrl = String.format("%s/%s", bucketDomain, filename);
+        String avatarUrl = String.format("%s/%s", avatarBucketDomain, filename);
         user.setAvatar(avatarUrl);
         userRepository.save(user);
 
@@ -95,10 +95,10 @@ public class AvatarService {
 
         if (user.getAvatar() != null && !user.getAvatar().endsWith(DEFAULT_AVATAR)) {
             String filename = user.getAvatar().substring(user.getAvatar().lastIndexOf('/') + 1);
-            amazonS3.deleteObject(bucketName, filename);
+            amazonS3.deleteObject(avatarBucketName, filename);
         }
 
-        user.setAvatar(String.format("%s/%s", bucketDomain, DEFAULT_AVATAR));
+        user.setAvatar(String.format("%s/%s", avatarBucketDomain, DEFAULT_AVATAR));
         userRepository.save(user);
 
         return userMapper.toResponseDto(user);
