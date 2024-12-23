@@ -32,6 +32,13 @@ spring:
             - email
             - profile
 
+aws:
+  accessKeyId: ${AWS_ACCESS_KEY_ID}
+  secretKey: ${AWS_SECRET_KEY}
+  region: us-west-2
+  s3:
+    avatar-bucket-name: trip-rover-avatars-dev
+    avatar-bucket-domain: https://trip-rover-avatars-dev.s3.us-west-2.amazonaws.com
 
 logging:
   level:
