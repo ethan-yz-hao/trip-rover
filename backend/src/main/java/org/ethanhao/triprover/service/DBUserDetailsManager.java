@@ -51,17 +51,12 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
     }
 
     @Override
-    public UserDetails updatePassword(UserDetails user, String newPassword) {
-        return null;
-    }
-
-    @Override
     public void createUser(UserDetails userDetails) {
     }
 
     public User createUserWithRole(User user, List<String> roles) {
         // no duplicate user with status 0
-        if (userRepository.findByUserNameAndDelFlag(user.getUserName(), 0) != null) {
+        if (userExists(user.getUserName())) {
             throw new UserOperationException("User with the same username already exists");
         }
         // set user type and status
@@ -78,11 +73,6 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
     }
 
     @Override
-    public void updateUser(UserDetails user) {
-
-    }
-
-    @Override
     public void deleteUser(String username) {
         User user = userRepository.findByUserName(username);
         
@@ -96,12 +86,22 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
     }
 
     @Override
+    public void updateUser(UserDetails user) {
+
+    }
+
+    @Override
+    public UserDetails updatePassword(UserDetails user, String newPassword) {
+        return null;
+    }
+
+    @Override
     public void changePassword(String oldPassword, String newPassword) {
 
     }
 
     @Override
     public boolean userExists(String username) {
-        return false;
+        return userRepository.findByUserNameAndDelFlag(username, 0) != null;
     }
 }
