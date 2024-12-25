@@ -37,4 +37,5 @@ TODO:
 - autocomplete search for user name and plan name
 - websocket connection limit
 - dual database: note on how to sync
+- ml model for plan place recommendation
 - spring cloud
