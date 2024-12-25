@@ -116,7 +116,7 @@ public class PlanController {
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
             logger.info("User {} is not authorized to update plan {}", userId, planId);
-            throw new AccessDeniedException("User is not authorized to delete plan");
+            throw new AccessDeniedException("User is not authorized to update plan");
         }
 
         PlanSummaryResponseDTO planSummary = planService.updatePlan(userId, planId, request);

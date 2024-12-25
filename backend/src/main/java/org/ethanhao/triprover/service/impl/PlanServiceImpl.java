@@ -101,10 +101,7 @@ public class PlanServiceImpl implements PlanService {
         Plan plan = planRepository.findById(planId)
                 .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
         
-        if (request.getPlanName() != null) {
-            plan.setPlanName(request.getPlanName());
-        }
-        
+        planMapper.updatePlanFromDto(request, plan);
         planRepository.save(plan);
 
         return planRepository.findPlanSummaryByUserIdAndPlanId(userId, planId);
