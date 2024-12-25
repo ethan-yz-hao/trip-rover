@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,21 +53,21 @@ public class UserController {
         return new ResponseResult<>(HttpStatus.OK.value(), "Register successful", userResponseDTO);
     }
 
-    @PostMapping("/update")
-    @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<UserResponseDTO> updatePassword(@RequestBody UserUpdateDTO updateRequest, Authentication authentication) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        Long userId = loginUser.getUser().getId();
-        UserResponseDTO userResponseDTO = userService.updateUser(userId, updateRequest);
-        return new ResponseResult<>(HttpStatus.OK.value(), "User update successful", userResponseDTO);
-    }
-
     @DeleteMapping("/delete")
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<Object> deleteUser(Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         userService.deleteUser(loginUser.getUser().getUserName());
         return new ResponseResult<>(HttpStatus.OK.value(), "User delete successful");
+    }
+
+    @PatchMapping("/update")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<UserResponseDTO> updatePassword(@RequestBody UserUpdateDTO updateRequest, Authentication authentication) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUser().getId();
+        UserResponseDTO userResponseDTO = userService.updateUser(userId, updateRequest);
+        return new ResponseResult<>(HttpStatus.OK.value(), "User update successful", userResponseDTO);
     }
 
     @PostMapping("/change-password")
