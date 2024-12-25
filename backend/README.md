@@ -5,20 +5,21 @@ RBAC authorization
     Authorize/check user role during channel subscription and message handling (controller)
 Websocket
     optimistic update, versioning + acknowledgement + re-fetching
-    update plan: add, remove, reorder, update places
+    update plan places: add, remove, reorder, update places
 OAuth2
     Google, create user if not exist
 RESTful
-    Auth
-        login, logout, register, update user, delete user
+    User
+        login, logout, register, update user, delete user, add member, delete member, update member
     Plan
-        get plan
-        check role
-        get plan summaries of user (projection interface)
+        check role (owner, editor, viewer from plan member)
+        get plan places (for websocket sync)
+        get plan summaries of user (projection interface), create plan, delete plan (including members and places), update plan summaries
         upload avatar / delete avatar
 Exception with global exception handler and custom exception class
-DTO for validation
+DTO for validation, update
     User
+    plan
 S3 storage for avatar
 
 ## Local Development
@@ -33,7 +34,6 @@ docker-compose down -v
 ```
 
 TODO:
-- user controller (RESTful): login, logout, register, update user, delete user
 - autocomplete search for user name and plan name
 - websocket connection limit
 - dual database: note on how to sync
