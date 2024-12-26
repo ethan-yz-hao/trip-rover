@@ -25,9 +25,9 @@ INSERT INTO sys_user_role (user_id, role_id) VALUES
                                                  ((SELECT id FROM sys_user WHERE user_name = 'ethanhao'), (SELECT id FROM sys_role WHERE role_name = 'User'));
 
 -- Inserting Plans
-INSERT INTO plans (plan_name, version) VALUES
-                                           ('Trip to New York', 0),
-                                           ('Road Trip across California', 0);
+INSERT INTO plans (plan_name, is_public, description, version) VALUES
+    ('Trip to New York', true, 'A week-long adventure exploring the Big Apple, including visits to Central Park, Times Square, and Broadway.', 0),
+    ('Road Trip across California', false, 'Scenic drive from San Francisco to Los Angeles along the Pacific Coast Highway.', 0);
 
 -- Inserting PlanPlaces
 INSERT INTO plan_places (plan_id, sequence_number, place_id, google_place_id, stay_seconds) VALUES

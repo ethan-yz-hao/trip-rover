@@ -7,4 +7,8 @@ import lombok.Data;
 public class PlanBaseDTO {
     @NotBlank(message = "Plan name is required")
     private String planName;
+
+    private Boolean isPublic;
+
+    private String description;
 } 

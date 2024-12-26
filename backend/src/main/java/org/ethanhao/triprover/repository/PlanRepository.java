@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface PlanRepository extends JpaRepository<Plan, Long> {
     @Query("SELECT p.planId as planId, p.planName as planName, " +
+           "p.isPublic as isPublic, p.description as description, " +
            "p.createTime as createTime, p.updateTime as updateTime, " +
            "pur.role as role " +
            "FROM Plan p " +
@@ -18,6 +19,7 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
     List<PlanSummaryResponseDTO> findPlanSummaryByUserId(@Param("userId") Long userId);
 
     @Query("SELECT p.planId as planId, p.planName as planName, " +
+           "p.isPublic as isPublic, p.description as description, " +
            "p.createTime as createTime, p.updateTime as updateTime, " +
            "pur.role as role " +
            "FROM Plan p " +

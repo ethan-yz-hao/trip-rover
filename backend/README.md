@@ -10,12 +10,14 @@ OAuth2
     Google, create user if not exist
 RESTful
     User
-        login, logout, register, update user, delete user, add member, delete member, update member
+        Auth: login, logout, 
+        User：register, update user, delete user, change password
+        Avatar: upload avatar / delete avatar
     Plan
         check role (owner, editor, viewer from plan member)
         get plan places (for websocket sync)
-        get plan summaries of user (projection interface), create plan, delete plan (including members and places), update plan summaries
-        upload avatar / delete avatar
+        plan Member: add member, delete member, update member
+        get plan summaries of user (projection interface), create plan, delete plan (including members and places), update plan summaries (name isPublic, description)
 Exception with global exception handler and custom exception class
 DTO for validation, update
     User

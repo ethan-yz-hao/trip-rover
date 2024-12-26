@@ -25,6 +25,12 @@ public class Plan {
 
     private String planName;
 
+    @Column(columnDefinition = "boolean default true")
+    private Boolean isPublic;
+    
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Version
     @Column(columnDefinition = "bigint default 0")
     private Long version; // Version field for optimistic locking

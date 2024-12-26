@@ -6,4 +6,8 @@ import lombok.Data;
 public class PlanUpdateDTO {
 
     private String planName;
+
+    private Boolean isPublic;
+
+    private String description;
 } 

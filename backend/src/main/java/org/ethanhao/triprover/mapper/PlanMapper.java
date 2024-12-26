@@ -32,5 +32,8 @@ public interface PlanMapper {
     @Mapping(target = "places", ignore = true)
     @Mapping(target = "createTime", ignore = true)
     @Mapping(target = "updateTime", ignore = true)
+    @Mapping(target = "planName", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "description", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "isPublic", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updatePlanFromDto(PlanUpdateDTO dto, @MappingTarget Plan plan);
 }
