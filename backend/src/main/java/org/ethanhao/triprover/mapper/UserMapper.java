@@ -32,6 +32,7 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "userName", ignore = true)
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "avatar", ignore = true)
     @Mapping(target = "createTime", ignore = true)
     @Mapping(target = "createBy", ignore = true)
     @Mapping(target = "updateTime", ignore = true)
