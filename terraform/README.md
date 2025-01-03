@@ -72,6 +72,7 @@ aws dynamodb create-table \
 
 ## Deploy development environment
 
+```
 # Navigate to the dev environment directory
 cd terraform/environments/dev
 
