@@ -19,13 +19,13 @@ A Spring Boot application that provides backend services for the TripRover trave
   - Role-based access control for operations
 
 #### Real-time Collaborative Operations (WebSocket STOMP)
-- Real-time plan updates with optimistic concurrency control
+- Real-time plan updates with optimistic concurrency control (Optimistic Locking)
   - Place management operations:
     - Add new places
     - Remove existing places
     - Reorder places in sequence
     - Update place details (Google Place ID, stay duration)
-  - Version control to handle concurrent updates
+  - Versioning for optimistic concurrency control
   - Optimistic update at client side
   - Acknowledgment system for update confirmations
   - Re-fetch plan places to sync with server state when confirmation fails
