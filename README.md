@@ -2,6 +2,8 @@
 
 # Trip Rover
 
+Trip Rover is a collaborative travel planning tool that allows users to create and manage travel plans with multiple participants.
+
 ## Features
 
 - Create and manage travel plans with multiple participants
