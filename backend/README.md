@@ -1,31 +1,77 @@
-JWT based authentication
-    Redis Caching authentication (authenticated user) to improve verification efficiency (when authenticated user access resources)
-    Authenticate User at websocket handshake
-RBAC authorization
-    Authorize/check user role during channel subscription and message handling (controller)
-Websocket
-    optimistic update, versioning + acknowledgement + re-fetching
-    update plan places: add, remove, reorder, update places
-OAuth2
-    Google, create user if not exist
-RESTful
-    User
-        Auth: login, logout, 
-        User：register, update user, delete user, change password
-        Avatar: upload avatar / delete avatar
-    Plan
-        check role (owner, editor, viewer from plan member)
-        get plan places (for websocket sync)
-        plan Member: add member, delete member, update member
-        get plan summaries of user (projection interface), create plan, delete plan (including members and places), update plan summaries (name isPublic, description)
-Exception with global exception handler and custom exception class
-DTO for validation, update
-    User
-    plan
-S3 storage for avatar
+# TripRover Backend
 
-## Local Development
-Start the application
+A Spring Boot application that provides backend services for the TripRover travel planning platform.
+
+## Features
+
+### Plan Management
+
+#### RESTful Operations
+- Plan CRUD operations through DTOs
+  - Create new plans
+  - Retrieve plan summaries through projection interface
+  - Retrieve plan places for websocket synchronization during concurrency exception
+  - Update plan basic information
+  - Delete plans, cascade delete members and places
+- Member management with role-based permissions
+  - Add/remove plan members
+  - Update member roles (owner, editor, viewer)
+  - Role-based access control for operations
+
+#### Real-time Collaborative Operations (WebSocket STOMP)
+- Real-time plan updates with optimistic concurrency control
+  - Place management operations:
+    - Add new places
+    - Remove existing places
+    - Reorder places in sequence
+    - Update place details (Google Place ID, stay duration)
+  - Version control to handle concurrent updates
+  - Optimistic update at client side
+  - Acknowledgment system for update confirmations
+  - Re-fetch plan places to sync with server state when confirmation fails
+  - Error handling for:
+    - Version conflicts
+    - Authorization failures
+    - Invalid operations
+- Client-specific update and acknowledgment channels
+- Broadcast updates to all channel subscribers
+
+### User Management
+- Authentication
+    - JWT-based authentication with Redis caching to improve verification efficiency
+    - HTTP-only secure cookie for JWT storage
+    - Logout through JWT invalidation
+    - OAuth2 integration (Google) for authentication and registration
+- Authorization
+    - Role-Based Access Control (RBAC)
+    - WebSocket authorization at handshake, channel subscription, and individual message handling
+- User CRUD operations through DTOs
+    - User registration and authentication
+    - Profile management (user information update)
+    - Password management
+- Avatar upload/deletion with S3 storage
+
+## Tech Stack
+
+- **Framework**: Spring Boot
+- **Security**: Spring Security, JWT, OAuth2
+- **Database**: PostgreSQL
+- **Caching**: Redis
+- **Avatar Storage**: AWS S3
+- **Real-time Collaboration**: WebSocket (STOMP)
+- **Build Tool**: Maven
+- **Containerization**: Docker
+
+## Getting Started
+
+### Prerequisites
+- Docker and Docker Compose
+- Java 22 or higher
+- Maven
+
+### Local Development
+
+Start the postgres and redis containers
 ```
 docker-compose up -d
 ```

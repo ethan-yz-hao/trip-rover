@@ -2,5 +2,19 @@
 
 # Trip Rover
 
+## Features
+
+- Create and manage travel plans with multiple participants
+- Real-time collaborative updates on plan places (create new place, update place, update place stay duration, delete place, reorder place through drag-and-drop)
+- Role-based access control on plan (owner, editor, viewer)
+
+### Backend (`/backend`)
+Spring Boot application providing REST and WebSocket services:
+- [Backend Documentation](backend/README.md)
+
+### Infrastructure (`/terraform`)
+AWS infrastructure managed with Terraform:
+- [Infrastructure Documentation](terraform/README.md)
+
 ## License
 This project is licensed under the GNU Affero General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
