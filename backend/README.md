@@ -51,12 +51,31 @@ A Spring Boot application that provides backend services for the TripRover trave
     - Password management
 - Avatar upload/deletion with S3 storage
 
+### Search and Autocomplete
+- Elasticsearch/OpenSearch integration
+  - Autocomplete suggestions for:
+    - User names during member invitations
+    - Plan names in dashboard search
+  - Real-time indexing of:
+    - User profiles for member search
+    - Plan metadata for plan search
+  - Fuzzy matching for typo tolerance
+  - Relevance scoring based on:
+    - Text similarity
+    - User relationships
+    - Plan recency
+  - Performance optimization:
+    - Index aliases for zero-downtime updates
+    - Field-level caching
+    - Request debouncing on client side
+
 ## Tech Stack
 
 - **Framework**: Spring Boot
 - **Security**: Spring Security, JWT, OAuth2
 - **Database**: PostgreSQL
 - **Caching**: Redis
+- **Search Engine**: Elasticsearch
 - **Avatar Storage**: AWS S3
 - **Real-time Collaboration**: WebSocket (STOMP)
 - **Build Tool**: Maven
