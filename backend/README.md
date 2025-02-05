@@ -52,22 +52,30 @@ A Spring Boot application that provides backend services for the TripRover trave
 - Avatar upload/deletion with S3 storage
 
 ### Search and Autocomplete
-- Elasticsearch/OpenSearch integration
+- Elasticsearch/OpenSearch integration with Debezium CDC
   - Autocomplete suggestions for:
     - User names during member invitations
     - Plan names in dashboard search
-  - Real-time indexing of:
-    - User profiles for member search
-    - Plan metadata for plan search
-  - Fuzzy matching for typo tolerance
-  - Relevance scoring based on:
-    - Text similarity
-    - User relationships
-    - Plan recency
+  - Real-time data synchronization:
+    - Change Data Capture (CDC) from PostgreSQL
+    - Selective field synchronization for performance
+    - Event streaming through Apache Kafka
+  - Search features:
+    - Fuzzy matching for typo tolerance
+    - Relevance scoring based on:
+      - Text similarity
+      - User relationships
+      - Plan recency
+    - Contextual boosting based on user permissions
   - Performance optimization:
+    - Selective table and column monitoring
     - Index aliases for zero-downtime updates
-    - Field-level caching
+    - Kafka Connect transforms for data filtering
     - Request debouncing on client side
+  - Reliability:
+    - At-least-once delivery guarantee
+    - Automatic failure recovery
+    - Transaction log consistency
 
 ## Tech Stack
 
@@ -75,7 +83,7 @@ A Spring Boot application that provides backend services for the TripRover trave
 - **Security**: Spring Security, JWT, OAuth2
 - **Database**: PostgreSQL
 - **Caching**: Redis
-- **Search Engine**: Elasticsearch
+- **Search Infrastructure**: Elasticsearch, Debezium, Kafka
 - **Avatar Storage**: AWS S3
 - **Real-time Collaboration**: WebSocket (STOMP)
 - **Build Tool**: Maven
