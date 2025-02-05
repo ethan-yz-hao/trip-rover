@@ -8,10 +8,18 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    command: >
+      postgres
+      -c wal_level=logical
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7.4.0-alpine
@@ -23,6 +31,11 @@ services:
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   elasticsearch:
     image: elasticsearch:8.12.2
@@ -36,8 +49,97 @@ services:
       - "9200:9200"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-u", "elastic:${ELASTIC_PASSWORD}", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.1
+    container_name: trip-rover-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_DATA_DIR: /var/lib/zookeeper/data
+      ZOOKEEPER_LOG_DIR: /var/lib/zookeeper/log
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    healthcheck:
+      test: echo srvr | nc localhost 2181 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.1
+    container_name: trip-rover-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/bin/kafka-topics --bootstrap-server=localhost:9092 --list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  debezium:
+    image: debezium/connect:2.5
+    container_name: trip-rover-debezium
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: trip-rover
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/connectors"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   postgres-data:
+    name: trip-rover-postgres-data
   redis-data:
+    name: trip-rover-redis-data
   elasticsearch-data:
+    name: trip-rover-elasticsearch-data
+  zookeeper-data:
+    name: trip-rover-zookeeper-data
+  zookeeper-logs:
+    name: trip-rover-zookeeper-logs
+  kafka-data:
+    name: trip-rover-kafka-data
