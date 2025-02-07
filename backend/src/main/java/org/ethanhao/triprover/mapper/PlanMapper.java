@@ -17,15 +17,6 @@ public interface PlanMapper {
 
     PlanPlacesResponseDTO planToPlanPlacesResponseDto(Plan plan);
 
-    @Mapping(target = "planId", source = "id")
-    @Mapping(target = "planName", ignore = true)
-    @Mapping(target = "version", ignore = true)
-    @Mapping(target = "planMembers", ignore = true)
-    @Mapping(target = "places", ignore = true)
-    @Mapping(target = "createTime", ignore = true)
-    @Mapping(target = "updateTime", ignore = true)
-    Plan idToPlan(Long id);
-
     @Mapping(target = "planId", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "planMembers", ignore = true)
