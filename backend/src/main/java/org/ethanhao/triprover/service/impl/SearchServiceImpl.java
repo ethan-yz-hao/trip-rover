@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 public class SearchServiceImpl implements SearchService {
 
@@ -54,16 +52,12 @@ public class SearchServiceImpl implements SearchService {
                 UserIndex.class
             );
 
-            log.info("Search query: {}", query);
-            log.info("Search response raw: {}", response);
-
             return response.hits().hits().stream()
                 .map(Hit::source)
                 .map(userIndexMapper::toResponseDTO)
                 .collect(Collectors.toList());
 
         } catch (IOException e) {
-            log.error("Error searching users", e);
             throw new RuntimeException("Failed to search users", e);
         }
     }

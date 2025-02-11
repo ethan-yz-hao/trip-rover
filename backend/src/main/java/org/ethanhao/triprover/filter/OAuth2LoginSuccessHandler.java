@@ -1,7 +1,8 @@
 package org.ethanhao.triprover.filter;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.time.Duration;
+
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
@@ -14,10 +15,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.time.Duration;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     @Autowired
     private JwtUtil jwtUtil;
@@ -52,5 +55,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         // authenticate the user
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        log.info("User {} logged in via OAuth2 successfully", loginUser.getUser().getUserName());
     }
 }

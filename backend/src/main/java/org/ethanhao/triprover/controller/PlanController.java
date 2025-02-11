@@ -12,8 +12,6 @@ import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberBaseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 import org.ethanhao.triprover.service.PlanService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,14 +26,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 
 @RestController
 @RequestMapping("/api/plan")
+@Slf4j
 public class PlanController {
 
     private final PlanService planService;
-    private static final Logger logger = LoggerFactory.getLogger(PlanController.class);
 
     @Autowired
     public PlanController(PlanService planService) {
@@ -48,7 +47,7 @@ public class PlanController {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
         
-        logger.info("Retrieving plans for user: {} (ID: {})", 
+        log.info("Retrieving plans for user: {} (ID: {})", 
             loginUser.getUser().getUserName(), 
             userId);
         
@@ -77,7 +76,7 @@ public class PlanController {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
         
-        logger.info("Creating new plan '{}' for user: {} (ID: {})", 
+        log.info("Creating new plan '{}' for user: {} (ID: {})", 
             request.getPlanName(), 
             loginUser.getUser().getUserName(), 
             userId);
@@ -96,7 +95,7 @@ public class PlanController {
         Long userId = loginUser.getUser().getId();
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.OWNER)) {  
-            logger.info("User {} is not authorized to delete plan {}", userId, planId);
+            log.info("User {} is not authorized to delete plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to delete plan");
         }
 
@@ -115,7 +114,7 @@ public class PlanController {
         Long userId = loginUser.getUser().getId();
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
-            logger.info("User {} is not authorized to update plan {}", userId, planId);
+            log.info("User {} is not authorized to update plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to update plan");
         }
 
@@ -134,7 +133,7 @@ public class PlanController {
         Long planId = request.getPlanId();
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
-            logger.info("User {} is not authorized to add member to plan {}", userId, planId);
+            log.info("User {} is not authorized to add member to plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to add member to plan");
         }
 
@@ -153,7 +152,7 @@ public class PlanController {
         Long planId = request.getPlanId();
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
-            logger.info("User {} is not authorized to remove member from plan {}", userId, planId);
+            log.info("User {} is not authorized to remove member from plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to remove member from plan");
         }
 
@@ -172,7 +171,7 @@ public class PlanController {
         Long planId = request.getPlanId();
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
-            logger.info("User {} is not authorized to update member role in plan {}", userId, planId);
+            log.info("User {} is not authorized to update member role in plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to update member role in plan");
         }
 
@@ -189,9 +188,9 @@ public class PlanController {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
 
-        logger.info("User {} fetching plan {}", userId, planId);
+        log.info("User {} fetching plan {}", userId, planId);
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.VIEWER)) {
-            logger.info("User {} is not authorized to fetch plan {}", userId, planId);
+            log.info("User {} is not authorized to fetch plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to fetch plan");
         }
 

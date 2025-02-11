@@ -10,8 +10,8 @@ import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
+@Slf4j
 public class ElasticsearchIndexService {
 
     private final ElasticsearchClient esClient;
@@ -27,7 +27,6 @@ public class ElasticsearchIndexService {
         try {
             createUserIndexIfNotExists();
         } catch (IOException e) {
-            log.error("Failed to initialize Elasticsearch indices", e);
             throw new RuntimeException("Failed to initialize Elasticsearch indices", e);
         }
     }
@@ -52,7 +51,9 @@ public class ElasticsearchIndexService {
                     .numberOfReplicas("1"))
 
             );
-            log.info("Created users index with mappings");
+            log.info("Created Elasticsearch index");
+        } else {
+            log.info("Elasticsearch index already exists, skipping creation");
         }
     }
 } 

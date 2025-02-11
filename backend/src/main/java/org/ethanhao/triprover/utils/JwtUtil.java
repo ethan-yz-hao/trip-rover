@@ -1,24 +1,26 @@
 package org.ethanhao.triprover.utils;
 
+import java.util.Base64;
+import java.util.Date;
+import java.util.UUID;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
-import java.util.Date;
-import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * JWT token generation and parsing
  */
 @Component
+@Slf4j
 public class JwtUtil {
     @Value("${JWT_SECRET_KEY}")
     private String jwtKey;
@@ -40,12 +42,10 @@ public class JwtUtil {
         return builder.compact();
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
-
     private JwtBuilder getJwtBuilder(String subject, Long ttlMillis,
                                             String uuid) {
         // log JWT token
-        logger.info("JWT token subject: {}", jwtKey);
+        log.info("JWT token subject: {}", jwtKey);
 
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
         SecretKey secretKey = generalKey();

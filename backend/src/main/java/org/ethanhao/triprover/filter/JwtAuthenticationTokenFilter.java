@@ -6,8 +6,6 @@ import java.util.Objects;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -26,11 +24,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
-
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationTokenFilter.class);
 
     @Autowired
     RedisCache redisCache;
@@ -92,6 +90,6 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         // let it pass through
         filterChain.doFilter(request, response);
 
-        logger.info("User {} accessed the resource", loginUser.getUser().getUserName());
+        log.info("User {} accessed the resource", loginUser.getUser().getUserName());
     }
 }

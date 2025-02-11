@@ -20,19 +20,14 @@ import org.ethanhao.triprover.repository.PlanRepository;
 import org.ethanhao.triprover.repository.UserRepository;
 import org.ethanhao.triprover.service.PlanService;
 import org.ethanhao.triprover.service.PlanUpdateService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 
-
 @Service
 public class PlanServiceImpl implements PlanService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PlanServiceImpl.class);
 
     private final PlanRepository planRepository;
 
@@ -56,10 +51,7 @@ public class PlanServiceImpl implements PlanService {
     @Transactional(readOnly = true)
     @Override
     public List<PlanSummaryResponseDTO> getPlanSummaries(Long userId) {
-        
         List<PlanSummaryResponseDTO> planSummaries = planRepository.findPlanSummaryByUserId(userId);
-        logger.info("Fetched {} plans for user ID: {}", planSummaries.size(), userId);
-
         return planSummaries;
     }
 

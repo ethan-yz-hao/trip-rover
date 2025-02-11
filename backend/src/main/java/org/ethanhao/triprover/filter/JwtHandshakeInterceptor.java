@@ -1,18 +1,17 @@
 package org.ethanhao.triprover.filter;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
+import java.util.Map;
+import java.util.Objects;
+
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.utils.JwtUtil;
 import org.ethanhao.triprover.utils.RedisCache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
@@ -22,16 +21,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
-import java.util.Map;
-import java.util.Objects;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
-
-    private static final Logger logger = LoggerFactory.getLogger(JwtHandshakeInterceptor.class);
 
     private final JwtUtil jwtUtil;
     private final RedisCache redisCache;
@@ -91,7 +90,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         // Set the authentication in SecurityContext
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
-        logger.info("User {} connected to WebSocket", loginUser.getUser().getUserName());
+        log.info("User {} connected to WebSocket", loginUser.getUser().getUserName());
 
         return true; // Accept the handshake
     }
