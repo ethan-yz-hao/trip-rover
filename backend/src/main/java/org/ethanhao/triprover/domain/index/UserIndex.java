@@ -1,5 +1,6 @@
 package org.ethanhao.triprover.domain.index;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -17,9 +18,11 @@ public class UserIndex {
     private Long id;
 
     @Field(name = "user_name", type = FieldType.Text)
+    @JsonProperty("user_name")
     private String userName;
 
     @Field(name = "nick_name", type = FieldType.Text)
+    @JsonProperty("nick_name")
     private String nickName;
 
     @Field(type = FieldType.Integer)
@@ -29,5 +32,6 @@ public class UserIndex {
     private Integer status;
 
     @Field(name = "del_flag", type = FieldType.Integer)
+    @JsonProperty("del_flag")
     private Integer delFlag;
 } 
