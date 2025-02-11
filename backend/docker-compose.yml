@@ -38,7 +38,7 @@ services:
       retries: 5
 
   elasticsearch:
-    image: elasticsearch:8.12.2
+    image: elasticsearch:8.10.4
     container_name: trip-rover-elasticsearch
     environment:
       - discovery.type=single-node
@@ -56,28 +56,23 @@ services:
       retries: 5
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.1
+    image: debezium/zookeeper:2.5
     container_name: trip-rover-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_INIT_LIMIT: 5
-      ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_DATA_DIR: /var/lib/zookeeper/data
-      ZOOKEEPER_LOG_DIR: /var/lib/zookeeper/log
     ports:
       - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
     volumes:
-      - zookeeper-data:/var/lib/zookeeper/data
-      - zookeeper-logs:/var/lib/zookeeper/log
+      - zookeeper-data:/zookeeper/data
+      - zookeeper-logs:/zookeeper/txns
     healthcheck:
-      test: echo srvr | nc localhost 2181 || exit 1
+      test: /zookeeper/bin/zkServer.sh print-cmd || exit 1
       interval: 10s
       timeout: 5s
       retries: 5
 
   kafka:
-    image: confluentinc/cp-kafka:7.5.1
+    image: debezium/kafka:2.5
     container_name: trip-rover-kafka
     depends_on:
       zookeeper:
@@ -86,24 +81,27 @@ services:
       - "9092:9092"
       - "29092:29092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
     volumes:
-      - kafka-data:/var/lib/kafka/data
+      - kafka-data:/kafka/data
     healthcheck:
-      test: ["CMD-SHELL", "/usr/bin/kafka-topics --bootstrap-server=localhost:9092 --list"]
+      test: ["CMD-SHELL", "/kafka/bin/kafka-topics.sh --bootstrap-server=localhost:9092 --list"]
       interval: 30s
       timeout: 10s
       retries: 5
 
   debezium:
-    image: debezium/connect:2.5
+    build:
+      context: ./docker/debezium
+      dockerfile: Dockerfile
     container_name: trip-rover-debezium
     depends_on:
       kafka:
@@ -115,15 +113,18 @@ services:
     ports:
       - "8083:8083"
     environment:
-      BOOTSTRAP_SERVERS: kafka:9092
       GROUP_ID: trip-rover
       CONFIG_STORAGE_TOPIC: connect_configs
       OFFSET_STORAGE_TOPIC: connect_offsets
       STATUS_STORAGE_TOPIC: connect_statuses
+      BOOTSTRAP_SERVERS: kafka:9092
       KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      STATUS_STORAGE_REPLICATION_FACTOR: "1"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/connectors"]
       interval: 30s
@@ -143,3 +144,6 @@ volumes:
     name: trip-rover-zookeeper-logs
   kafka-data:
     name: trip-rover-kafka-data
+  debezium-plugins:
+    name: trip-rover-debezium-plugins
+

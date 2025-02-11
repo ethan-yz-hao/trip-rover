@@ -103,6 +103,24 @@ Start the postgres and redis containers
 docker-compose up -d
 ```
 
+Start the Postgres source connector:
+```bash
+# at ./backend
+curl -X POST -H "Content-Type: application/json" -d @postgres-source-connector-config.json http://localhost:8083/connectors
+```
+
+Start the Elasticsearch sink connector:
+```bash
+# at ./backend
+curl -X POST -H "Content-Type: application/json" -d @elasticsearch-sink-connector-config.json http://localhost:8083/connectors
+```
+
+Check connector status:
+```bash
+curl -X GET http://localhost:8083/connectors/postgres-source/status
+curl -X GET http://localhost:8083/connectors/elasticsearch-sink/status
+```
+
 Down and remove volumes
 ```
 docker-compose down -v
@@ -114,3 +132,18 @@ TODO:
 - ml model for plan place recommendation
 - spring cloud
 - dual database: note on how to sync (in the future, dynamoDB)
+
+## Commands
+
+### Elasticsearch
+
+Check all indices
+```
+curl -X GET "http://localhost:9200/_cat/indices?v"
+```
+
+Search users
+```
+curl -X GET "http://localhost:9200/users/_search?pretty"
+```
+

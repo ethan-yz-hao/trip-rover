@@ -1,19 +1,24 @@
 package org.ethanhao.triprover.controller;
 
+import java.util.List;
+
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.dto.user.ChangePasswordDTO;
 import org.ethanhao.triprover.dto.user.UserAuthDTO;
+import org.ethanhao.triprover.dto.user.UserIndexResponseDTO;
 import org.ethanhao.triprover.dto.user.UserRegisterDTO;
 import org.ethanhao.triprover.dto.user.UserResponseDTO;
 import org.ethanhao.triprover.dto.user.UserUpdateDTO;
 import org.ethanhao.triprover.service.AvatarService;
+import org.ethanhao.triprover.service.SearchService;
 import org.ethanhao.triprover.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,6 +39,9 @@ public class UserController {
 
     @Autowired
     private AvatarService avatarService;
+
+    @Autowired
+    private SearchService searchService;
 
     @PostMapping("/login")
     public ResponseResult<Object> login(@Valid @RequestBody UserAuthDTO loginRequest, HttpServletResponse response) {
@@ -106,6 +114,19 @@ public class UserController {
             HttpStatus.OK.value(),
             "Avatar deleted successfully",
             userResponseDTO
+        );
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<List<UserIndexResponseDTO>> searchUsers(
+            @RequestParam String query) {
+
+        List<UserIndexResponseDTO> users = searchService.searchUsers(query);
+        return new ResponseResult<>(
+            HttpStatus.OK.value(),
+            "Search successful",
+            users
         );
     }
 }

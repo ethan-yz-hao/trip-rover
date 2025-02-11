@@ -1,0 +1,31 @@
+{
+  "name": "postgres-source",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "trip-rover",
+    "database.password": "123456",
+    "database.dbname": "trip-rover",
+    "database.server.name": "trip-rover",
+    "topic.prefix": "trip-rover",
+    "schema.include.list": "public",
+    "table.include.list": "public.sys_user",
+    "plugin.name": "pgoutput",
+    "transforms": "unwrap,route",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+    "transforms.route.replacement": "users",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false",
+    "include.schema.changes": "false",
+    "tombstones.on.delete": "false",
+    "decimal.handling.mode": "string",
+    "heartbeat.interval.ms": "5000",
+    "snapshot.mode": "initial"
+  }
+}

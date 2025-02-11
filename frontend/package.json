@@ -12,6 +12,7 @@
     "@hello-pangea/dnd": "^17.0.0",
     "@stomp/stompjs": "^7.0.0",
     "axios": "^1.7.7",
+    "lodash": "^4.17.21",
     "loglevel": "^1.9.2",
     "next": "14.2.13",
     "react": "^18",
@@ -20,6 +21,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.15",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -41,3 +41,9 @@ export interface ResponseResult<T> {
     msg: string;
     data: T;
 }
+
+export interface UserIndexResponseDTO {
+    id: number;
+    userName: string;
+    nickName: string;
+}
