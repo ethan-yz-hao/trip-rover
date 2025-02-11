@@ -1,0 +1,26 @@
+{
+  "name": "elasticsearch-plan-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    "tasks.max": "1",
+    "topics": "plans",
+    "connection.url": "http://elasticsearch:9200",
+    "connection.username": "elastic",
+    "connection.password": "123456",
+    "type.name": "_doc",
+    "key.ignore": "false",
+    "schema.ignore": "true",
+    "behavior.on.null.values": "delete",
+    "write.method": "upsert",
+    "auto.create.indices.at.start": "true",
+    "transforms": "ExtractKey,selectFields",
+    "transforms.ExtractKey.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+    "transforms.ExtractKey.field": "plan_id",
+    "transforms.selectFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+    "transforms.selectFields.whitelist": "plan_id,plan_name,description,is_public",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false"
+  }
+} 
