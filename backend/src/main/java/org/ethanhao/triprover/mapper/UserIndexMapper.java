@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface UserIndexMapper {
     @Mapping(source = "id", target = "id")
-    @Mapping(source = "user_name", target = "userName")
-    @Mapping(source = "nick_name", target = "nickName")
+    @Mapping(source = "userName", target = "userName")
+    @Mapping(source = "nickName", target = "nickName")
     UserIndexResponseDTO toResponseDTO(UserIndex userIndex);
 } 

@@ -16,12 +16,11 @@ public class UserIndex {
     @Field(type = FieldType.Long)
     private Long id;
 
-    @Field(type = FieldType.Text, analyzer = "ik_max_word")
-    private String user_name;
+    @Field(name = "user_name", type = FieldType.Text)
+    private String userName;
 
-
-    @Field(type = FieldType.Text, analyzer = "ik_max_word")
-    private String nick_name;
+    @Field(name = "nick_name", type = FieldType.Text)
+    private String nickName;
 
     @Field(type = FieldType.Integer)
     private Integer type;
@@ -29,6 +28,6 @@ public class UserIndex {
     @Field(type = FieldType.Integer)
     private Integer status;
 
-    @Field(type = FieldType.Integer)
-    private Integer del_flag;
+    @Field(name = "del_flag", type = FieldType.Integer)
+    private Integer delFlag;
 } 
