@@ -34,12 +34,12 @@ public class ElasticsearchIndexService {
 
     private void createUserIndexIfNotExists() throws IOException {
         boolean exists = esClient.indices().exists(
-            ExistsRequest.of(builder -> builder.index("users"))
+            ExistsRequest.of(builder -> builder.index("sys_user"))
         ).value();
 
         if (!exists) {
             esClient.indices().create(builder -> builder
-                .index("users")
+                .index("sys_user")
                 .mappings(typeMapping -> typeMapping
                     .properties("id", prop -> prop.keyword(keywordProp -> keywordProp))
                     .properties("user_name", prop -> prop.text(textProp -> textProp))

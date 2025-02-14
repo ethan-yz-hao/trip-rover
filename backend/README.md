@@ -136,7 +136,13 @@ Check connector status:
 ```bash
 curl -X GET http://localhost:8083/connectors/postgres-source/status
 curl -X GET http://localhost:8083/connectors/elasticsearch-sink/status
-curl -X GET http://localhost:8083/connectors/elasticsearch-user-sink/status
+curl -X GET http://localhost:8083/connectors/elasticsearch-plan-sink/status
+
+Delete connector:
+```bash
+curl -X DELETE http://localhost:8083/connectors/postgres-source
+curl -X DELETE http://localhost:8083/connectors/elasticsearch-sink
+curl -X DELETE http://localhost:8083/connectors/elasticsearch-plan-sink
 ``` -->
 
 Down and remove volumes

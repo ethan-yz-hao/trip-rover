@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(indexName = "users")
+@Document(indexName = "sys_user")
 public class UserIndex {
     @Field(type = FieldType.Long)
     private Long id;
