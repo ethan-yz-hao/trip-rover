@@ -20,13 +20,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Service
 public class AvatarService {
     @Autowired
-    private AmazonS3 amazonS3;
+    private S3Client s3Client;
 
     @Autowired
     private UserRepository userRepository;
@@ -75,11 +77,15 @@ public class AvatarService {
         String filename = String.format("avatar_%d_%s.png", userId, UUID.randomUUID().toString());
 
         // Upload to S3
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentType("image/png");
-        metadata.setContentLength(imageBytes.length);
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(avatarBucketName)
+                .key(filename)
+                .contentType("image/png")
+                .contentLength((long) imageBytes.length)
+                .build();
 
-        amazonS3.putObject(avatarBucketName, filename, new ByteArrayInputStream(imageBytes), metadata);
+        s3Client.putObject(putObjectRequest, 
+                RequestBody.fromInputStream(new ByteArrayInputStream(imageBytes), imageBytes.length));
 
         // Update user's avatar URL
         String avatarUrl = String.format("https://%s/%s", avatarBucketDomain, filename);
@@ -95,7 +101,11 @@ public class AvatarService {
 
         if (user.getAvatar() != null && !user.getAvatar().endsWith(defaultAvatarUrl)) {
             String filename = user.getAvatar().substring(user.getAvatar().lastIndexOf('/') + 1);
-            amazonS3.deleteObject(avatarBucketName, filename);
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(avatarBucketName)
+                    .key(filename)
+                    .build();
+            s3Client.deleteObject(deleteObjectRequest);
         }
 
         user.setAvatar(defaultAvatarUrl);
