@@ -98,12 +98,29 @@ A Spring Boot application that provides backend services for the TripRover trave
 
 ### Local Development
 
-Start the postgres and redis containers
+Set the environment file
+```bash
+export ENV_FILE=.env.dev
 ```
+
+```powershell
+$env:ENV_FILE = ".env.dev"
+```
+
+Start the postgres and redis containers
+```bash
 docker-compose up -d
 ```
 
-Start the Postgres source connector:
+Create the connectors
+```
+# For local development
+./script/setup-connectors.sh .env.dev
+```
+
+Start the application
+
+<!-- Start the Postgres source connector:
 ```bash
 # at ./backend
 curl -X POST -H "Content-Type: application/json" -d @postgres-source-connector-config.json http://localhost:8083/connectors
@@ -119,7 +136,8 @@ Check connector status:
 ```bash
 curl -X GET http://localhost:8083/connectors/postgres-source/status
 curl -X GET http://localhost:8083/connectors/elasticsearch-sink/status
-```
+curl -X GET http://localhost:8083/connectors/elasticsearch-user-sink/status
+``` -->
 
 Down and remove volumes
 ```

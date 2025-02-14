@@ -1,6 +1,4 @@
 spring:
-  config:
-    import: file:.env[.properties]
   application:
     name: TripRover
   datasource:
@@ -44,16 +42,8 @@ aws:
 elasticsearch:
   host: ${ELASTICSEARCH_HOST:localhost}
   port: ${ELASTICSEARCH_PORT:9200}
-  username: ${ELASTICSEARCH_USERNAME:elastic}
+  username: ${ELASTIC_USERNAME:elastic}
   password: ${ELASTIC_PASSWORD}
-
-kafka:
-  bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:29092}
-
-debezium:
-  connect:
-    url: ${DEBEZIUM_CONNECT_URL:http://localhost:8083}
-    name: ${DEBEZIUM_CONNECTOR_NAME:trip-rover-connector}
 
 logging:
   level:

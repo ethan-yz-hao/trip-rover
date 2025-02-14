@@ -26,6 +26,7 @@ public class ElasticsearchIndexService {
     public void initializeIndices() {
         try {
             createUserIndexIfNotExists();
+            createPlanIndexIfNotExists();
         } catch (IOException e) {
             throw new RuntimeException("Failed to initialize Elasticsearch indices", e);
         }
@@ -49,11 +50,33 @@ public class ElasticsearchIndexService {
                 .settings(settings -> settings
                     .numberOfShards("1")
                     .numberOfReplicas("1"))
-
             );
-            log.info("Created Elasticsearch index");
+            log.info("Created users index in Elasticsearch");
         } else {
-            log.info("Elasticsearch index already exists, skipping creation");
+            log.info("Users index already exists in Elasticsearch, skipping creation");
+        }
+    }
+
+    private void createPlanIndexIfNotExists() throws IOException {
+        boolean exists = esClient.indices().exists(
+            ExistsRequest.of(builder -> builder.index("plans"))
+        ).value();
+
+        if (!exists) {
+            esClient.indices().create(builder -> builder
+                .index("plans")
+                .mappings(typeMapping -> typeMapping
+                    .properties("plan_id", prop -> prop.keyword(keywordProp -> keywordProp))
+                    .properties("plan_name", prop -> prop.text(textProp -> textProp))
+                    .properties("description", prop -> prop.text(textProp -> textProp))
+                    .properties("is_public", prop -> prop.boolean_(boolProp -> boolProp)))
+                .settings(settings -> settings
+                    .numberOfShards("1")
+                    .numberOfReplicas("1"))
+            );
+            log.info("Created plans index in Elasticsearch");
+        } else {
+            log.info("Plans index already exists in Elasticsearch, skipping creation");
         }
     }
 } 
