@@ -1,19 +1,16 @@
-import PlanComponent from "@/components/home/PlanComponent";
-import LoginForm from "@/components/profile/login/LoginForm";
-import Logout from "@/components/profile/login/Logout";
-import PlanList from "@/components/home/PlanList";
-import SearchUser from "@/components/home/SearchUser";
-import SearchPlan from "@/components/home/SearchPlan";
+import PlanList from "@/app/profile/components/PlanList";
+import SearchUser from "@/components/canvas/list/SearchUser";
+import SearchPlan from "@/components/canvas/list/SearchPlan";
+import Navbar from "../components/navbar/Navbar";
 
 export default function Home() {
     return (
         <>
-            <LoginForm />
-            <Logout />
+            <Navbar />
             <SearchUser />
             <SearchPlan />
-            {/* <PlanComponent planId={1}/> */}
-            <PlanList />
+            Need a public list and map that works when not logged in and have no
+            websocket connection
         </>
     );
 }

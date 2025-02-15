@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import log from "@/utils/log";
-import Link from "next/link";
 import { PlanSummary as PlanSummaryType } from "@/types/model";
 
 const PlanSummary = ({ planId }: { planId: number }) => {
@@ -53,9 +52,6 @@ const PlanSummary = ({ planId }: { planId: number }) => {
         <div>
             {planSummary && (
                 <div key={planSummary.planId} className="plan-item">
-                    <Link href={`/`}>
-                        <h1 className="hover:underline cursor-pointer">Home</h1>
-                    </Link>
                     <h3>{planSummary.planName}</h3>
                     <p>Role: {planSummary.role}</p>
                     <p>Created: {planSummary.createTime.toLocaleString()}</p>

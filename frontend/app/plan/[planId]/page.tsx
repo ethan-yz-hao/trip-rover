@@ -1,6 +1,7 @@
 "use client";
-import PlanComponent from "@/components/home/PlanComponent";
-import PlanSummary from "@/components/home/PlanSummary";
+import PlanComponent from "@/components/canvas/list/PlanComponent";
+import PlanSummary from "@/components/canvas/list/PlanSummary";
+import Navbar from "@/components/navbar/Navbar";
 import { useParams } from "next/navigation";
 
 export default function PlanPage() {
@@ -8,9 +9,12 @@ export default function PlanPage() {
     const planId = Number(params.planId);
 
     return (
-        <div className="container mx-auto p-4">
-            <PlanSummary planId={planId} />
-            <PlanComponent planId={planId} />
-        </div>
+        <>
+            <Navbar />
+            <div className="container mx-auto p-4">
+                <PlanSummary planId={planId} />
+                <PlanComponent planId={planId} />
+            </div>
+        </>
     );
 }
