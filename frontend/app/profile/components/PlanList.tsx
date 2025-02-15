@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import log from "@/lib/log";
-import { PlanSummary } from "@/types/model";
+import { PlanSummary, ResponseResult } from "@/types/model";
 import Link from "next/link";
+import { axiosInstance } from "@/lib/axios";
 
 const PlanList = () => {
     const [planSummaries, setPlanSummaries] = useState<PlanSummary[]>([]);
@@ -11,17 +12,17 @@ const PlanList = () => {
     useEffect(() => {
         const fetchPlanSummaries = async () => {
             try {
-                const response = await fetch("http://localhost:8080/api/plan", {
-                    credentials: "include",
+                const response = await axiosInstance.get<
+                    ResponseResult<PlanSummary[]>
+                >("/plan", {
+                    withCredentials: true,
                 });
 
-                if (!response.ok) {
-                    throw new Error("Please log in to view plans");
+                if (response.status !== 200) {
+                    throw new Error(response.data.msg);
                 }
 
-                const data = await response.json();
-                // Convert string dates to Date objects
-                const plansWithDates = data.data.map(
+                const plansWithDates = response.data.data.map(
                     (planSummary: PlanSummary) => ({
                         ...planSummary,
                         createTime: new Date(planSummary.createTime),

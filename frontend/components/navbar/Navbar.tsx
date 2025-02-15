@@ -6,17 +6,10 @@ import Link from "next/link";
 import HomeIcon from "@mui/icons-material/Home";
 import LoginIcon from "@mui/icons-material/Login";
 import PersonIcon from "@mui/icons-material/Person";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { logout } from "@/lib/features/auth/authSlice";
+import { useAppSelector } from "@/lib/hooks";
 
 export default function Navbar() {
-    const dispatch = useAppDispatch();
     const { isAuthenticated, user } = useAppSelector((state) => state.auth);
-
-    const handleLogout = () => {
-        dispatch(logout());
-    };
 
     return (
         <AppBar position="static">
@@ -52,13 +45,6 @@ export default function Navbar() {
                                     {user?.userName}
                                 </Button>
                             </Link>
-                            <Button
-                                color="inherit"
-                                startIcon={<LogoutIcon />}
-                                onClick={handleLogout}
-                            >
-                                Logout
-                            </Button>
                         </>
                     )}
                 </Box>

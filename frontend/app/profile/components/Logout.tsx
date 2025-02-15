@@ -1,26 +1,35 @@
 "use client";
 import React from "react";
+import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/lib/hooks";
+import { logout } from "@/lib/features/auth/authSlice";
 import log from "@/lib/log";
+import { Button } from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout";
 
-const handleLogout = async () => {
-    try {
-        const response = await fetch("http://localhost:8080/api/user/logout", {
-            method: "POST",
-            credentials: "include",
-        });
+const Logout: React.FC = () => {
+    const router = useRouter();
+    const dispatch = useAppDispatch();
 
-        if (!response.ok) {
-            throw new Error(`Logout failed with status: ${response.status}`);
+    const handleLogout = async () => {
+        try {
+            await dispatch(logout()).unwrap();
+            log.log("Logged out successfully");
+            router.push("/");
+        } catch (error) {
+            log.error("Error logging out:", error);
         }
+    };
 
-        log.log("Logged out successfully");
-    } catch (error) {
-        log.error("Error logging out:", error);
-    }
-};
-
-const Logout = () => {
-    return <button onClick={handleLogout}>Logout</button>;
+    return (
+        <Button
+            color="inherit"
+            startIcon={<LogoutIcon />}
+            onClick={handleLogout}
+        >
+            Logout
+        </Button>
+    );
 };
 
 export default Logout;
