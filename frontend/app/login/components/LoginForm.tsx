@@ -63,7 +63,6 @@ const LoginForm: React.FC = () => {
                     {loading ? "Logging in..." : "Login"}
                 </button>
             </form>
-            {/* Show error message if any */}
             {error && <p style={{ color: "red" }}>{error}</p>}
         </div>
     );

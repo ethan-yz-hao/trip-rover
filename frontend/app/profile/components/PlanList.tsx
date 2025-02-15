@@ -3,24 +3,23 @@ import React, { useState, useEffect } from "react";
 import log from "@/lib/log";
 import { PlanSummary, ResponseResult } from "@/types/model";
 import Link from "next/link";
-import { axiosInstance } from "@/lib/axios";
+import { axiosInstance, AppError } from "@/lib/axios";
+import { Alert, CircularProgress, Box, Typography } from "@mui/material";
 
 const PlanList = () => {
     const [planSummaries, setPlanSummaries] = useState<PlanSummary[]>([]);
-    const [error, setError] = useState<string>("");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchPlanSummaries = async () => {
             try {
+                setLoading(true);
+                setError(null);
+
                 const response = await axiosInstance.get<
                     ResponseResult<PlanSummary[]>
-                >("/plan", {
-                    withCredentials: true,
-                });
-
-                if (response.status !== 200) {
-                    throw new Error(response.data.msg);
-                }
+                >("/plan");
 
                 const plansWithDates = response.data.data.map(
                     (planSummary: PlanSummary) => ({
@@ -29,42 +28,76 @@ const PlanList = () => {
                         updateTime: new Date(planSummary.updateTime),
                     })
                 );
+
                 setPlanSummaries(plansWithDates);
-            } catch (error) {
-                log.error("Error fetching plans:", error);
-                setError(
-                    error instanceof Error
-                        ? error.message
-                        : "Failed to load plans"
-                );
+            } catch (err) {
+                log.error("Error fetching plans:", err);
+
+                // Handle specific error types
+                if (err instanceof AppError) {
+                    setError(err.message);
+                } else {
+                    setError(
+                        "An unexpected error occurred while loading plans"
+                    );
+                }
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchPlanSummaries();
     }, []);
 
+    if (loading) {
+        return (
+            <Box display="flex" justifyContent="center" p={4}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
     if (error) {
-        return <div>{error}</div>;
+        return (
+            <Box p={2}>
+                <Alert severity="error">{error}</Alert>
+            </Box>
+        );
     }
 
     return (
-        <div>
-            <h2>Your Plans</h2>
-            {planSummaries.map((planSummary) => (
-                <div key={planSummary.planId} className="plan-item">
-                    <Link href={`/plan/${planSummary.planId}`}>
-                        <h3 className="hover:underline cursor-pointer">
-                            {planSummary.planName}
-                        </h3>
-                    </Link>
-                    <p>Role: {planSummary.role}</p>
-                    <p>Created: {planSummary.createTime.toLocaleString()}</p>
-                    <p>
-                        Last Modified: {planSummary.updateTime.toLocaleString()}
-                    </p>
-                </div>
-            ))}
-        </div>
+        <Box p={2}>
+            <Typography variant="h4" component="h2" gutterBottom>
+                Your Plans
+            </Typography>
+
+            {planSummaries.length === 0 ? (
+                <Typography>
+                    You don't have any plans yet. Create your first plan!
+                </Typography>
+            ) : (
+                planSummaries.map((planSummary) => (
+                    <Box key={planSummary.planId} className="plan-item" mb={2}>
+                        <Link href={`/plan/${planSummary.planId}`}>
+                            <Typography
+                                variant="h6"
+                                className="hover:underline cursor-pointer"
+                            >
+                                {planSummary.planName}
+                            </Typography>
+                        </Link>
+                        <Typography>Role: {planSummary.role}</Typography>
+                        <Typography>
+                            Created: {planSummary.createTime.toLocaleString()}
+                        </Typography>
+                        <Typography>
+                            Last Modified:{" "}
+                            {planSummary.updateTime.toLocaleString()}
+                        </Typography>
+                    </Box>
+                ))
+            )}
+        </Box>
     );
 };
 
