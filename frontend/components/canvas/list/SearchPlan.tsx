@@ -3,6 +3,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import log from "@/lib/log";
 import { PlanIndexResponseDTO, ResponseResult } from "@/types/model";
 import debounce from "lodash/debounce";
+import { axiosInstance } from "@/lib/axios";
 
 const SearchPlan = () => {
     const [query, setQuery] = useState<string>("");
@@ -18,21 +19,15 @@ const SearchPlan = () => {
 
         setIsLoading(true);
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/plan/search?query=${encodeURIComponent(
-                    searchQuery
-                )}`,
-                {
-                    credentials: "include",
-                }
+            const response = await axiosInstance.get(
+                `/plan/search?query=${encodeURIComponent(searchQuery)}`
             );
 
-            if (!response.ok) {
+            if (response.status !== 200) {
                 throw new Error("Failed to search plans");
             }
 
-            const data: ResponseResult<PlanIndexResponseDTO[]> =
-                await response.json();
+            const data: ResponseResult<PlanIndexResponseDTO[]> = response.data;
             setPlans(data.data);
             setError("");
         } catch (error) {

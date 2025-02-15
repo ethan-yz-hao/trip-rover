@@ -4,6 +4,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { Roboto } from "next/font/google";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "@/style/theme";
+import { ReduxProvider } from "./reduxProvider";
 
 export const metadata: Metadata = {
     title: "Create Next App",
@@ -26,7 +27,9 @@ export default function RootLayout({
         <html lang="en">
             <body className={roboto.className}>
                 <ThemeProvider theme={theme}>
-                    <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
+                    <AppRouterCacheProvider>
+                        <ReduxProvider>{children}</ReduxProvider>
+                    </AppRouterCacheProvider>
                 </ThemeProvider>
             </body>
         </html>

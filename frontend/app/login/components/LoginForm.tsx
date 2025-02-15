@@ -1,47 +1,36 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { login } from "@/lib/features/auth/authSlice";
 import log from "@/lib/log";
 
 const LoginForm: React.FC = () => {
+    const router = useRouter();
+    const dispatch = useAppDispatch();
+    const { loading, error } = useAppSelector((state) => state.auth);
+
     // State to hold form data
     const [userName, setUserName] = useState<string>("");
     const [password, setPassword] = useState<string>("");
-    const [message, setMessage] = useState<string>("");
 
     // Handle form submission
     const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault(); // Prevent form from submitting the traditional way
+        event.preventDefault();
 
         try {
-            // Send POST request to the API
-            const response = await fetch(
-                "http://localhost:8080/api/user/login",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        userName,
-                        password,
-                    }),
-                    credentials: "include", // Include cookies in the request
-                }
-            );
+            const resultAction = await dispatch(
+                login({ userName, password })
+            ).unwrap();
+            log.log("Login success:", resultAction);
 
-            // Parse the JSON response
-            const data = await response.json();
-
-            // Handle success or failure
-            if (response.ok) {
-                setMessage(data.msg);
-                log.log("Success:", data);
-            } else {
-                setMessage(`Login failed: ${data.msg || "Unknown error"}`);
-            }
+            // Handle successful login redirect
+            const redirectPath =
+                window.localStorage.getItem("redirectAfterLogin");
+            window.localStorage.removeItem("redirectAfterLogin");
+            router.push(redirectPath || "/");
         } catch (error) {
-            log.error("Error:", error);
-            setMessage("Login failed due to network or server error.");
+            log.error("Login error:", error);
         }
     };
 
@@ -56,6 +45,7 @@ const LoginForm: React.FC = () => {
                         value={userName}
                         onChange={(e) => setUserName(e.target.value)}
                         required
+                        disabled={loading}
                     />
                 </div>
                 <div>
@@ -66,12 +56,15 @@ const LoginForm: React.FC = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={loading}
                     />
                 </div>
-                <button type="submit">Login</button>
+                <button type="submit" disabled={loading}>
+                    {loading ? "Logging in..." : "Login"}
+                </button>
             </form>
-            {/* Show message */}
-            {message && <p>{message}</p>}
+            {/* Show error message if any */}
+            {error && <p style={{ color: "red" }}>{error}</p>}
         </div>
     );
 };
