@@ -1,6 +1,6 @@
 'use client';
-import PlanComponent from '@/app/components/PlanComponent';
-import PlanSummary from '@/app/components/PlanSummary';
+import PlanComponent from '@/app/components/home/PlanComponent';
+import PlanSummary from '@/app/components/home/PlanSummary';
 import { useParams } from 'next/navigation';
 
 export default function PlanPage() {

@@ -1,9 +1,9 @@
-import PlanComponent from "@/app/components/PlanComponent";
-import LoginForm from "@/app/components/LoginForm";
-import Logout from "./components/Logout";
-import PlanList from "./components/PlanList";
-import SearchUser from "./components/SearchUser";
-import SearchPlan from "./components/SearchPlan";
+import PlanComponent from "@/app/components/home/PlanComponent";
+import LoginForm from "@/app/components/profile/LoginForm";
+import Logout from "./components/profile/Logout";
+import PlanList from "./components/home/PlanList";
+import SearchUser from "./components/home/SearchUser";
+import SearchPlan from "./components/home/SearchPlan";
 
 export default function Home() {
     return (

@@ -6,7 +6,7 @@ import WebSocketService from '@/app/webSocketService';
 import {v4 as uuidv4} from 'uuid';
 import axios from "axios";
 import log from "@/app/log";
-import StaySecondsEditor from "@/app/components/StaySecondEditor";
+import StaySecondsEditor from "@/app/components/home/StaySecondEditor";
 
 interface PlanComponentProps {
     planId: number;
