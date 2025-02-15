@@ -1,13 +1,13 @@
-'use client';
-import React, { useState, useCallback, useEffect } from 'react';
-import log from "@/app/log";
-import { PlanIndexResponseDTO, ResponseResult } from '@/app/model';
-import debounce from 'lodash/debounce';
+"use client";
+import React, { useState, useCallback, useEffect } from "react";
+import log from "@/utils/log";
+import { PlanIndexResponseDTO, ResponseResult } from "@/types/model";
+import debounce from "lodash/debounce";
 
 const SearchPlan = () => {
-    const [query, setQuery] = useState<string>('');
+    const [query, setQuery] = useState<string>("");
     const [plans, setPlans] = useState<PlanIndexResponseDTO[]>([]);
-    const [error, setError] = useState<string>('');
+    const [error, setError] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const searchPlans = async (searchQuery: string) => {
@@ -19,22 +19,29 @@ const SearchPlan = () => {
         setIsLoading(true);
         try {
             const response = await fetch(
-                `http://localhost:8080/api/plan/search?query=${encodeURIComponent(searchQuery)}`,
+                `http://localhost:8080/api/plan/search?query=${encodeURIComponent(
+                    searchQuery
+                )}`,
                 {
-                    credentials: 'include',
+                    credentials: "include",
                 }
             );
 
             if (!response.ok) {
-                throw new Error('Failed to search plans');
+                throw new Error("Failed to search plans");
             }
 
-            const data: ResponseResult<PlanIndexResponseDTO[]> = await response.json();
+            const data: ResponseResult<PlanIndexResponseDTO[]> =
+                await response.json();
             setPlans(data.data);
-            setError('');
+            setError("");
         } catch (error) {
-            log.error('Error searching plans:', error);
-            setError(error instanceof Error ? error.message : 'Failed to search plans');
+            log.error("Error searching plans:", error);
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to search plans"
+            );
             setPlans([]);
         } finally {
             setIsLoading(false);
@@ -77,7 +84,7 @@ const SearchPlan = () => {
             {error && <div className="text-red-500">{error}</div>}
 
             <div className="space-y-2">
-                {plans.map(plan => (
+                {plans.map((plan) => (
                     <div
                         key={plan.planId}
                         className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
@@ -93,4 +100,4 @@ const SearchPlan = () => {
     );
 };
 
-export default SearchPlan; 
+export default SearchPlan;

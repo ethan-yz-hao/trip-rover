@@ -1,13 +1,13 @@
- 'use client';
-import React, { useState, useCallback, useEffect } from 'react';
-import log from "@/app/log";
-import { UserIndexResponseDTO, ResponseResult } from '@/app/model';
-import debounce from 'lodash/debounce';
+"use client";
+import React, { useState, useCallback, useEffect } from "react";
+import log from "@/utils/log";
+import { UserIndexResponseDTO, ResponseResult } from "@/types/model";
+import debounce from "lodash/debounce";
 
 const SearchUser = () => {
-    const [query, setQuery] = useState<string>('');
+    const [query, setQuery] = useState<string>("");
     const [users, setUsers] = useState<UserIndexResponseDTO[]>([]);
-    const [error, setError] = useState<string>('');
+    const [error, setError] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const searchUsers = async (searchQuery: string) => {
@@ -19,22 +19,29 @@ const SearchUser = () => {
         setIsLoading(true);
         try {
             const response = await fetch(
-                `http://localhost:8080/api/user/search?query=${encodeURIComponent(searchQuery)}`,
+                `http://localhost:8080/api/user/search?query=${encodeURIComponent(
+                    searchQuery
+                )}`,
                 {
-                    credentials: 'include',
+                    credentials: "include",
                 }
             );
 
             if (!response.ok) {
-                throw new Error('Failed to search users');
+                throw new Error("Failed to search users");
             }
 
-            const data: ResponseResult<UserIndexResponseDTO[]> = await response.json();
+            const data: ResponseResult<UserIndexResponseDTO[]> =
+                await response.json();
             setUsers(data.data);
-            setError('');
+            setError("");
         } catch (error) {
-            log.error('Error searching users:', error);
-            setError(error instanceof Error ? error.message : 'Failed to search users');
+            log.error("Error searching users:", error);
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to search users"
+            );
             setUsers([]);
         } finally {
             setIsLoading(false);
@@ -77,13 +84,15 @@ const SearchUser = () => {
             {error && <div className="text-red-500">{error}</div>}
 
             <div className="space-y-2">
-                {users.map(user => (
+                {users.map((user) => (
                     <div
                         key={user.id}
                         className="p-3 border rounded-lg hover:bg-gray-50"
                     >
                         <div className="font-medium">{user.userName}</div>
-                        <div className="text-sm text-gray-500">{user.nickName}</div>
+                        <div className="text-sm text-gray-500">
+                            {user.nickName}
+                        </div>
                     </div>
                 ))}
                 {query && users.length === 0 && !isLoading && !error && (

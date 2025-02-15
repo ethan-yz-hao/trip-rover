@@ -14,7 +14,7 @@ export interface PlanPlaces {
 export interface PlanSummary {
     planId: number;
     planName: string;
-    role: 'OWNER' | 'EDITOR' | 'VIEWER';
+    role: "OWNER" | "EDITOR" | "VIEWER";
     createTime: Date;
     updateTime: Date;
 }
@@ -22,17 +22,17 @@ export interface PlanSummary {
 export interface PlanUpdateMessage {
     clientId: string;
     updateId: string;
-    action: 'ADD' | 'REMOVE' | 'REORDER' | 'UPDATE';
-    placeId: string;              // For ADD and REMOVE actions
-    targetPlaceId?: string;       // For REORDER action
+    action: "ADD" | "REMOVE" | "REORDER" | "UPDATE";
+    placeId: string; // For ADD and REMOVE actions
+    targetPlaceId?: string; // For REORDER action
     version: number;
-    googlePlaceId?: string;       // For ADD and UPDATE actions
-    staySeconds?: number;         // For ADD and UPDATE actions
+    googlePlaceId?: string; // For ADD and UPDATE actions
+    staySeconds?: number; // For ADD and UPDATE actions
 }
 
 export interface PlanAckMessage {
     updateId: string;
-    status: 'OK' | 'ERROR';
+    status: "OK" | "ERROR";
     errorMessage?: string;
 }
 
