@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
-import log from "@/utils/log";
+import log from "@/lib/log";
 import { PlanIndexResponseDTO, ResponseResult } from "@/types/model";
 import debounce from "lodash/debounce";
 

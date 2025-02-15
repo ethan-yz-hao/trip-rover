@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import log from "@/utils/log";
+import log from "@/lib/log";
 import { PlanSummary } from "@/types/model";
 import Link from "next/link";
 

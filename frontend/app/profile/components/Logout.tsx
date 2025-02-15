@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import log from "@/utils/log";
+import log from "@/lib/log";
 
 const handleLogout = async () => {
     try {

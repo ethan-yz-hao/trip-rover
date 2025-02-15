@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import log from "@/utils/log";
+import log from "@/lib/log";
 import { PlanSummary as PlanSummaryType } from "@/types/model";
 
 const PlanSummary = ({ planId }: { planId: number }) => {

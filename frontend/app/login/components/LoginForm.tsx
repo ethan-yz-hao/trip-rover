@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import log from "@/utils/log";
+import log from "@/lib/log";
 
 const LoginForm: React.FC = () => {
     // State to hold form data

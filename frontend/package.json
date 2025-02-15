@@ -16,6 +16,7 @@
     "@mui/icons-material": "^6.4.4",
     "@mui/material": "^6.4.4",
     "@mui/material-nextjs": "^6.4.3",
+    "@reduxjs/toolkit": "^2.5.1",
     "@stomp/stompjs": "^7.0.0",
     "axios": "^1.7.7",
     "lodash": "^4.17.21",

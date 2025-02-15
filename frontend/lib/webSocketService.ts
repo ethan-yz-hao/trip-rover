@@ -2,7 +2,7 @@ import { Client, IMessage } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { PlanAckMessage, PlanUpdateMessage } from "@/types/model";
 import { v4 as uuidv4 } from "uuid";
-import log from "@/utils/log";
+import log from "@/lib/log";
 
 class WebSocketService {
     private client: Client;

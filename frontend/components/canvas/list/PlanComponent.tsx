@@ -13,10 +13,10 @@ import {
     Draggable,
     DropResult,
 } from "@hello-pangea/dnd";
-import WebSocketService from "@/utils/webSocketService";
+import WebSocketService from "@/lib/webSocketService";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import log from "@/utils/log";
+import log from "@/lib/log";
 import StaySecondsEditor from "@/components/canvas/list/StaySecondEditor";
 
 interface PlanComponentProps {
