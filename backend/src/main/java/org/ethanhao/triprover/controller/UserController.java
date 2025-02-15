@@ -61,6 +61,14 @@ public class UserController {
         return new ResponseResult<>(HttpStatus.OK.value(), "Register successful", userResponseDTO);
     }
 
+    @GetMapping("/profile")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<UserResponseDTO> getProfile(Authentication authentication) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        UserResponseDTO userResponseDTO = userService.getUser(loginUser.getUser().getId());
+        return new ResponseResult<>(HttpStatus.OK.value(), "Profile retrieved successfully", userResponseDTO);
+    }
+
     @DeleteMapping("/delete")
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<Object> deleteUser(Authentication authentication) {
@@ -71,7 +79,8 @@ public class UserController {
 
     @PatchMapping("/update")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<UserResponseDTO> updatePassword(@RequestBody UserUpdateDTO updateRequest, Authentication authentication) {
+    public ResponseResult<UserResponseDTO> updatePassword(@RequestBody UserUpdateDTO updateRequest,
+            Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
         UserResponseDTO userResponseDTO = userService.updateUser(userId, updateRequest);
@@ -92,14 +101,13 @@ public class UserController {
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
-        
+
         UserResponseDTO userResponseDTO = avatarService.uploadAvatar(file, userId);
-        
+
         return new ResponseResult<>(
-            HttpStatus.OK.value(),
-            "Avatar uploaded successfully",
-            userResponseDTO
-        );
+                HttpStatus.OK.value(),
+                "Avatar uploaded successfully",
+                userResponseDTO);
     }
 
     @DeleteMapping("/avatar")
@@ -107,14 +115,13 @@ public class UserController {
     public ResponseResult<UserResponseDTO> deleteAvatar(Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
-        
+
         UserResponseDTO userResponseDTO = avatarService.deleteAvatar(userId);
-        
+
         return new ResponseResult<>(
-            HttpStatus.OK.value(),
-            "Avatar deleted successfully",
-            userResponseDTO
-        );
+                HttpStatus.OK.value(),
+                "Avatar deleted successfully",
+                userResponseDTO);
     }
 
     @GetMapping("/search")
@@ -124,9 +131,8 @@ public class UserController {
 
         List<UserIndexResponseDTO> users = searchService.searchUsers(query);
         return new ResponseResult<>(
-            HttpStatus.OK.value(),
-            "Search successful",
-            users
-        );
+                HttpStatus.OK.value(),
+                "Search successful",
+                users);
     }
 }

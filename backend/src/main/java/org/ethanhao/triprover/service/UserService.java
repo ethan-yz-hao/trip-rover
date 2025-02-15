@@ -15,6 +15,8 @@ public interface UserService {
 
     UserResponseDTO register(UserRegisterDTO registerRequest);
 
+    UserResponseDTO getUser(Long userId);
+
     UserResponseDTO updateUser(Long userId, UserUpdateDTO updateRequest);
 
     void deleteUser(String username);

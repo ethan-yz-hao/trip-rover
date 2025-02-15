@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
-    
+
     @Autowired
     AuthenticationManager authenticationManager;
 
@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     UserRepository userRepository;
-    
+
     @Autowired
     RedisCache redisCache;
 
@@ -60,9 +60,10 @@ public class UserServiceImpl implements UserService {
     public void login(UserAuthDTO loginRequest, HttpServletResponse response) {
         User user = userMapper.userAuthDtoToUser(loginRequest);
         // Encapsulate the Authentication object
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword());
-        // Authenticate the user through the authenticate method of AuthenticationManager
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                user.getUserName(), user.getPassword());
+        // Authenticate the user through the authenticate method of
+        // AuthenticationManager
         Authentication authenticated = authenticationManager.authenticate(authenticationToken);
         // If the authentication fails, throw an exception
         if (Objects.isNull(authenticated)) {
@@ -93,7 +94,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void logout(HttpServletResponse response) {
         // Get the user id from SecurityContextHolder
-        UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder
+                .getContext().getAuthentication();
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         String userId = loginUser.getUser().getId().toString();
         // Delete user information from redis
@@ -119,9 +121,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponseDTO getUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return userMapper.toResponseDto(user);
+    }
+
+    @Override
     public UserResponseDTO updateUser(Long userId, UserUpdateDTO updateRequest) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         userMapper.updateUserFromDto(updateRequest, user);
         User updatedUser = userRepository.save(user);
         return userMapper.toResponseDto(updatedUser);
