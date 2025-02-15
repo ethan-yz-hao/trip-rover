@@ -24,9 +24,12 @@ export const login = createAsyncThunk(
     "auth/login",
     async (
         credentials: { userName: string; password: string },
-        { rejectWithValue }
+        { dispatch, rejectWithValue }
     ) => {
         try {
+            // Logout first to clear any existing session
+            await dispatch(logout());
+
             // Login request
             await axiosInstance.post<ResponseResult<void>>(
                 "/user/login",
