@@ -47,3 +47,8 @@ export interface UserIndexResponseDTO {
     userName: string;
     nickName: string;
 }
+
+export interface PlanIndexResponseDTO {
+    planId: number;
+    planName: string;
+}

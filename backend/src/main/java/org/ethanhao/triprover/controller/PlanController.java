@@ -6,13 +6,16 @@ import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.PlanMember;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.dto.plan.PlanBaseDTO;
+import org.ethanhao.triprover.dto.plan.PlanIndexResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanPlacesResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberBaseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 import org.ethanhao.triprover.service.PlanService;
+import org.ethanhao.triprover.service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -35,10 +39,12 @@ import lombok.extern.slf4j.Slf4j;
 public class PlanController {
 
     private final PlanService planService;
+    private final SearchService searchService;
 
     @Autowired
-    public PlanController(PlanService planService) {
+    public PlanController(PlanService planService, SearchService searchService) {
         this.planService = planService;
+        this.searchService = searchService;
     }
 
     @GetMapping()
@@ -196,6 +202,18 @@ public class PlanController {
 
         PlanPlacesResponseDTO planPlaces = planService.getPlanPlaces(planId);
         return new ResponseResult<>(200, "Success", planPlaces);
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<List<PlanIndexResponseDTO>> searchPlans(
+            @RequestParam String query) {
+        List<PlanIndexResponseDTO> plans = searchService.searchPlans(query);
+        return new ResponseResult<>(
+            HttpStatus.OK.value(),
+            "Search successful",
+            plans
+        );
     }
 
 }

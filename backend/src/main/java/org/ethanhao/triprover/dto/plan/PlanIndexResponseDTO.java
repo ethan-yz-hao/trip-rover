@@ -6,6 +6,4 @@ import lombok.Data;
 public class PlanIndexResponseDTO {
     private Long planId;
     private String planName;
-    private String description;
-    private Boolean isPublic;
 }

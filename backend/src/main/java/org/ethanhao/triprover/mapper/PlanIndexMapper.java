@@ -9,7 +9,5 @@ import org.mapstruct.Mapping;
 public interface PlanIndexMapper {
     @Mapping(source = "planId", target = "planId")
     @Mapping(source = "planName", target = "planName")
-    @Mapping(source = "description", target = "description")
-    @Mapping(source = "isPublic", target = "isPublic")
     PlanIndexResponseDTO toResponseDTO(PlanIndex planIndex);
 } 

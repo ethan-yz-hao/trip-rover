@@ -114,7 +114,7 @@ docker-compose up -d
 
 Create the connectors
 ```
-# For local development (Note even for local development, we use .env.prod)
+# For local development (Note even for local development, use .env.prod)
 ./script/setup-connectors.sh .env.prod
 ```
 
