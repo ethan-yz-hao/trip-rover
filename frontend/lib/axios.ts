@@ -54,7 +54,8 @@ axiosInstance.interceptors.response.use(
             } finally {
                 isLoggingOut = false;
             }
-            return Promise.reject(new AppError("Session expired", 401, error));
+            const msg = responseData?.msg || "An unexpected error occurred";
+            return Promise.reject(new AppError(msg, 401, error));
         }
 
         // Handle other common errors
