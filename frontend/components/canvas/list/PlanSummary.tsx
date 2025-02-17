@@ -3,7 +3,13 @@ import React, { useState, useEffect } from "react";
 import log from "@/lib/log";
 import { PlanSummary as PlanSummaryType } from "@/types/model";
 
-const PlanSummary = ({ planId }: { planId: number }) => {
+const PlanSummary = ({
+    planId,
+    onRoleChange,
+}: {
+    planId: number;
+    onRoleChange: (role: "OWNER" | "EDITOR" | "VIEWER") => void;
+}) => {
     const [planSummary, setPlanSummary] = useState<PlanSummaryType | null>(
         null
     );
@@ -31,6 +37,7 @@ const PlanSummary = ({ planId }: { planId: number }) => {
                     updateTime: new Date(data.data.updateTime),
                 };
                 setPlanSummary(planSummary);
+                onRoleChange(planSummary.role);
             } catch (error) {
                 log.error("Error fetching plans:", error);
                 setError(
@@ -42,7 +49,7 @@ const PlanSummary = ({ planId }: { planId: number }) => {
         };
 
         fetchPlanSummary();
-    }, []);
+    }, [planId, onRoleChange]);
 
     if (error) {
         return <div>{error}</div>;

@@ -28,6 +28,7 @@ import {
 
 interface PlanPlaceListProps {
     planId: number;
+    userRole: "OWNER" | "EDITOR" | "VIEWER";
 }
 
 interface PendingUpdate {
@@ -35,13 +36,14 @@ interface PendingUpdate {
     updateMessage: PlanUpdateMessage;
 }
 
-const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId }) => {
+const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId, userRole }) => {
     const [planPlaces, setPlanPlaces] = useState<PlanPlaces | null>(null);
     const planPlacesRef = useRef<PlanPlaces | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
     const [newGooglePlaceId, setNewGooglePlaceId] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const canEdit = userRole === "OWNER" || userRole === "EDITOR";
 
     // Ordered queue of pending updates
     const pendingUpdatesRef = useRef<PendingUpdate[]>([]);
@@ -473,22 +475,28 @@ const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId }) => {
                     {error}
                 </Alert>
             </Snackbar>
-            <form onSubmit={handleAdd}>
-                <div>
-                    <label htmlFor="newGooglePlaceId">
-                        New Google Place Id:
-                    </label>
-                    <input
-                        type="text"
-                        id="newGooglePlaceId"
-                        value={newGooglePlaceId}
-                        onChange={(e) => setNewGooglePlaceId(e.target.value)}
-                        required
-                    />
-                </div>
-                <button type="submit">Add New Place Index</button>
-            </form>
-            <DragDropContext onDragEnd={onDragEnd}>
+
+            {canEdit && (
+                <form onSubmit={handleAdd}>
+                    <div>
+                        <label htmlFor="newGooglePlaceId">
+                            New Google Place Id:
+                        </label>
+                        <input
+                            type="text"
+                            id="newGooglePlaceId"
+                            value={newGooglePlaceId}
+                            onChange={(e) =>
+                                setNewGooglePlaceId(e.target.value)
+                            }
+                            required
+                        />
+                    </div>
+                    <button type="submit">Add New Place Index</button>
+                </form>
+            )}
+
+            <DragDropContext onDragEnd={canEdit ? onDragEnd : () => {}}>
                 <Droppable droppableId="places">
                     {(provided) => (
                         <ul
@@ -500,6 +508,7 @@ const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId }) => {
                                     key={place.placeId}
                                     draggableId={place.placeId}
                                     index={index}
+                                    isDragDisabled={!canEdit}
                                 >
                                     {(provided) => (
                                         <li
@@ -509,23 +518,29 @@ const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId }) => {
                                         >
                                             {place.placeId}{" "}
                                             {place.googlePlaceId}{" "}
-                                            {place.staySeconds}{" "}
-                                            <StaySecondsEditor
-                                                placeId={place.placeId}
-                                                currentStaySeconds={
-                                                    place.staySeconds
-                                                }
-                                                onSubmit={
-                                                    handleStaySecondsUpdate
-                                                }
-                                            />
-                                            <button
-                                                onClick={() =>
-                                                    handleDelete(place.placeId)
-                                                }
-                                            >
-                                                Delete
-                                            </button>
+                                            {place.staySeconds}
+                                            {canEdit && (
+                                                <>
+                                                    <StaySecondsEditor
+                                                        placeId={place.placeId}
+                                                        currentStaySeconds={
+                                                            place.staySeconds
+                                                        }
+                                                        onSubmit={
+                                                            handleStaySecondsUpdate
+                                                        }
+                                                    />
+                                                    <button
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                place.placeId
+                                                            )
+                                                        }
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </>
+                                            )}
                                         </li>
                                     )}
                                 </Draggable>
