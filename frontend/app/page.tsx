@@ -1,6 +1,5 @@
-import PlanList from "@/app/profile/components/PlanList";
-import SearchUser from "@/components/canvas/list/SearchUser";
-import SearchPlan from "@/components/canvas/list/SearchPlan";
+import SearchUser from "@/components/canvas/search/SearchUser";
+import SearchPlan from "@/components/canvas/search/SearchPlan";
 import Navbar from "../components/navbar/Navbar";
 
 export default function Home() {
