@@ -12,6 +12,9 @@ import {
     Stack,
     Divider,
     Tooltip,
+    TextField,
+    IconButton,
+    Button,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -30,6 +33,12 @@ const PlanSummary = ({
         null
     );
     const [error, setError] = useState<string>("");
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedDescription, setEditedDescription] = useState("");
+    const [updateError, setUpdateError] = useState("");
+
+    const canEdit =
+        planSummary?.role === "OWNER" || planSummary?.role === "EDITOR";
 
     useEffect(() => {
         const fetchPlanSummary = async () => {
@@ -66,6 +75,49 @@ const PlanSummary = ({
 
         fetchPlanSummary();
     }, [planId, onRoleChange]);
+
+    const handleEditClick = () => {
+        setEditedDescription(planSummary?.description || "");
+        setIsEditing(true);
+    };
+
+    const handleSubmit = async () => {
+        try {
+            const response = await fetch(
+                `http://localhost:8080/api/plan/${planId}`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        description: editedDescription,
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to update description");
+            }
+
+            const data = await response.json();
+            setPlanSummary({
+                ...planSummary!,
+                description: editedDescription,
+                updateTime: new Date(data.data.updateTime),
+            });
+            setIsEditing(false);
+            setUpdateError("");
+        } catch (error) {
+            log.error("Error updating description:", error);
+            setUpdateError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to update description"
+            );
+        }
+    };
 
     if (error) {
         return <div>{error}</div>;
@@ -152,11 +204,75 @@ const PlanSummary = ({
             <AccordionDetails>
                 {planSummary && (
                     <Stack spacing={2}>
-                        <Typography color="text.secondary" sx={{ mt: 1 }}>
-                            {planSummary.description}
-                        </Typography>
-
-                        <Divider />
+                        <Box sx={{ position: "relative" }}>
+                            {isEditing ? (
+                                <Stack spacing={2}>
+                                    <TextField
+                                        multiline
+                                        minRows={2}
+                                        maxRows={4}
+                                        value={editedDescription}
+                                        onChange={(e) =>
+                                            setEditedDescription(e.target.value)
+                                        }
+                                        error={!!updateError}
+                                        helperText={updateError}
+                                        fullWidth
+                                        sx={{ mt: 1 }}
+                                    />
+                                    <Stack
+                                        direction="row"
+                                        spacing={1}
+                                        justifyContent="flex-end"
+                                    >
+                                        <Button
+                                            variant="outlined"
+                                            onClick={() => setIsEditing(false)}
+                                            size="small"
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            onClick={handleSubmit}
+                                            size="small"
+                                        >
+                                            Save
+                                        </Button>
+                                    </Stack>
+                                </Stack>
+                            ) : (
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "flex-start",
+                                        gap: 1,
+                                    }}
+                                >
+                                    <Typography
+                                        color="text.secondary"
+                                        sx={{ flex: 1 }}
+                                    >
+                                        {planSummary.description}
+                                    </Typography>
+                                    {canEdit && (
+                                        <IconButton
+                                            onClick={handleEditClick}
+                                            size="small"
+                                            sx={{
+                                                ml: 1,
+                                                "&:hover": {
+                                                    backgroundColor:
+                                                        "action.hover",
+                                                },
+                                            }}
+                                        >
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
+                                </Box>
+                            )}
+                        </Box>
 
                         <Stack direction="row" spacing={1} alignItems="center">
                             <Chip
