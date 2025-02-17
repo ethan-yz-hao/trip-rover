@@ -26,7 +26,7 @@ import {
     Snackbar,
 } from "@mui/material";
 
-interface PlanComponentProps {
+interface PlanPlaceListProps {
     planId: number;
 }
 
@@ -35,7 +35,7 @@ interface PendingUpdate {
     updateMessage: PlanUpdateMessage;
 }
 
-const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
+const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId }) => {
     const [planPlaces, setPlanPlaces] = useState<PlanPlaces | null>(null);
     const planPlacesRef = useRef<PlanPlaces | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
@@ -539,4 +539,4 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
     );
 };
 
-export default PlanComponent;
+export default PlanPlaceList;
