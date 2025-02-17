@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
-
 @RestController
 @RequestMapping("/api/plan")
 @Slf4j
@@ -52,11 +51,11 @@ public class PlanController {
     public ResponseResult<List<PlanSummaryResponseDTO>> getPlanSummaries(Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
-        
-        log.info("Retrieving plans for user: {} (ID: {})", 
-            loginUser.getUser().getUserName(), 
-            userId);
-        
+
+        log.info("Retrieving plans for user: {} (ID: {})",
+                loginUser.getUser().getUserName(),
+                userId);
+
         List<PlanSummaryResponseDTO> planSummaries = planService.getPlanSummaries(userId);
         return new ResponseResult<>(200, "Success", planSummaries);
     }
@@ -65,15 +64,14 @@ public class PlanController {
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<PlanSummaryResponseDTO> getPlanSummary(
             @PathVariable Long planId,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
 
         PlanSummaryResponseDTO planSummary = planService.getPlanSummary(userId, planId);
         return new ResponseResult<>(200, "Success", planSummary);
     }
-    
+
     @PostMapping()
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<PlanSummaryResponseDTO> createPlan(
@@ -81,12 +79,12 @@ public class PlanController {
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
-        
-        log.info("Creating new plan '{}' for user: {} (ID: {})", 
-            request.getPlanName(), 
-            loginUser.getUser().getUserName(), 
-            userId);
-        
+
+        log.info("Creating new plan '{}' for user: {} (ID: {})",
+                request.getPlanName(),
+                loginUser.getUser().getUserName(),
+                userId);
+
         PlanSummaryResponseDTO planSummary = planService.createPlan(userId, request);
         return new ResponseResult<>(200, "Success", planSummary);
     }
@@ -95,12 +93,11 @@ public class PlanController {
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<Void> deletePlan(
             @PathVariable Long planId,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
 
-        if (!planService.hasRole(userId, planId, PlanMember.RoleType.OWNER)) {  
+        if (!planService.hasRole(userId, planId, PlanMember.RoleType.OWNER)) {
             log.info("User {} is not authorized to delete plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to delete plan");
         }
@@ -114,8 +111,7 @@ public class PlanController {
     public ResponseResult<PlanSummaryResponseDTO> updatePlan(
             @PathVariable Long planId,
             @Valid @RequestBody PlanUpdateDTO request,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
 
@@ -128,12 +124,28 @@ public class PlanController {
         return new ResponseResult<>(200, "Success", planSummary);
     }
 
+    @GetMapping("/{planId}/member")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<List<PlanMemberBaseDTO>> getPlanMembers(
+            @PathVariable Long planId,
+            Authentication authentication) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUser().getId();
+
+        if (!planService.hasRole(userId, planId, PlanMember.RoleType.VIEWER)) {
+            log.info("User {} is not authorized to view members of plan {}", userId, planId);
+            throw new AccessDeniedException("User is not authorized to view plan members");
+        }
+
+        List<PlanMemberBaseDTO> planMembers = planService.getPlanMembers(planId);
+        return new ResponseResult<>(200, "Success", planMembers);
+    }
+
     @PostMapping("/member")
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<PlanSummaryResponseDTO> addPlanMember(
             @Valid @RequestBody PlanMemberUpdateDTO request,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
         Long planId = request.getPlanId();
@@ -151,8 +163,7 @@ public class PlanController {
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<PlanSummaryResponseDTO> removePlanMember(
             @Valid @RequestBody PlanMemberBaseDTO request,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
         Long planId = request.getPlanId();
@@ -170,8 +181,7 @@ public class PlanController {
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<PlanSummaryResponseDTO> updatePlanMemberRole(
             @Valid @RequestBody PlanMemberUpdateDTO request,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
         Long planId = request.getPlanId();
@@ -189,8 +199,7 @@ public class PlanController {
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<PlanPlacesResponseDTO> getPlanPlace(
             @PathVariable Long planId,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
 
@@ -210,10 +219,8 @@ public class PlanController {
             @RequestParam String query) {
         List<PlanIndexResponseDTO> plans = searchService.searchPlans(query);
         return new ResponseResult<>(
-            HttpStatus.OK.value(),
-            "Search successful",
-            plans
-        );
+                HttpStatus.OK.value(),
+                "Search successful",
+                plans);
     }
-
 }

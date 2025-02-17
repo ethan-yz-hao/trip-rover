@@ -12,13 +12,24 @@ import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 
 public interface PlanService {
     List<PlanSummaryResponseDTO> getPlanSummaries(Long userId);
+
     PlanSummaryResponseDTO getPlanSummary(Long userId, Long planId);
+
     PlanSummaryResponseDTO createPlan(Long userId, PlanBaseDTO request);
+
     void deletePlan(Long planId);
+
     PlanSummaryResponseDTO updatePlan(Long userId, Long planId, PlanUpdateDTO request);
+
+    List<PlanMemberBaseDTO> getPlanMembers(Long planId);
+
     PlanSummaryResponseDTO addPlanMember(Long userId, PlanMemberUpdateDTO request);
+
     PlanSummaryResponseDTO removePlanMember(Long userId, PlanMemberBaseDTO request);
+
     PlanSummaryResponseDTO updatePlanMemberRole(Long userId, PlanMemberUpdateDTO request);
+
     PlanPlacesResponseDTO getPlanPlaces(Long planId);
-    boolean hasRole(Long userId,Long planId, PlanMember.RoleType requiredRole);
+
+    boolean hasRole(Long userId, Long planId, PlanMember.RoleType requiredRole);
 }
