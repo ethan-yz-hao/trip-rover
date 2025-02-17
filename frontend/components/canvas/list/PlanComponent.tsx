@@ -18,7 +18,13 @@ import { v4 as uuidv4 } from "uuid";
 import { axiosInstance, AppError } from "@/lib/axios";
 import log from "@/lib/log";
 import StaySecondsEditor from "@/components/canvas/list/StaySecondEditor";
-import { Box, CircularProgress, Alert, Typography } from "@mui/material";
+import {
+    Box,
+    CircularProgress,
+    Alert,
+    Typography,
+    Snackbar,
+} from "@mui/material";
 
 interface PlanComponentProps {
     planId: number;
@@ -44,7 +50,6 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
     const fetchPlanData = async () => {
         try {
             setLoading(true);
-            setError(null);
 
             const response = await axiosInstance.get<
                 ResponseResult<PlanPlaces>
@@ -54,7 +59,6 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
             planPlacesRef.current = response.data.data;
         } catch (err) {
             log.error("Error fetching plan:", err);
-
             if (err instanceof AppError) {
                 setError(err.message);
             } else {
@@ -77,16 +81,34 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
         const webSocketService = new WebSocketService(planId);
         webSocketServiceRef.current = webSocketService;
 
-        webSocketService.connect(
-            (updateMessage: PlanUpdateMessage) => {
-                log.info("WebSocket update message received:", updateMessage);
-                handleUpdateMessage(updateMessage);
-            },
-            (ackMessage: PlanAckMessage) => {
-                log.log("WebSocket ack message received:", ackMessage);
-                handleAckMessage(ackMessage);
+        const initializeWebSocket = async () => {
+            try {
+                await webSocketService.connect(
+                    (updateMessage: PlanUpdateMessage) => {
+                        log.info(
+                            "WebSocket update message received:",
+                            updateMessage
+                        );
+                        handleUpdateMessage(updateMessage);
+                    },
+                    (ackMessage: PlanAckMessage) => {
+                        log.info("WebSocket ack message received:", ackMessage);
+                        handleAckMessage(ackMessage);
+                    }
+                );
+            } catch (err) {
+                log.error("WebSocket connection error:", err);
+                if (err instanceof AppError) {
+                    setError(err.message);
+                } else {
+                    setError(
+                        "Failed to establish real-time connection. Updates may be delayed."
+                    );
+                }
             }
-        );
+        };
+
+        initializeWebSocket();
 
         return () => {
             webSocketService.disconnect();
@@ -117,21 +139,29 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
 
         // Apply the update from other clients
         if (!planPlacesRef.current) {
-            log.error("Plan not loaded");
+            setError("Cannot apply update: Plan not loaded");
             return;
         }
-        const updatedPlan = applyLocalUpdate(
-            planPlacesRef.current,
-            updateMessage
-        );
-        if (!updatedPlan) {
-            log.error(
-                "Failed to apply incoming update locally. Refetching plan data"
+
+        try {
+            const updatedPlan = applyLocalUpdate(
+                planPlacesRef.current,
+                updateMessage
             );
-            fetchPlanData(); // Reload the plan
-        } else {
+            if (!updatedPlan) {
+                throw new AppError("Failed to apply incoming update", 422);
+            }
+
             planPlacesRef.current = updatedPlan;
             setPlanPlaces(updatedPlan);
+        } catch (err) {
+            log.error("Failed to apply incoming update:", err);
+            if (err instanceof AppError) {
+                setError(err.message);
+            } else {
+                setError("Failed to apply incoming update");
+            }
+            fetchPlanData(); // Reload the plan as fallback
         }
     };
 
@@ -149,7 +179,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
 
         if (status === "ERROR") {
             log.error("Update failed:", errorMessage);
-            alert("Update failed: " + errorMessage);
+            setError(errorMessage || "Update failed");
             fetchPlanData(); // Reload the plan
         }
     };
@@ -159,121 +189,151 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
         currentPlan: PlanPlaces,
         updateMessage: PlanUpdateMessage
     ): PlanPlaces | null => {
-        switch (updateMessage.action) {
-            case "REORDER":
-                const { placeId, targetPlaceId, version } = updateMessage;
-                const placeToMoveIndex = currentPlan.places.findIndex(
-                    (place) => place.placeId === placeId
-                );
-                if (placeToMoveIndex === -1) {
-                    log.error(`Place with ID ${placeId} not found for REORDER`);
-                    return null;
-                }
-
-                const placeToMove = currentPlan.places[placeToMoveIndex];
-                const updatedPlaces = Array.from(currentPlan.places);
-                updatedPlaces.splice(placeToMoveIndex, 1); // Remove the place
-
-                let targetIndex = updatedPlaces.length; // Default to end
-                if (targetPlaceId) {
-                    const targetPlace = updatedPlaces.find(
-                        (place) => place.placeId === targetPlaceId
+        try {
+            switch (updateMessage.action) {
+                case "REORDER":
+                    const { placeId, targetPlaceId, version } = updateMessage;
+                    const placeToMoveIndex = currentPlan.places.findIndex(
+                        (place) => place.placeId === placeId
                     );
-                    if (targetPlace) {
-                        targetIndex = updatedPlaces.indexOf(targetPlace); // Insert before the targetIndex
+                    if (placeToMoveIndex === -1) {
+                        return null;
                     }
-                }
 
-                // Adjust target index (insert after the targetIndex) if moving down
-                if (targetIndex >= placeToMoveIndex) {
-                    targetIndex += 1;
-                }
+                    const placeToMove = currentPlan.places[placeToMoveIndex];
+                    const updatedPlaces = Array.from(currentPlan.places);
+                    updatedPlaces.splice(placeToMoveIndex, 1); // Remove the place
 
-                updatedPlaces.splice(targetIndex, 0, placeToMove); // Insert at new position
-
-                return { ...currentPlan, places: updatedPlaces, version };
-
-            case "ADD":
-                if (updateMessage.placeId && updateMessage.googlePlaceId) {
-                    const newPlace: Place = {
-                        placeId: updateMessage.placeId,
-                        googlePlaceId: updateMessage.googlePlaceId,
-                        staySeconds: updateMessage.staySeconds || 1800,
-                    };
-                    return {
-                        ...currentPlan,
-                        places: [...currentPlan.places, newPlace],
-                        version: updateMessage.version,
-                    };
-                }
-                return null;
-
-            case "REMOVE":
-                if (updateMessage.placeId) {
-                    const filteredPlaces = currentPlan.places.filter(
-                        (place) => place.placeId !== updateMessage.placeId
-                    );
-                    return {
-                        ...currentPlan,
-                        places: filteredPlaces,
-                        version: updateMessage.version,
-                    };
-                }
-                return null;
-
-            case "UPDATE":
-                if (
-                    updateMessage.placeId &&
-                    updateMessage.googlePlaceId &&
-                    updateMessage.staySeconds
-                ) {
-                    const updatedPlaces = currentPlan.places.map((place) => {
-                        if (place.placeId === updateMessage.placeId) {
-                            return {
-                                ...place,
-                                googlePlaceId: updateMessage.googlePlaceId!,
-                                staySeconds: updateMessage.staySeconds!,
-                            };
+                    let targetIndex = updatedPlaces.length; // Default to end
+                    if (targetPlaceId) {
+                        const targetPlace = updatedPlaces.find(
+                            (place) => place.placeId === targetPlaceId
+                        );
+                        if (targetPlace) {
+                            targetIndex = updatedPlaces.indexOf(targetPlace); // Insert before the targetIndex
                         }
-                        return place;
-                    });
-                    return {
-                        ...currentPlan,
-                        places: updatedPlaces,
-                        version: updateMessage.version,
-                    };
-                }
-                return null;
-            default:
-                log.error("Unknown action:", updateMessage.action);
-                return null;
+                    }
+
+                    // Adjust target index (insert after the targetIndex) if moving down
+                    if (targetIndex >= placeToMoveIndex) {
+                        targetIndex += 1;
+                    }
+
+                    updatedPlaces.splice(targetIndex, 0, placeToMove); // Insert at new position
+
+                    return { ...currentPlan, places: updatedPlaces, version };
+
+                case "ADD":
+                    if (updateMessage.placeId && updateMessage.googlePlaceId) {
+                        const newPlace: Place = {
+                            placeId: updateMessage.placeId,
+                            googlePlaceId: updateMessage.googlePlaceId,
+                            staySeconds: updateMessage.staySeconds || 1800,
+                        };
+                        return {
+                            ...currentPlan,
+                            places: [...currentPlan.places, newPlace],
+                            version: updateMessage.version,
+                        };
+                    }
+                    return null;
+
+                case "REMOVE":
+                    if (updateMessage.placeId) {
+                        const filteredPlaces = currentPlan.places.filter(
+                            (place) => place.placeId !== updateMessage.placeId
+                        );
+                        return {
+                            ...currentPlan,
+                            places: filteredPlaces,
+                            version: updateMessage.version,
+                        };
+                    }
+                    return null;
+
+                case "UPDATE":
+                    if (
+                        updateMessage.placeId &&
+                        updateMessage.googlePlaceId &&
+                        updateMessage.staySeconds
+                    ) {
+                        const updatedPlaces = currentPlan.places.map(
+                            (place) => {
+                                if (place.placeId === updateMessage.placeId) {
+                                    return {
+                                        ...place,
+                                        googlePlaceId:
+                                            updateMessage.googlePlaceId!,
+                                        staySeconds: updateMessage.staySeconds!,
+                                    };
+                                }
+                                return place;
+                            }
+                        );
+                        return {
+                            ...currentPlan,
+                            places: updatedPlaces,
+                            version: updateMessage.version,
+                        };
+                    }
+                    return null;
+                default:
+                    throw new AppError(
+                        `Unknown action: ${updateMessage.action}`,
+                        422
+                    );
+            }
+        } catch (err) {
+            if (err instanceof AppError) {
+                throw err;
+            }
+            throw new AppError("Failed to apply update", 422, err);
         }
     };
 
     // Send an update message
     const sendUpdate = (updateMessage: PlanUpdateMessage) => {
-        const updateId = uuidv4();
+        try {
+            if (!webSocketServiceRef.current?.isConnected()) {
+                throw new AppError(
+                    "WebSocket connection is not available",
+                    409
+                );
+            }
 
-        if (!planPlacesRef.current) {
-            log.error("Plan not loaded");
-            return;
+            const updateId = uuidv4();
+
+            if (!planPlacesRef.current) {
+                throw new AppError("Plan data is not loaded", 409);
+            }
+
+            // Optimistically apply the update
+            const updatedPlan = applyLocalUpdate(
+                planPlacesRef.current,
+                updateMessage
+            );
+            if (!updatedPlan) {
+                throw new AppError("Failed to apply local update", 422);
+            }
+
+            planPlacesRef.current = updatedPlan;
+            setPlanPlaces(updatedPlan);
+
+            // Send the update via WebSocket
+            pendingUpdatesRef.current.push({ updateId, updateMessage });
+            webSocketServiceRef.current.sendUpdate(updateMessage, updateId);
+        } catch (err) {
+            log.error("Error sending update:", err);
+            if (err instanceof AppError) {
+                setError(err.message);
+            } else {
+                setError("Failed to send update. Please try again.");
+            }
+            // Revert optimistic update if needed
+            if (planPlacesRef.current) {
+                setPlanPlaces(planPlacesRef.current);
+            }
         }
-
-        // Optimistically apply the update to the local state
-        const updatedPlan = applyLocalUpdate(
-            planPlacesRef.current,
-            updateMessage
-        );
-        if (!updatedPlan) {
-            log.error("Local update failed");
-            return;
-        }
-        planPlacesRef.current = updatedPlan;
-        setPlanPlaces(updatedPlan);
-
-        // Send the update via WebSocket
-        pendingUpdatesRef.current.push({ updateId, updateMessage });
-        webSocketServiceRef.current?.sendUpdate(updateMessage, updateId);
     };
 
     // Handle drag and drop
@@ -305,18 +365,21 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
         sendUpdate(updateMessage);
     };
 
+    // Handle error snackbar close
+    const handleErrorClose = (
+        event?: React.SyntheticEvent | Event,
+        reason?: string
+    ) => {
+        if (reason === "clickaway") {
+            return;
+        }
+        setError(null);
+    };
+
     if (loading) {
         return (
             <Box display="flex" justifyContent="center" p={4}>
                 <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box p={2}>
-                <Alert severity="error">{error}</Alert>
             </Box>
         );
     }
@@ -353,7 +416,6 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
             (place) => place.placeId === placeId
         );
         if (index === -1) {
-            log.error("Place not found:", placeId);
             return;
         }
 
@@ -377,7 +439,6 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
             (place) => place.placeId === placeId
         );
         if (!place) {
-            log.error("Place not found:", placeId);
             return;
         }
 
@@ -396,7 +457,22 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
     };
 
     return (
-        <>
+        <Box>
+            <Snackbar
+                open={error !== null}
+                autoHideDuration={6000}
+                onClose={handleErrorClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            >
+                <Alert
+                    onClose={handleErrorClose}
+                    severity="error"
+                    variant="filled"
+                    sx={{ width: "100%" }}
+                >
+                    {error}
+                </Alert>
+            </Snackbar>
             <form onSubmit={handleAdd}>
                 <div>
                     <label htmlFor="newGooglePlaceId">
@@ -459,7 +535,7 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
                     )}
                 </Droppable>
             </DragDropContext>
-        </>
+        </Box>
     );
 };
 
