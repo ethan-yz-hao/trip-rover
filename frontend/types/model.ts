@@ -14,6 +14,8 @@ export interface PlanPlaces {
 export interface PlanSummary {
     planId: number;
     planName: string;
+    isPublic: boolean;
+    description: string;
     role: "OWNER" | "EDITOR" | "VIEWER";
     createTime: Date;
     updateTime: Date;

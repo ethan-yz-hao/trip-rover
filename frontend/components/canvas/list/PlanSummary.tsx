@@ -60,6 +60,8 @@ const PlanSummary = ({
             {planSummary && (
                 <div key={planSummary.planId} className="plan-item">
                     <h3>{planSummary.planName}</h3>
+                    <p>Description: {planSummary.description}</p>
+                    <p>Is Public: {planSummary.isPublic ? "Yes" : "No"}</p>
                     <p>Role: {planSummary.role}</p>
                     <p>Created: {planSummary.createTime.toLocaleString()}</p>
                     <p>
