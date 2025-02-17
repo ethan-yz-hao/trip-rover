@@ -21,7 +21,7 @@ public class CorsConfig implements WebMvcConfigurer {
                 // Allow cookies
                 .allowCredentials(true)
                 // Set allowed request methods
-                .allowedMethods("GET", "POST", "DELETE", "PUT", "OPTIONS")
+                .allowedMethods("GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS")
                 // Set allowed headers
                 .allowedHeaders("*")
                 // Cross-domain allow time
