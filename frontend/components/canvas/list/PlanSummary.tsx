@@ -10,11 +10,12 @@ import {
     Box,
     Chip,
     Stack,
-    Divider,
     Tooltip,
     TextField,
     IconButton,
     Button,
+    Switch,
+    FormControlLabel,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -35,6 +36,7 @@ const PlanSummary = ({
     const [error, setError] = useState<string>("");
     const [isEditing, setIsEditing] = useState(false);
     const [editedDescription, setEditedDescription] = useState("");
+    const [editedIsPublic, setEditedIsPublic] = useState(false);
     const [updateError, setUpdateError] = useState("");
 
     const canEdit =
@@ -78,6 +80,7 @@ const PlanSummary = ({
 
     const handleEditClick = () => {
         setEditedDescription(planSummary?.description || "");
+        setEditedIsPublic(planSummary?.isPublic || false);
         setIsEditing(true);
     };
 
@@ -93,28 +96,28 @@ const PlanSummary = ({
                     credentials: "include",
                     body: JSON.stringify({
                         description: editedDescription,
+                        isPublic: editedIsPublic,
                     }),
                 }
             );
 
             if (!response.ok) {
-                throw new Error("Failed to update description");
+                throw new Error("Failed to update plan");
             }
 
             const data = await response.json();
             setPlanSummary({
                 ...planSummary!,
                 description: editedDescription,
+                isPublic: editedIsPublic,
                 updateTime: new Date(data.data.updateTime),
             });
             setIsEditing(false);
             setUpdateError("");
         } catch (error) {
-            log.error("Error updating description:", error);
+            log.error("Error updating plan:", error);
             setUpdateError(
-                error instanceof Error
-                    ? error.message
-                    : "Failed to update description"
+                error instanceof Error ? error.message : "Failed to update plan"
             );
         }
     };
@@ -220,6 +223,37 @@ const PlanSummary = ({
                                         fullWidth
                                         sx={{ mt: 1 }}
                                     />
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={editedIsPublic}
+                                                onChange={(e) =>
+                                                    setEditedIsPublic(
+                                                        e.target.checked
+                                                    )
+                                                }
+                                                color="success"
+                                            />
+                                        }
+                                        label={
+                                            <Stack
+                                                direction="row"
+                                                spacing={1}
+                                                alignItems="center"
+                                            >
+                                                {editedIsPublic ? (
+                                                    <PublicIcon />
+                                                ) : (
+                                                    <LockIcon />
+                                                )}
+                                                <Typography>
+                                                    {editedIsPublic
+                                                        ? "Public"
+                                                        : "Private"}
+                                                </Typography>
+                                            </Stack>
+                                        }
+                                    />
                                     <Stack
                                         direction="row"
                                         spacing={1}
@@ -274,30 +308,48 @@ const PlanSummary = ({
                             )}
                         </Box>
 
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <Chip
-                                icon={
-                                    planSummary.isPublic ? (
-                                        <PublicIcon />
-                                    ) : (
-                                        <LockIcon />
-                                    )
-                                }
-                                label={
-                                    planSummary.isPublic ? "Public" : "Private"
-                                }
-                                size="small"
-                                color={
-                                    planSummary.isPublic ? "success" : "default"
-                                }
-                            />
-                            <Chip
-                                icon={<EditIcon />}
-                                label={planSummary.role}
-                                size="small"
-                                color="primary"
-                            />
-                        </Stack>
+                        {!isEditing && (
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                            >
+                                <Chip
+                                    icon={
+                                        planSummary.isPublic ? (
+                                            <PublicIcon />
+                                        ) : (
+                                            <LockIcon />
+                                        )
+                                    }
+                                    label={
+                                        planSummary.isPublic
+                                            ? "Public"
+                                            : "Private"
+                                    }
+                                    size="small"
+                                    color={
+                                        planSummary.isPublic
+                                            ? "success"
+                                            : "default"
+                                    }
+                                    sx={{
+                                        fontSize: "12px",
+                                        px: 0.5,
+                                    }}
+                                />
+                                <Chip
+                                    icon={<EditIcon />}
+                                    label={planSummary.role}
+                                    size="small"
+                                    color="primary"
+                                    sx={{
+                                        fontSize: "12px",
+                                        px: 0.5,
+                                    }}
+                                />
+                            </Stack>
+                        )}
                     </Stack>
                 )}
             </AccordionDetails>
