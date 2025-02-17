@@ -15,9 +15,10 @@ import {
 } from "@hello-pangea/dnd";
 import WebSocketService from "@/lib/webSocketService";
 import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
+import { axiosInstance, AppError } from "@/lib/axios";
 import log from "@/lib/log";
 import StaySecondsEditor from "@/components/canvas/list/StaySecondEditor";
+import { Box, CircularProgress, Alert, Typography } from "@mui/material";
 
 interface PlanComponentProps {
     planId: number;
@@ -29,11 +30,12 @@ interface PendingUpdate {
 }
 
 const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     const [planPlaces, setPlanPlaces] = useState<PlanPlaces | null>(null);
     const planPlacesRef = useRef<PlanPlaces | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
     const [newGooglePlaceId, setNewGooglePlaceId] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     // Ordered queue of pending updates
     const pendingUpdatesRef = useRef<PendingUpdate[]>([]);
@@ -41,24 +43,32 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
     // fetch the plan places data
     const fetchPlanData = async () => {
         try {
-            const response = await axios.get<ResponseResult<PlanPlaces>>(
-                `${backendUrl}/api/plan/${planId}/places`,
-                {
-                    withCredentials: true,
-                }
-            );
+            setLoading(true);
+            setError(null);
+
+            const response = await axiosInstance.get<
+                ResponseResult<PlanPlaces>
+            >(`/plan/${planId}/places`);
+
             setPlanPlaces(response.data.data);
             planPlacesRef.current = response.data.data;
-        } catch (error) {
-            log.error("Error fetching plan:", error);
-            alert("Failed to load the plan. Please try again.");
+        } catch (err) {
+            log.error("Error fetching plan:", err);
+
+            if (err instanceof AppError) {
+                setError(err.message);
+            } else {
+                setError("Failed to load the plan. Please try again.");
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
     // Load the plan places data
     useEffect(() => {
         fetchPlanData();
-    }, [planId, backendUrl]);
+    }, [planId]);
 
     // Initialize and manage WebSocket connection
     useEffect(() => {
@@ -295,8 +305,28 @@ const PlanComponent: React.FC<PlanComponentProps> = ({ planId }) => {
         sendUpdate(updateMessage);
     };
 
+    if (loading) {
+        return (
+            <Box display="flex" justifyContent="center" p={4}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box p={2}>
+                <Alert severity="error">{error}</Alert>
+            </Box>
+        );
+    }
+
     if (!planPlaces || !planPlaces.places) {
-        return <div>Loading...</div>;
+        return (
+            <Box p={2}>
+                <Typography>No plan data available.</Typography>
+            </Box>
+        );
     }
 
     const handleAdd = async (e: React.FormEvent) => {
