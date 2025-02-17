@@ -10,6 +10,7 @@ import org.ethanhao.triprover.dto.plan.PlanIndexResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanPlacesResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
+import org.ethanhao.triprover.dto.plan.member.BatchPlanMemberAdditionResponseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberBaseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 import org.ethanhao.triprover.service.PlanService;
@@ -143,20 +144,29 @@ public class PlanController {
 
     @PostMapping("/member")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummaryResponseDTO> addPlanMember(
-            @Valid @RequestBody PlanMemberUpdateDTO request,
+    public ResponseResult<BatchPlanMemberAdditionResponseDTO> addPlanMembers(
+            @Valid @RequestBody List<PlanMemberUpdateDTO> requests,
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
-        Long planId = request.getPlanId();
 
-        if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
-            log.info("User {} is not authorized to add member to plan {}", userId, planId);
-            throw new AccessDeniedException("User is not authorized to add member to plan");
+        if (requests.isEmpty()) {
+            return new ResponseResult<>(400, "Request list cannot be empty", null);
         }
 
-        PlanSummaryResponseDTO planSummary = planService.addPlanMember(userId, request);
-        return new ResponseResult<>(200, "Success", planSummary);
+        Long planId = requests.get(0).getPlanId();
+        // Verify all requests are for the same plan
+        if (!requests.stream().allMatch(req -> req.getPlanId().equals(planId))) {
+            return new ResponseResult<>(400, "All member additions must be for the same plan", null);
+        }
+
+        if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
+            log.info("User {} is not authorized to add members to plan {}", userId, planId);
+            throw new AccessDeniedException("User is not authorized to add members to plan");
+        }
+
+        BatchPlanMemberAdditionResponseDTO result = planService.addPlanMembers(userId, requests);
+        return new ResponseResult<>(200, "Members processed", result);
     }
 
     @DeleteMapping("/member")

@@ -8,8 +8,8 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class PlanMemberUpdateDTO extends PlanMemberBaseDTO{
+public class PlanMemberUpdateDTO extends PlanMemberBaseDTO {
 
     @NotNull(message = "Role is required")
     private PlanMember.RoleType role;
-} 
+}

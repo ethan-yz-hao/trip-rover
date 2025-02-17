@@ -7,6 +7,7 @@ import org.ethanhao.triprover.dto.plan.PlanBaseDTO;
 import org.ethanhao.triprover.dto.plan.PlanPlacesResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
+import org.ethanhao.triprover.dto.plan.member.BatchPlanMemberAdditionResponseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberBaseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 
@@ -24,6 +25,8 @@ public interface PlanService {
     List<PlanMemberBaseDTO> getPlanMembers(Long planId);
 
     PlanSummaryResponseDTO addPlanMember(Long userId, PlanMemberUpdateDTO request);
+
+    BatchPlanMemberAdditionResponseDTO addPlanMembers(Long userId, List<PlanMemberUpdateDTO> requests);
 
     PlanSummaryResponseDTO removePlanMember(Long userId, PlanMemberBaseDTO request);
 
