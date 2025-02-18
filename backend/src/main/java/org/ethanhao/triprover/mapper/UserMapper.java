@@ -64,8 +64,11 @@ public interface UserMapper {
 
     @AfterMapping
     default void setDefaults(@MappingTarget User user) {
-        if (user.getStatus() == null) user.setStatus(0);
-        if (user.getType() == null) user.setType(0);
-        if (user.getDelFlag() == null) user.setDelFlag(0);
+        if (user.getStatus() == null)
+            user.setStatus(0);
+        if (user.getType() == null)
+            user.setType(0);
+        if (user.getDelFlag() == null)
+            user.setDelFlag(0);
     }
-} 
+}

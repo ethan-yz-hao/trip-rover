@@ -10,6 +10,4 @@ public class UserResponseDTO {
     private String email;
     private String phoneNumber;
     private String avatar;
-    private Integer status;
-    private Integer type;
 }

@@ -23,4 +23,6 @@ public interface UserService {
 
     void changePassword(String oldPassword, String newPassword);
 
+    UserResponseDTO getUserInfo(Long userId);
+
 }

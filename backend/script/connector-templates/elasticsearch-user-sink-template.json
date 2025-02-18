@@ -17,7 +17,7 @@
     "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
     "transforms.extractKey.field": "id",
     "transforms.selectFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-    "transforms.selectFields.whitelist": "id,user_name,nick_name,type,status,del_flag",
+    "transforms.selectFields.whitelist": "id,user_name,nick_name,email,phone_number,avatar,type,status,del_flag",
     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
     "key.converter.schemas.enable": "false",

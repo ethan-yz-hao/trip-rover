@@ -34,23 +34,24 @@ public class ElasticsearchIndexService {
 
     private void createUserIndexIfNotExists() throws IOException {
         boolean exists = esClient.indices().exists(
-            ExistsRequest.of(builder -> builder.index("sys_user"))
-        ).value();
+                ExistsRequest.of(builder -> builder.index("sys_user"))).value();
 
         if (!exists) {
             esClient.indices().create(builder -> builder
-                .index("sys_user")
-                .mappings(typeMapping -> typeMapping
-                    .properties("id", prop -> prop.keyword(keywordProp -> keywordProp))
-                    .properties("user_name", prop -> prop.text(textProp -> textProp))
-                    .properties("nick_name", prop -> prop.text(textProp -> textProp))
-                    .properties("type", prop -> prop.keyword(keywordProp -> keywordProp))
-                    .properties("status", prop -> prop.keyword(keywordProp -> keywordProp))
-                    .properties("del_flag", prop -> prop.keyword(keywordProp -> keywordProp)))
-                .settings(settings -> settings
-                    .numberOfShards("1")
-                    .numberOfReplicas("1"))
-            );
+                    .index("sys_user")
+                    .mappings(typeMapping -> typeMapping
+                            .properties("id", prop -> prop.keyword(keywordProp -> keywordProp))
+                            .properties("user_name", prop -> prop.text(textProp -> textProp))
+                            .properties("nick_name", prop -> prop.text(textProp -> textProp))
+                            .properties("email", prop -> prop.keyword(keywordProp -> keywordProp))
+                            .properties("phone_number", prop -> prop.keyword(keywordProp -> keywordProp))
+                            .properties("avatar", prop -> prop.keyword(keywordProp -> keywordProp))
+                            .properties("type", prop -> prop.keyword(keywordProp -> keywordProp))
+                            .properties("status", prop -> prop.keyword(keywordProp -> keywordProp))
+                            .properties("del_flag", prop -> prop.keyword(keywordProp -> keywordProp)))
+                    .settings(settings -> settings
+                            .numberOfShards("1")
+                            .numberOfReplicas("1")));
             log.info("Created users index in Elasticsearch");
         } else {
             log.info("Users index already exists in Elasticsearch, skipping creation");
@@ -59,24 +60,22 @@ public class ElasticsearchIndexService {
 
     private void createPlanIndexIfNotExists() throws IOException {
         boolean exists = esClient.indices().exists(
-            ExistsRequest.of(builder -> builder.index("plans"))
-        ).value();
+                ExistsRequest.of(builder -> builder.index("plans"))).value();
 
         if (!exists) {
             esClient.indices().create(builder -> builder
-                .index("plans")
-                .mappings(typeMapping -> typeMapping
-                    .properties("plan_id", prop -> prop.keyword(keywordProp -> keywordProp))
-                    .properties("plan_name", prop -> prop.text(textProp -> textProp))
-                    .properties("description", prop -> prop.text(textProp -> textProp))
-                    .properties("is_public", prop -> prop.boolean_(boolProp -> boolProp)))
-                .settings(settings -> settings
-                    .numberOfShards("1")
-                    .numberOfReplicas("1"))
-            );
+                    .index("plans")
+                    .mappings(typeMapping -> typeMapping
+                            .properties("plan_id", prop -> prop.keyword(keywordProp -> keywordProp))
+                            .properties("plan_name", prop -> prop.text(textProp -> textProp))
+                            .properties("description", prop -> prop.text(textProp -> textProp))
+                            .properties("is_public", prop -> prop.boolean_(boolProp -> boolProp)))
+                    .settings(settings -> settings
+                            .numberOfShards("1")
+                            .numberOfReplicas("1")));
             log.info("Created plans index in Elasticsearch");
         } else {
             log.info("Plans index already exists in Elasticsearch, skipping creation");
         }
     }
-} 
+}

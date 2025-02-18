@@ -6,7 +6,6 @@ import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.ResponseResult;
 import org.ethanhao.triprover.dto.user.ChangePasswordDTO;
 import org.ethanhao.triprover.dto.user.UserAuthDTO;
-import org.ethanhao.triprover.dto.user.UserIndexResponseDTO;
 import org.ethanhao.triprover.dto.user.UserRegisterDTO;
 import org.ethanhao.triprover.dto.user.UserResponseDTO;
 import org.ethanhao.triprover.dto.user.UserUpdateDTO;
@@ -29,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/user")
@@ -126,13 +126,23 @@ public class UserController {
 
     @GetMapping("/search")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<List<UserIndexResponseDTO>> searchUsers(
+    public ResponseResult<List<UserResponseDTO>> searchUsers(
             @RequestParam String query) {
 
-        List<UserIndexResponseDTO> users = searchService.searchUsers(query);
+        List<UserResponseDTO> users = searchService.searchUsers(query);
         return new ResponseResult<>(
                 HttpStatus.OK.value(),
                 "Search successful",
                 users);
+    }
+
+    @GetMapping("/{userId}")
+    @PreAuthorize("hasAuthority('user:all')")
+    public ResponseResult<UserResponseDTO> getUserInfo(@PathVariable Long userId) {
+        UserResponseDTO userInfo = userService.getUserInfo(userId);
+        return new ResponseResult<>(
+                HttpStatus.OK.value(),
+                "User info retrieved successfully",
+                userInfo);
     }
 }

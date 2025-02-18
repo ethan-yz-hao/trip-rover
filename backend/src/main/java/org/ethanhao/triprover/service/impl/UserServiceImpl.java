@@ -145,4 +145,11 @@ public class UserServiceImpl implements UserService {
     public void changePassword(String oldPassword, String newPassword) {
         dbUserDetailsManager.changePassword(oldPassword, newPassword);
     }
+
+    @Override
+    public UserResponseDTO getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return userMapper.toResponseDto(user);
+    }
 }

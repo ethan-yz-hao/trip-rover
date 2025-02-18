@@ -26,6 +26,18 @@ public class UserIndex {
     @JsonProperty("nick_name")
     private String nickName;
 
+    @Field(name = "email", type = FieldType.Text)
+    @JsonProperty("email")
+    private String email;
+
+    @Field(name = "phone_number", type = FieldType.Text)
+    @JsonProperty("phone_number")
+    private String phoneNumber;
+
+    @Field(name = "avatar", type = FieldType.Text)
+    @JsonProperty("avatar")
+    private String avatar;
+
     @Field(type = FieldType.Integer)
     private Integer type;
 
@@ -35,4 +47,4 @@ public class UserIndex {
     @Field(name = "del_flag", type = FieldType.Integer)
     @JsonProperty("del_flag")
     private Integer delFlag;
-} 
+}
