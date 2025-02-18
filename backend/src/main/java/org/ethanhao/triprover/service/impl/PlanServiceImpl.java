@@ -15,6 +15,7 @@ import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
 import org.ethanhao.triprover.dto.plan.member.BatchPlanMemberAdditionResponseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberAdditionFailureDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberBaseDTO;
+import org.ethanhao.triprover.dto.plan.member.PlanMemberResponseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 import org.ethanhao.triprover.exception.PlanOperationException;
 import org.ethanhao.triprover.mapper.PlanMapper;
@@ -107,95 +108,108 @@ public class PlanServiceImpl implements PlanService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<PlanMemberBaseDTO> getPlanMembers(Long planId) {
-        Plan plan = planRepository.findById(planId)
-                .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
-
-        return plan.getPlanMembers().stream()
-                .map(member -> {
-                    PlanMemberBaseDTO dto = new PlanMemberBaseDTO();
-                    dto.setPlanId(planId);
-                    dto.setUserId(member.getId().getUser().getId());
-                    dto.setRole(member.getRole());
-                    return dto;
-                })
+    public List<PlanMemberResponseDTO> getPlanMembers(Long planId) {
+        List<PlanMember> planMembers = planMemberRepository.findByPlanIdWithUser(planId);
+        return planMembers.stream()
+                .map(planMemberMapper::planMemberToPlanMemberResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional
     @Override
-    public PlanSummaryResponseDTO addPlanMember(Long userId, PlanMemberUpdateDTO request) {
-        PlanMember planMember = planMemberMapper.planMemberDTOToPlanMember(request);
+    public BatchPlanMemberAdditionResponseDTO addPlanMembers(Long userId, Long planId,
+            List<PlanMemberUpdateDTO> requests) {
+        List<PlanMemberResponseDTO> successfulAdds = new ArrayList<>();
+        List<PlanMemberAdditionFailureDTO> failures = new ArrayList<>();
 
-        User targetUser = userRepository.findById(planMember.getId().getUser().getId())
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with ID: " + planMember.getId().getUser().getId()));
-
-        Long planId = planMember.getId().getPlan().getPlanId();
-
-        planRepository.findById(planId)
+        Plan plan = planRepository.findById(planId)
                 .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
 
-        if (targetUser.getId().equals(userId)) {
-            throw new PlanOperationException("Cannot update member of oneself");
+        for (PlanMemberUpdateDTO request : requests) {
+            try {
+                // Validate target user exists first
+                User targetUser = userRepository.findById(request.getId())
+                        .orElseThrow(() -> new UsernameNotFoundException(
+                                "User not found with ID: " + request.getId()));
+
+                // Validate business rules
+                if (targetUser.getId().equals(userId)) {
+                    throw new PlanOperationException("Cannot add oneself as a member");
+                }
+
+                if (planMemberRepository.findByPlanIdAndUserIdWithUser(planId, targetUser.getId()) != null) {
+                    throw new PlanOperationException("User already added to the plan");
+                }
+
+                if (request.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
+                    throw new PlanOperationException("Cannot add owner or above to the plan");
+                }
+
+                // Create PlanMember with the complete User entity
+                PlanMember planMember = new PlanMember();
+                PlanMemberId memberId = new PlanMemberId();
+                memberId.setPlan(plan);
+                memberId.setUser(targetUser);
+                planMember.setId(memberId);
+                planMember.setRole(request.getRole());
+
+                // Save the member
+                planMemberRepository.save(planMember);
+
+                // Fetch the updated member with user data
+                PlanMember savedMember = planMemberRepository.findByPlanIdAndUserIdWithUser(planId, targetUser.getId());
+                successfulAdds.add(planMemberMapper.planMemberToPlanMemberResponseDTO(savedMember));
+
+            } catch (Exception e) {
+                failures.add(PlanMemberAdditionFailureDTO.builder()
+                        .id(request.getId())
+                        .error(e.getMessage())
+                        .build());
+            }
         }
 
-        if (planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId) != null) {
-            throw new PlanOperationException("User already added to the plan");
-        }
-
-        if (planMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
-            throw new PlanOperationException("Cannot add owner or above to the plan");
-        }
-
-        planMemberRepository.save(planMember);
-
-        return planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId);
+        return BatchPlanMemberAdditionResponseDTO.builder()
+                .successful(successfulAdds)
+                .failed(failures)
+                .build();
     }
 
     @Transactional
     @Override
-    public PlanSummaryResponseDTO removePlanMember(Long userId, PlanMemberBaseDTO request) {
+    public void removePlanMember(Long userId, Long planId, PlanMemberBaseDTO request) {
+        PlanMemberId planMemberId = planMemberMapper.planMemberIdDTOToPlanMemberId(request, planId);
+        PlanMember targetPlanMember = planMemberRepository.findById(planMemberId)
+                .orElseThrow(() -> new ResourceAccessException("Plan member not found"));
 
-        PlanMemberId planMemberId = planMemberMapper.planMemberIdDTOToPlanMemberId(request);
-
-        PlanMember planMember = planMemberRepository.findById(planMemberId)
-                .orElseThrow(() -> new ResourceAccessException("Plan member not found with ID: " + planMemberId));
-
-        if (planMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
+        if (targetPlanMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
             throw new PlanOperationException("Cannot remove owner or above from the plan");
         }
 
         planMemberRepository.deleteById(planMemberId);
-
-        return planRepository.findPlanSummaryByUserIdAndPlanId(
-                planMemberId.getUser().getId(),
-                planMemberId.getPlan().getPlanId());
     }
 
     @Transactional
     @Override
-    public PlanSummaryResponseDTO updatePlanMemberRole(Long userId, PlanMemberUpdateDTO request) {
-        PlanMember planMember = planMemberMapper.planMemberDTOToPlanMember(request);
+    public PlanMemberResponseDTO updatePlanMemberRole(Long userId, Long planId, PlanMemberUpdateDTO request) {
+        PlanMember targetPlanMember = planMemberRepository.findByPlanIdAndUserIdWithUser(planId, request.getId());
 
-        PlanMember targetPlanMember = planMemberRepository.findById(planMember.getId())
-                .orElseThrow(() -> new ResourceAccessException("Plan member not found with ID: " + planMember.getId()));
-
-        if (targetPlanMember.getId().getUser().getId().equals(userId)) {
-            throw new PlanOperationException("Cannot update oneself's role");
+        if (targetPlanMember == null) {
+            throw new PlanOperationException("Plan member not found");
         }
 
-        if (planMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
+        if (request.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
             throw new PlanOperationException("Cannot update role to owner or above");
         }
 
-        targetPlanMember.setRole(planMember.getRole());
+        if (hasRole(targetPlanMember.getId().getUser().getId(), planId, PlanMember.RoleType.OWNER)) {
+            throw new PlanOperationException("Cannot update owner's role");
+        }
+
+        targetPlanMember.setRole(request.getRole());
 
         planMemberRepository.save(targetPlanMember);
 
-        return planRepository.findPlanSummaryByUserIdAndPlanId(
-                planMember.getId().getUser().getId(),
-                planMember.getId().getPlan().getPlanId());
+        return planMemberMapper.planMemberToPlanMemberResponseDTO(targetPlanMember);
     }
 
     @Transactional(readOnly = true)
@@ -208,62 +222,11 @@ public class PlanServiceImpl implements PlanService {
 
     @Override
     public boolean hasRole(Long userId, Long planId, PlanMember.RoleType requiredRole) {
-        PlanMember planMember = planMemberRepository.findByIdPlanPlanIdAndIdUserId(planId, userId);
+        PlanMember planMember = planMemberRepository.findByPlanIdAndUserIdWithUser(planId, userId);
         if (planMember == null) {
             return false;
         }
         // Check if the user's role meets or exceeds the required role
         return planMember.getRole().ordinal() <= requiredRole.ordinal();
-    }
-
-    @Transactional
-    @Override
-    public BatchPlanMemberAdditionResponseDTO addPlanMembers(Long userId, List<PlanMemberUpdateDTO> requests) {
-        List<PlanMemberUpdateDTO> successfulAdds = new ArrayList<>();
-        List<PlanMemberAdditionFailureDTO> failures = new ArrayList<>();
-
-        Long planId = requests.get(0).getPlanId();
-        planRepository.findById(planId)
-                .orElseThrow(() -> new ResourceAccessException("Plan not found with ID: " + planId));
-
-        for (PlanMemberUpdateDTO request : requests) {
-            try {
-                // Convert DTO to entity
-                PlanMember planMember = planMemberMapper.planMemberDTOToPlanMember(request);
-
-                // Validate target user exists
-                User targetUser = userRepository.findById(planMember.getId().getUser().getId())
-                        .orElseThrow(() -> new UsernameNotFoundException(
-                                "User not found with ID: " + planMember.getId().getUser().getId()));
-
-                // Validate business rules
-                if (targetUser.getId().equals(userId)) {
-                    throw new PlanOperationException("Cannot add oneself as a member");
-                }
-
-                if (planRepository.findPlanSummaryByUserIdAndPlanId(targetUser.getId(), planId) != null) {
-                    throw new PlanOperationException("User already added to the plan");
-                }
-
-                if (planMember.getRole().ordinal() <= PlanMember.RoleType.OWNER.ordinal()) {
-                    throw new PlanOperationException("Cannot add owner or above to the plan");
-                }
-
-                // Save the member
-                planMemberRepository.save(planMember);
-                successfulAdds.add(request);
-
-            } catch (Exception e) {
-                failures.add(PlanMemberAdditionFailureDTO.builder()
-                        .userId(request.getUserId())
-                        .error(e.getMessage())
-                        .build());
-            }
-        }
-
-        return BatchPlanMemberAdditionResponseDTO.builder()
-                .successful(successfulAdds)
-                .failed(failures)
-                .build();
     }
 }

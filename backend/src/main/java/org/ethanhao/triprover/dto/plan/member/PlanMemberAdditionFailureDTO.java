@@ -6,6 +6,6 @@ import lombok.Builder;
 @Data
 @Builder
 public class PlanMemberAdditionFailureDTO {
-    private Long userId;
+    private Long id;
     private String error;
 }

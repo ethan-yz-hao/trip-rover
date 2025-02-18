@@ -7,6 +7,6 @@ import lombok.Builder;
 @Data
 @Builder
 public class BatchPlanMemberAdditionResponseDTO {
-    private List<PlanMemberUpdateDTO> successful;
+    private List<PlanMemberResponseDTO> successful;
     private List<PlanMemberAdditionFailureDTO> failed;
 }

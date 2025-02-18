@@ -12,6 +12,7 @@ import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
 import org.ethanhao.triprover.dto.plan.member.BatchPlanMemberAdditionResponseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberBaseDTO;
+import org.ethanhao.triprover.dto.plan.member.PlanMemberResponseDTO;
 import org.ethanhao.triprover.dto.plan.member.PlanMemberUpdateDTO;
 import org.ethanhao.triprover.service.PlanService;
 import org.ethanhao.triprover.service.SearchService;
@@ -127,7 +128,7 @@ public class PlanController {
 
     @GetMapping("/{planId}/member")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<List<PlanMemberBaseDTO>> getPlanMembers(
+    public ResponseResult<List<PlanMemberResponseDTO>> getPlanMembers(
             @PathVariable Long planId,
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
@@ -138,13 +139,14 @@ public class PlanController {
             throw new AccessDeniedException("User is not authorized to view plan members");
         }
 
-        List<PlanMemberBaseDTO> planMembers = planService.getPlanMembers(planId);
+        List<PlanMemberResponseDTO> planMembers = planService.getPlanMembers(planId);
         return new ResponseResult<>(200, "Success", planMembers);
     }
 
-    @PostMapping("/member")
+    @PostMapping("/{planId}/member")
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<BatchPlanMemberAdditionResponseDTO> addPlanMembers(
+            @PathVariable Long planId,
             @Valid @RequestBody List<PlanMemberUpdateDTO> requests,
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
@@ -154,55 +156,49 @@ public class PlanController {
             return new ResponseResult<>(400, "Request list cannot be empty", null);
         }
 
-        Long planId = requests.get(0).getPlanId();
-        // Verify all requests are for the same plan
-        if (!requests.stream().allMatch(req -> req.getPlanId().equals(planId))) {
-            return new ResponseResult<>(400, "All member additions must be for the same plan", null);
-        }
-
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
             log.info("User {} is not authorized to add members to plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to add members to plan");
         }
 
-        BatchPlanMemberAdditionResponseDTO result = planService.addPlanMembers(userId, requests);
+        BatchPlanMemberAdditionResponseDTO result = planService.addPlanMembers(userId, planId, requests);
         return new ResponseResult<>(200, "Members processed", result);
     }
 
-    @DeleteMapping("/member")
+    @DeleteMapping("/{planId}/member")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummaryResponseDTO> removePlanMember(
+    public ResponseResult<Void> removePlanMember(
+            @PathVariable Long planId,
             @Valid @RequestBody PlanMemberBaseDTO request,
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
-        Long planId = request.getPlanId();
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
             log.info("User {} is not authorized to remove member from plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to remove member from plan");
         }
 
-        PlanSummaryResponseDTO planSummary = planService.removePlanMember(userId, request);
-        return new ResponseResult<>(200, "Success", planSummary);
+        planService.removePlanMember(userId, planId, request);
+        return new ResponseResult<>(200, "Success");
     }
 
-    @PatchMapping("/member/role")
+    @PatchMapping("/{planId}/member/role")
     @PreAuthorize("hasAuthority('user:all')")
-    public ResponseResult<PlanSummaryResponseDTO> updatePlanMemberRole(
+    public ResponseResult<PlanMemberResponseDTO> updatePlanMemberRole(
+            @PathVariable Long planId,
             @Valid @RequestBody PlanMemberUpdateDTO request,
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();
-        Long planId = request.getPlanId();
 
         if (!planService.hasRole(userId, planId, PlanMember.RoleType.EDITOR)) {
             log.info("User {} is not authorized to update member role in plan {}", userId, planId);
             throw new AccessDeniedException("User is not authorized to update member role in plan");
         }
 
-        PlanSummaryResponseDTO planSummary = planService.updatePlanMemberRole(userId, request);
-        return new ResponseResult<>(200, "Success", planSummary);
+        PlanMemberResponseDTO planMember = planService.updatePlanMemberRole(userId, planId, request);
+        return new ResponseResult<>(200, "Success", planMember);
     }
 
     @GetMapping("/{planId}/places")

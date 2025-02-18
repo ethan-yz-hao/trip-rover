@@ -9,21 +9,22 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface PlanRepository extends JpaRepository<Plan, Long> {
-    @Query("SELECT p.planId as planId, p.planName as planName, " +
-           "p.isPublic as isPublic, p.description as description, " +
-           "p.createTime as createTime, p.updateTime as updateTime, " +
-           "pur.role as role " +
-           "FROM Plan p " +
-           "JOIN p.planMembers pur " +
-           "WHERE pur.id.user.id = :userId")
-    List<PlanSummaryResponseDTO> findPlanSummaryByUserId(@Param("userId") Long userId);
+       @Query("SELECT p.planId as planId, p.planName as planName, " +
+                     "p.isPublic as isPublic, p.description as description, " +
+                     "p.createTime as createTime, p.updateTime as updateTime, " +
+                     "pur.role as role " +
+                     "FROM Plan p " +
+                     "JOIN p.planMembers pur " +
+                     "WHERE pur.id.user.id = :userId")
+       List<PlanSummaryResponseDTO> findPlanSummaryByUserId(@Param("userId") Long userId);
 
-    @Query("SELECT p.planId as planId, p.planName as planName, " +
-           "p.isPublic as isPublic, p.description as description, " +
-           "p.createTime as createTime, p.updateTime as updateTime, " +
-           "pur.role as role " +
-           "FROM Plan p " +
-           "JOIN p.planMembers pur " +
-           "WHERE pur.id.user.id = :userId AND p.planId = :planId")
-    PlanSummaryResponseDTO findPlanSummaryByUserIdAndPlanId(@Param("userId") Long userId, @Param("planId") Long planId);
+       @Query("SELECT p.planId as planId, p.planName as planName, " +
+                     "p.isPublic as isPublic, p.description as description, " +
+                     "p.createTime as createTime, p.updateTime as updateTime, " +
+                     "pur.role as role " +
+                     "FROM Plan p " +
+                     "JOIN p.planMembers pur " +
+                     "WHERE pur.id.user.id = :userId AND p.planId = :planId")
+       PlanSummaryResponseDTO findPlanSummaryByUserIdAndPlanId(@Param("userId") Long userId,
+                     @Param("planId") Long planId);
 }
