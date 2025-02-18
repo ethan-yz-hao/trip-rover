@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import log from "@/lib/log";
-import { PlanSummary as PlanSummaryType } from "@/types/model";
+import { PlanSummary as PlanSummaryType, ResponseResult } from "@/types/model";
 import {
     Accordion,
     AccordionSummary,
@@ -22,6 +22,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PublicIcon from "@mui/icons-material/Public";
 import LockIcon from "@mui/icons-material/Lock";
 import EditIcon from "@mui/icons-material/Edit";
+import { axiosInstance, AppError } from "@/lib/axios";
 
 const PlanSummary = ({
     planId,
@@ -45,33 +46,25 @@ const PlanSummary = ({
     useEffect(() => {
         const fetchPlanSummary = async () => {
             try {
-                const response = await fetch(
-                    `http://localhost:8080/api/plan/${planId}`,
-                    {
-                        credentials: "include",
-                    }
-                );
+                const response = await axiosInstance.get<
+                    ResponseResult<PlanSummaryType>
+                >(`/plan/${planId}`);
 
-                if (!response.ok) {
-                    throw new Error("Please log in to view plans");
-                }
-
-                const data = await response.json();
                 // Convert string dates to Date objects
                 const planSummary = {
-                    ...data.data,
-                    createTime: new Date(data.data.createTime),
-                    updateTime: new Date(data.data.updateTime),
+                    ...response.data.data,
+                    createTime: new Date(response.data.data.createTime),
+                    updateTime: new Date(response.data.data.updateTime),
                 };
                 setPlanSummary(planSummary);
                 onRoleChange(planSummary.role);
-            } catch (error) {
-                log.error("Error fetching plans:", error);
-                setError(
-                    error instanceof Error
-                        ? error.message
-                        : "Failed to load plans"
-                );
+            } catch (err) {
+                log.error("Error fetching plans:", err);
+                if (err instanceof AppError) {
+                    setError(err.message);
+                } else {
+                    setError("Failed to load plans");
+                }
             }
         };
 
@@ -86,39 +79,28 @@ const PlanSummary = ({
 
     const handleSubmit = async () => {
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/plan/${planId}`,
-                {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include",
-                    body: JSON.stringify({
-                        description: editedDescription,
-                        isPublic: editedIsPublic,
-                    }),
-                }
-            );
+            const response = await axiosInstance.patch<
+                ResponseResult<PlanSummaryType>
+            >(`/plan/${planId}`, {
+                description: editedDescription,
+                isPublic: editedIsPublic,
+            });
 
-            if (!response.ok) {
-                throw new Error("Failed to update plan");
-            }
-
-            const data = await response.json();
             setPlanSummary({
                 ...planSummary!,
                 description: editedDescription,
                 isPublic: editedIsPublic,
-                updateTime: new Date(data.data.updateTime),
+                updateTime: new Date(response.data.data.updateTime),
             });
             setIsEditing(false);
             setUpdateError("");
-        } catch (error) {
-            log.error("Error updating plan:", error);
-            setUpdateError(
-                error instanceof Error ? error.message : "Failed to update plan"
-            );
+        } catch (err) {
+            log.error("Error updating plan:", err);
+            if (err instanceof AppError) {
+                setUpdateError(err.message);
+            } else {
+                setUpdateError("Failed to update plan");
+            }
         }
     };
 
