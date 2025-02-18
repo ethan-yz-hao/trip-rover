@@ -86,12 +86,14 @@ const PlanSummary = ({
                 isPublic: editedIsPublic,
             });
 
-            setPlanSummary({
-                ...planSummary!,
-                description: editedDescription,
-                isPublic: editedIsPublic,
+            // Use the backend response to update the state
+            const updatedPlan = {
+                ...response.data.data,
+                createTime: new Date(response.data.data.createTime),
                 updateTime: new Date(response.data.data.updateTime),
-            });
+            };
+
+            setPlanSummary(updatedPlan);
             setIsEditing(false);
             setUpdateError("");
         } catch (err) {
