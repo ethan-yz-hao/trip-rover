@@ -23,6 +23,8 @@ import PublicIcon from "@mui/icons-material/Public";
 import LockIcon from "@mui/icons-material/Lock";
 import EditIcon from "@mui/icons-material/Edit";
 import { axiosInstance, AppError } from "@/lib/axios";
+import PeopleIcon from "@mui/icons-material/People";
+import PlanAccessDialog from "./PlanAccessDialog";
 
 const PlanSummary = ({
     planId,
@@ -39,6 +41,7 @@ const PlanSummary = ({
     const [editedDescription, setEditedDescription] = useState("");
     const [editedIsPublic, setEditedIsPublic] = useState(false);
     const [updateError, setUpdateError] = useState("");
+    const [isAccessDialogOpen, setIsAccessDialogOpen] = useState(false);
 
     const canEdit =
         planSummary?.role === "OWNER" || planSummary?.role === "EDITOR";
@@ -139,52 +142,65 @@ const PlanSummary = ({
                         <Typography variant="h6" component="div">
                             {planSummary.planName}
                         </Typography>
-                        <Tooltip
-                            title={
-                                <Box sx={{ p: 1 }}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            {canEdit && (
+                                <IconButton
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsAccessDialogOpen(true);
+                                    }}
+                                    size="small"
+                                >
+                                    <PeopleIcon />
+                                </IconButton>
+                            )}
+                            <Tooltip
+                                title={
+                                    <Box sx={{ p: 1 }}>
+                                        <Typography variant="body2">
+                                            Created on{" "}
+                                            {planSummary.createTime.toLocaleDateString(
+                                                "en-US",
+                                                {
+                                                    weekday: "long",
+                                                    year: "numeric",
+                                                    month: "long",
+                                                    day: "numeric",
+                                                }
+                                            )}
+                                        </Typography>
+                                    </Box>
+                                }
+                                arrow
+                                placement="top"
+                                sx={{
+                                    backgroundColor: "background.paper",
+                                    boxShadow: 2,
+                                    borderRadius: 1,
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 0.5,
+                                        color: "text.secondary",
+                                    }}
+                                >
+                                    <AccessTimeIcon fontSize="small" />
                                     <Typography variant="body2">
-                                        Created on{" "}
-                                        {planSummary.createTime.toLocaleDateString(
+                                        {planSummary.createTime.toLocaleTimeString(
                                             "en-US",
                                             {
-                                                weekday: "long",
-                                                year: "numeric",
-                                                month: "long",
-                                                day: "numeric",
+                                                hour: "numeric",
+                                                minute: "2-digit",
+                                                hour12: true,
                                             }
                                         )}
                                     </Typography>
                                 </Box>
-                            }
-                            arrow
-                            placement="top"
-                            sx={{
-                                backgroundColor: "background.paper",
-                                boxShadow: 2,
-                                borderRadius: 1,
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.5,
-                                    color: "text.secondary",
-                                }}
-                            >
-                                <AccessTimeIcon fontSize="small" />
-                                <Typography variant="body2">
-                                    {planSummary.createTime.toLocaleTimeString(
-                                        "en-US",
-                                        {
-                                            hour: "numeric",
-                                            minute: "2-digit",
-                                            hour12: true,
-                                        }
-                                    )}
-                                </Typography>
-                            </Box>
-                        </Tooltip>
+                            </Tooltip>
+                        </Stack>
                     </Box>
                 )}
             </AccordionSummary>
@@ -337,6 +353,14 @@ const PlanSummary = ({
                     </Stack>
                 )}
             </AccordionDetails>
+
+            {planSummary && (
+                <PlanAccessDialog
+                    open={isAccessDialogOpen}
+                    onClose={() => setIsAccessDialogOpen(false)}
+                    planId={planId}
+                />
+            )}
         </Accordion>
     );
 };

@@ -54,3 +54,23 @@ export interface PlanIndexResponseDTO {
     planId: number;
     planName: string;
 }
+
+export interface PlanMember {
+    id: number;
+    userName: string;
+    nickName: string;
+    email: string;
+    phoneNumber: string;
+    avatar: string;
+    role: "OWNER" | "EDITOR" | "VIEWER";
+}
+
+export interface PlanMemberAdditionFailure {
+    id: number;
+    error: string;
+}
+
+export interface BatchPlanMemberAdditionResponse {
+    successful: PlanMember[];
+    failed: PlanMemberAdditionFailure[];
+}
