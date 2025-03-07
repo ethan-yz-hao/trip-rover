@@ -28,7 +28,7 @@ import PlanAccessDialog from "./PlanAccessDialog";
 import { useCanvasContext } from "@/components/canvas/CanvasProvider";
 
 const PlanSummary = () => {
-    const { planId, planSummary, loading, error, userRole, fetchPlanSummary } =
+    const { planId, planSummary, loading, error, userRole, setPlanSummary } =
         useCanvasContext();
     const [isEditing, setIsEditing] = useState(false);
     const [editedDescription, setEditedDescription] = useState("");
@@ -59,8 +59,14 @@ const PlanSummary = () => {
                 isPublic: editedIsPublic,
             });
 
-            // Refresh plan summary data after update
-            fetchPlanSummary();
+            // Use the backend response to update the state
+            const updatedPlan = {
+                ...response.data.data,
+                createTime: new Date(response.data.data.createTime),
+                updateTime: new Date(response.data.data.updateTime),
+            };
+
+            setPlanSummary(updatedPlan);
             setIsEditing(false);
             setUpdateError("");
         } catch (err) {

@@ -37,7 +37,7 @@ interface CanvasContextType {
     // Methods for both authenticated and unauthenticated modes
     sendUpdate: (updateMessage: PlanUpdateMessage) => void;
     fetchPlanData: () => Promise<void>;
-    fetchPlanSummary: () => Promise<void>;
+    setPlanSummary: (summary: PlanSummary) => void;
     clearError: () => void;
 }
 
@@ -54,7 +54,7 @@ const CanvasContext = createContext<CanvasContextType>({
     setUserRole: () => {},
     sendUpdate: () => {},
     fetchPlanData: async () => {},
-    fetchPlanSummary: async () => {},
+    setPlanSummary: () => {},
     clearError: () => {},
 });
 
@@ -458,7 +458,7 @@ export const CanvasProvider: React.FC<{
                 setUserRole,
                 sendUpdate,
                 fetchPlanData,
-                fetchPlanSummary,
+                setPlanSummary,
                 clearError,
             }}
         >
