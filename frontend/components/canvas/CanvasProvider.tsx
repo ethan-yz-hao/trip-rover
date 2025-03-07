@@ -230,6 +230,11 @@ export const CanvasProvider: React.FC<{
                         }
                     }
 
+                    // Adjust target index (insert after the targetIndex) if moving down
+                    if (targetIndex >= placeToMoveIndex) {
+                        targetIndex += 1;
+                    }
+
                     updatedPlaces.splice(targetIndex, 0, placeToMove); // Insert at new position
 
                     return { ...currentPlan, places: updatedPlaces, version };
