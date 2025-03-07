@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import { PlanUpdateMessage } from "@/types/model";
+import React, { useState, useEffect } from "react";
+import { PlanUpdateMessage, PlanPlaces } from "@/types/model";
 import {
     DragDropContext,
     Droppable,
@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { useMapContext } from "@/components/canvas/CanvasProvider";
+import { useCanvasContext } from "@/components/canvas/CanvasProvider";
 
 const PlanPlaceList: React.FC = () => {
     const {
@@ -35,18 +35,69 @@ const PlanPlaceList: React.FC = () => {
         userRole,
         sendUpdate,
         clearError,
-    } = useMapContext();
+    } = useCanvasContext();
 
     const [newGooglePlaceId, setNewGooglePlaceId] = useState<string>("");
+    const [localPlanPlaces, setLocalPlanPlaces] = useState<PlanPlaces | null>(
+        null
+    );
+
+    // Initialize empty plan for unauthenticated users or authenticated users with no plan
+    useEffect(() => {
+        if (!planPlaces && !loading) {
+            // Check localStorage first
+            const localStorageKey = "local_plan";
+            const savedPlan = localStorage.getItem(localStorageKey);
+
+            if (savedPlan) {
+                try {
+                    setLocalPlanPlaces(JSON.parse(savedPlan));
+                } catch (err) {
+                    console.error("Failed to parse saved plan:", err);
+                    initializeEmptyPlan();
+                }
+            } else {
+                initializeEmptyPlan();
+            }
+        } else if (planPlaces) {
+            setLocalPlanPlaces(null); // Use the server data when available
+        }
+    }, [planPlaces, loading]);
+
+    // Initialize an empty plan
+    const initializeEmptyPlan = () => {
+        const emptyPlan: PlanPlaces = {
+            planId: -1,
+            planName: "",
+            places: [],
+            version: 1,
+        };
+        setLocalPlanPlaces(emptyPlan);
+
+        // Save to localStorage
+        const localStorageKey = "local_plan";
+        try {
+            localStorage.setItem(localStorageKey, JSON.stringify(emptyPlan));
+        } catch (err) {
+            console.error("Failed to save to localStorage:", err);
+        }
+    };
 
     // Determine if user can edit based on role or authentication status
     // For unauthenticated users, always allow editing (local only)
     const canEdit =
         !isAuthenticated || userRole === "OWNER" || userRole === "EDITOR";
 
+    // Get the effective plan data (server data or local data)
+    const effectivePlanPlaces = planPlaces || localPlanPlaces;
+
     // Handle drag and drop
     const onDragEnd = (result: DropResult) => {
-        if (!result.destination || !planPlaces) {
+        if (
+            !result.destination ||
+            !effectivePlanPlaces ||
+            effectivePlanPlaces.places.length < 2
+        ) {
             return;
         }
 
@@ -57,8 +108,8 @@ const PlanPlaceList: React.FC = () => {
             return;
         }
 
-        const movedPlace = planPlaces.places[sourceIndex];
-        const targetPlace = planPlaces.places[destinationIndex];
+        const movedPlace = effectivePlanPlaces.places[sourceIndex];
+        const targetPlace = effectivePlanPlaces.places[destinationIndex];
 
         // Create update message
         const updateMessage: PlanUpdateMessage = {
@@ -67,7 +118,7 @@ const PlanPlaceList: React.FC = () => {
             targetPlaceId: targetPlace.placeId,
             clientId: uuidv4(), // This will be overridden in the provider for authenticated users
             updateId: uuidv4(),
-            version: planPlaces.version,
+            version: effectivePlanPlaces.version,
         };
 
         sendUpdate(updateMessage);
@@ -81,7 +132,7 @@ const PlanPlaceList: React.FC = () => {
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!planPlaces) return;
+        if (!effectivePlanPlaces) return;
 
         // Create update message for adding a place
         const updateMessage: PlanUpdateMessage = {
@@ -89,7 +140,7 @@ const PlanPlaceList: React.FC = () => {
             updateId: uuidv4(),
             action: "ADD",
             placeId: uuidv4(),
-            version: planPlaces.version,
+            version: effectivePlanPlaces.version,
             googlePlaceId: newGooglePlaceId,
             staySeconds: 1800,
         };
@@ -99,7 +150,7 @@ const PlanPlaceList: React.FC = () => {
     };
 
     const handleDelete = (placeId: string) => {
-        if (!planPlaces) return;
+        if (!effectivePlanPlaces) return;
 
         // Create update message for removing a place
         const updateMessage: PlanUpdateMessage = {
@@ -107,7 +158,7 @@ const PlanPlaceList: React.FC = () => {
             updateId: uuidv4(),
             action: "REMOVE",
             placeId,
-            version: planPlaces.version,
+            version: effectivePlanPlaces.version,
         };
 
         sendUpdate(updateMessage);
@@ -117,9 +168,9 @@ const PlanPlaceList: React.FC = () => {
         placeId: string,
         newStaySeconds: number
     ) => {
-        if (!planPlaces) return;
+        if (!effectivePlanPlaces) return;
 
-        const place = planPlaces.places.find(
+        const place = effectivePlanPlaces.places.find(
             (place) => place.placeId === placeId
         );
         if (!place) return;
@@ -130,7 +181,7 @@ const PlanPlaceList: React.FC = () => {
             updateId: uuidv4(),
             action: "UPDATE",
             placeId,
-            version: planPlaces.version,
+            version: effectivePlanPlaces.version,
             googlePlaceId: place.googlePlaceId,
             staySeconds: newStaySeconds,
         };
@@ -146,10 +197,10 @@ const PlanPlaceList: React.FC = () => {
         );
     }
 
-    if (!planPlaces || !planPlaces.places) {
+    if (!effectivePlanPlaces) {
         return (
             <Box p={2}>
-                <Typography>No plan data available.</Typography>
+                <Typography>Loading plan data...</Typography>
             </Box>
         );
     }
@@ -205,72 +256,83 @@ const PlanPlaceList: React.FC = () => {
                                 boxShadow: 1,
                             }}
                         >
-                            {planPlaces.places.map((place, index) => (
-                                <Draggable
-                                    key={place.placeId}
-                                    draggableId={place.placeId}
-                                    index={index}
-                                    isDragDisabled={!canEdit}
-                                >
-                                    {(provided) => (
-                                        <ListItem
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            divider
-                                            secondaryAction={
-                                                canEdit && (
-                                                    <IconButton
-                                                        edge="end"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                place.placeId
-                                                            )
-                                                        }
-                                                        color="error"
-                                                    >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                )
-                                            }
+                            {effectivePlanPlaces.places.length === 0 ? (
+                                <ListItem>
+                                    <ListItemText primary="No places added yet. Add your first place above." />
+                                </ListItem>
+                            ) : (
+                                effectivePlanPlaces.places.map(
+                                    (place, index) => (
+                                        <Draggable
+                                            key={place.placeId}
+                                            draggableId={place.placeId}
+                                            index={index}
+                                            isDragDisabled={!canEdit}
                                         >
-                                            <Box
-                                                {...provided.dragHandleProps}
-                                                sx={{ mr: 1 }}
-                                            >
-                                                <DragIndicatorIcon color="action" />
-                                            </Box>
-                                            <ListItemText
-                                                primary={place.googlePlaceId}
-                                                secondary={
-                                                    <Box sx={{ mt: 1 }}>
-                                                        {canEdit ? (
-                                                            <StaySecondsEditor
-                                                                placeId={
-                                                                    place.placeId
+                                            {(provided) => (
+                                                <ListItem
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    divider
+                                                    secondaryAction={
+                                                        canEdit && (
+                                                            <IconButton
+                                                                edge="end"
+                                                                onClick={() =>
+                                                                    handleDelete(
+                                                                        place.placeId
+                                                                    )
                                                                 }
-                                                                currentStaySeconds={
-                                                                    place.staySeconds
-                                                                }
-                                                                onSubmit={
-                                                                    handleStaySecondsUpdate
-                                                                }
-                                                            />
-                                                        ) : (
-                                                            <Typography variant="body2">
-                                                                Stay time:{" "}
-                                                                {
-                                                                    place.staySeconds
-                                                                }{" "}
-                                                                seconds
-                                                            </Typography>
-                                                        )}
+                                                                color="error"
+                                                            >
+                                                                <DeleteIcon />
+                                                            </IconButton>
+                                                        )
+                                                    }
+                                                >
+                                                    <Box
+                                                        {...provided.dragHandleProps}
+                                                        sx={{ mr: 1 }}
+                                                    >
+                                                        <DragIndicatorIcon color="action" />
                                                     </Box>
-                                                }
-                                            />
-                                        </ListItem>
-                                    )}
-                                </Draggable>
-                            ))}
+                                                    <ListItemText
+                                                        primary={
+                                                            place.googlePlaceId
+                                                        }
+                                                        secondary={
+                                                            <Box sx={{ mt: 1 }}>
+                                                                {canEdit ? (
+                                                                    <StaySecondsEditor
+                                                                        placeId={
+                                                                            place.placeId
+                                                                        }
+                                                                        currentStaySeconds={
+                                                                            place.staySeconds
+                                                                        }
+                                                                        onSubmit={
+                                                                            handleStaySecondsUpdate
+                                                                        }
+                                                                    />
+                                                                ) : (
+                                                                    <Typography variant="body2">
+                                                                        Stay
+                                                                        time:{" "}
+                                                                        {
+                                                                            place.staySeconds
+                                                                        }{" "}
+                                                                        seconds
+                                                                    </Typography>
+                                                                )}
+                                                            </Box>
+                                                        }
+                                                    />
+                                                </ListItem>
+                                            )}
+                                        </Draggable>
+                                    )
+                                )
+                            )}
                             {provided.placeholder}
                         </List>
                     )}

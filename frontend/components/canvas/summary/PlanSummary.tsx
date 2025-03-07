@@ -25,10 +25,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import { axiosInstance, AppError } from "@/lib/axios";
 import PeopleIcon from "@mui/icons-material/People";
 import PlanAccessDialog from "./PlanAccessDialog";
-import { useMapContext } from "@/components/canvas/CanvasProvider";
+import { useCanvasContext } from "@/components/canvas/CanvasProvider";
 
 const PlanSummary = () => {
-    const { planId, setUserRole } = useMapContext();
+    const { planId, setUserRole } = useCanvasContext();
     const [planSummary, setPlanSummary] = useState<PlanSummaryType | null>(
         null
     );

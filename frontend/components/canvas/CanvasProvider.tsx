@@ -17,7 +17,7 @@ interface PendingUpdate {
     updateMessage: PlanUpdateMessage;
 }
 
-interface MapContextType {
+interface CanvasContextType {
     isAuthenticated: boolean;
     webSocketService: WebSocketService | null;
     planId: number | null;
@@ -33,7 +33,7 @@ interface MapContextType {
     clearError: () => void;
 }
 
-const MapContext = createContext<MapContextType>({
+const CanvasContext = createContext<CanvasContextType>({
     isAuthenticated: false,
     webSocketService: null,
     planId: null,
@@ -48,9 +48,9 @@ const MapContext = createContext<MapContextType>({
     clearError: () => {},
 });
 
-export const useMapContext = () => useContext(MapContext);
+export const useCanvasContext = () => useContext(CanvasContext);
 
-export const MapProvider: React.FC<{
+export const CanvasProvider: React.FC<{
     children: React.ReactNode;
     planId?: number;
 }> = ({ children, planId = undefined }) => {
@@ -398,7 +398,7 @@ export const MapProvider: React.FC<{
     const clearError = () => setError(null);
 
     return (
-        <MapContext.Provider
+        <CanvasContext.Provider
             value={{
                 isAuthenticated,
                 webSocketService,
@@ -415,6 +415,6 @@ export const MapProvider: React.FC<{
             }}
         >
             {children}
-        </MapContext.Provider>
+        </CanvasContext.Provider>
     );
 };

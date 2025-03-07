@@ -2,16 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { useAppSelector } from "@/lib/hooks";
-import { MapProvider } from "@/components/canvas/CanvasProvider";
+import { CanvasProvider } from "@/components/canvas/CanvasProvider";
 import { Grid } from "@mui/material";
 import PlanPlaceList from "@/components/canvas/list/PlanPlaceList";
 import PlanSummary from "@/components/canvas/summary/PlanSummary";
 
-interface MapContainerProps {
+interface CanvasContainerProps {
     planId?: number;
 }
 
-const MapContainer: React.FC<MapContainerProps> = ({ planId }) => {
+const CanvasContainer: React.FC<CanvasContainerProps> = ({ planId }) => {
     const { isAuthenticated } = useAppSelector((state) => state.auth);
     const [apiKey, setApiKey] = useState<string>("");
 
@@ -26,7 +26,7 @@ const MapContainer: React.FC<MapContainerProps> = ({ planId }) => {
 
     return (
         <APIProvider apiKey={apiKey}>
-            <MapProvider planId={planId}>
+            <CanvasProvider planId={planId}>
                 <Grid container sx={{ height: "calc(100vh - 64px)" }}>
                     <Grid item xs={12} md={3}>
                         {isAuthenticated && <PlanSummary />}
@@ -37,9 +37,9 @@ const MapContainer: React.FC<MapContainerProps> = ({ planId }) => {
                         {/* Map component will go here */}
                     </Grid>
                 </Grid>
-            </MapProvider>
+            </CanvasProvider>
         </APIProvider>
     );
 };
 
-export default MapContainer;
+export default CanvasContainer;
