@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import PlanPlaceList from "@/components/canvas/list/PlanPlaceList";
-import PlanSummary from "@/components/canvas/list/PlanSummary";
+import PlanSummary from "@/components/canvas/summary/PlanSummary";
 import Navbar from "@/components/navbar/Navbar";
 import { useParams } from "next/navigation";
 
