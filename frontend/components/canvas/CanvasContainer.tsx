@@ -14,18 +14,11 @@ interface MapContainerProps {
 const MapContainer: React.FC<MapContainerProps> = ({ planId }) => {
     const { isAuthenticated } = useAppSelector((state) => state.auth);
     const [apiKey, setApiKey] = useState<string>("");
-    const [userRole, setUserRole] = useState<"OWNER" | "EDITOR" | "VIEWER">(
-        "VIEWER"
-    );
 
     useEffect(() => {
         // Get API key from environment variable
         setApiKey(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "");
     }, []);
-
-    const handleRoleChange = (role: "OWNER" | "EDITOR" | "VIEWER") => {
-        setUserRole(role);
-    };
 
     if (!apiKey) {
         return <div>Loading Google Maps API...</div>;
@@ -36,15 +29,10 @@ const MapContainer: React.FC<MapContainerProps> = ({ planId }) => {
             <MapProvider planId={planId}>
                 <Grid container sx={{ height: "calc(100vh - 64px)" }}>
                     <Grid item xs={12}>
-                        {planId && isAuthenticated && (
-                            <PlanSummary
-                                planId={planId}
-                                onRoleChange={handleRoleChange}
-                            />
-                        )}
+                        {isAuthenticated && <PlanSummary />}
                     </Grid>
                     <Grid item xs={12} md={3}>
-                        <PlanPlaceList userRole={userRole} />
+                        <PlanPlaceList />
                     </Grid>
                     <Grid item xs={12} md={9}>
                         <h1>Map</h1>

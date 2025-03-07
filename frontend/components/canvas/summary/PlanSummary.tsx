@@ -25,14 +25,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import { axiosInstance, AppError } from "@/lib/axios";
 import PeopleIcon from "@mui/icons-material/People";
 import PlanAccessDialog from "./PlanAccessDialog";
+import { useMapContext } from "@/components/canvas/CanvasProvider";
 
-const PlanSummary = ({
-    planId,
-    onRoleChange,
-}: {
-    planId: number;
-    onRoleChange: (role: "OWNER" | "EDITOR" | "VIEWER") => void;
-}) => {
+const PlanSummary = () => {
+    const { planId, setUserRole } = useMapContext();
     const [planSummary, setPlanSummary] = useState<PlanSummaryType | null>(
         null
     );
@@ -60,7 +56,7 @@ const PlanSummary = ({
                     updateTime: new Date(response.data.data.updateTime),
                 };
                 setPlanSummary(planSummary);
-                onRoleChange(planSummary.role);
+                setUserRole(planSummary.role);
             } catch (err) {
                 log.error("Error fetching plans:", err);
                 if (err instanceof AppError) {
@@ -72,7 +68,7 @@ const PlanSummary = ({
         };
 
         fetchPlanSummary();
-    }, [planId, onRoleChange]);
+    }, [planId, setUserRole]);
 
     const handleEditClick = () => {
         setEditedDescription(planSummary?.description || "");
@@ -358,7 +354,6 @@ const PlanSummary = ({
                 <PlanAccessDialog
                     open={isAccessDialogOpen}
                     onClose={() => setIsAccessDialogOpen(false)}
-                    planId={planId}
                 />
             )}
         </Accordion>

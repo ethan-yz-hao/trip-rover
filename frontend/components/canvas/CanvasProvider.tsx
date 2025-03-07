@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+    useRef,
+} from "react";
 import { useAppSelector } from "@/lib/hooks";
 import WebSocketService from "@/lib/webSocketService";
 import { PlanUpdateMessage, PlanAckMessage, PlanPlaces } from "@/types/model";
@@ -19,6 +25,8 @@ interface MapContextType {
     planPlaces: PlanPlaces | null;
     loading: boolean;
     error: string | null;
+    userRole: "OWNER" | "EDITOR" | "VIEWER";
+    setUserRole: (role: "OWNER" | "EDITOR" | "VIEWER") => void;
     // Methods for both authenticated and unauthenticated modes
     sendUpdate: (updateMessage: PlanUpdateMessage) => void;
     fetchPlanData: () => Promise<void>;
@@ -33,6 +41,8 @@ const MapContext = createContext<MapContextType>({
     planPlaces: null,
     loading: false,
     error: null,
+    userRole: "VIEWER",
+    setUserRole: () => {},
     sendUpdate: () => {},
     fetchPlanData: async () => {},
     clearError: () => {},
@@ -45,12 +55,16 @@ export const MapProvider: React.FC<{
     planId?: number;
 }> = ({ children, planId = undefined }) => {
     const { isAuthenticated } = useAppSelector((state) => state.auth);
-    const [webSocketService, setWebSocketService] = useState<WebSocketService | null>(null);
+    const [webSocketService, setWebSocketService] =
+        useState<WebSocketService | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [planPlaces, setPlanPlaces] = useState<PlanPlaces | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
+    const [userRole, setUserRole] = useState<"OWNER" | "EDITOR" | "VIEWER">(
+        "VIEWER"
+    );
+
     // Refs for tracking state in callbacks
     const planPlacesRef = useRef<PlanPlaces | null>(null);
     const webSocketServiceRef = useRef<WebSocketService | null>(null);
@@ -68,7 +82,7 @@ export const MapProvider: React.FC<{
     // Fetch plan data from API
     const fetchPlanData = async () => {
         if (!planId) return;
-        
+
         try {
             setLoading(true);
             setError(null);
@@ -104,7 +118,10 @@ export const MapProvider: React.FC<{
                 .connect(
                     // Handle update messages
                     (updateMessage: PlanUpdateMessage) => {
-                        log.info("WebSocket update message received:", updateMessage);
+                        log.info(
+                            "WebSocket update message received:",
+                            updateMessage
+                        );
                         handleUpdateMessage(updateMessage);
                     },
                     // Handle ack messages
@@ -118,7 +135,9 @@ export const MapProvider: React.FC<{
                 })
                 .catch((error) => {
                     log.error("WebSocket connection failed:", error);
-                    setError("Failed to establish real-time connection. Updates may be delayed.");
+                    setError(
+                        "Failed to establish real-time connection. Updates may be delayed."
+                    );
                 });
 
             return () => {
@@ -210,7 +229,8 @@ export const MapProvider: React.FC<{
                                 if (place.placeId === updateMessage.placeId) {
                                     return {
                                         ...place,
-                                        googlePlaceId: updateMessage.googlePlaceId!,
+                                        googlePlaceId:
+                                            updateMessage.googlePlaceId!,
                                         staySeconds: updateMessage.staySeconds!,
                                     };
                                 }
@@ -225,7 +245,10 @@ export const MapProvider: React.FC<{
                     }
                     return null;
                 default:
-                    throw new AppError(`Unknown action: ${updateMessage.action}`, 422);
+                    throw new AppError(
+                        `Unknown action: ${updateMessage.action}`,
+                        422
+                    );
             }
         } catch (err) {
             if (err instanceof AppError) {
@@ -312,7 +335,7 @@ export const MapProvider: React.FC<{
             }
 
             const updateId = uuidv4();
-            
+
             // For authenticated users with WebSocket
             if (isAuthenticated && webSocketServiceRef.current?.isConnected()) {
                 // Optimistically apply the update
@@ -330,7 +353,7 @@ export const MapProvider: React.FC<{
                 // Send the update via WebSocket
                 pendingUpdatesRef.current.push({ updateId, updateMessage });
                 webSocketServiceRef.current.sendUpdate(updateMessage, updateId);
-            } 
+            }
             // For unauthenticated users or when WebSocket is not available
             else {
                 // Apply update locally only
@@ -344,12 +367,15 @@ export const MapProvider: React.FC<{
 
                 planPlacesRef.current = updatedPlan;
                 setPlanPlaces(updatedPlan);
-                
+
                 // Store in localStorage for unauthenticated users
                 if (!isAuthenticated && planId) {
                     try {
                         const localStorageKey = `plan_${planId}`;
-                        localStorage.setItem(localStorageKey, JSON.stringify(updatedPlan));
+                        localStorage.setItem(
+                            localStorageKey,
+                            JSON.stringify(updatedPlan)
+                        );
                     } catch (err) {
                         log.error("Failed to save to localStorage:", err);
                     }
@@ -381,6 +407,8 @@ export const MapProvider: React.FC<{
                 planPlaces,
                 loading,
                 error,
+                userRole,
+                setUserRole,
                 sendUpdate,
                 fetchPlanData,
                 clearError,

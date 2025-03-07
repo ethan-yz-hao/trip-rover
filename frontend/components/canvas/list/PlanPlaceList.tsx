@@ -26,18 +26,13 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { useMapContext } from "@/components/canvas/CanvasProvider";
 
-interface PlanPlaceListProps {
-    userRole?: "OWNER" | "EDITOR" | "VIEWER";
-}
-
-const PlanPlaceList: React.FC<PlanPlaceListProps> = ({
-    userRole = "VIEWER",
-}) => {
+const PlanPlaceList: React.FC = () => {
     const {
         isAuthenticated,
         planPlaces,
         loading,
         error,
+        userRole,
         sendUpdate,
         clearError,
     } = useMapContext();
