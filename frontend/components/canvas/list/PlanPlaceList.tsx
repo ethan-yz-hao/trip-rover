@@ -1,22 +1,13 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import {
-    Place,
-    PlanPlaces,
-    PlanAckMessage,
-    PlanUpdateMessage,
-    ResponseResult,
-} from "@/types/model";
+import React, { useState } from "react";
+import { PlanUpdateMessage } from "@/types/model";
 import {
     DragDropContext,
     Droppable,
     Draggable,
     DropResult,
 } from "@hello-pangea/dnd";
-import WebSocketService from "@/lib/webSocketService";
 import { v4 as uuidv4 } from "uuid";
-import { axiosInstance, AppError } from "@/lib/axios";
-import log from "@/lib/log";
 import StaySecondsEditor from "@/components/canvas/list/StaySecondEditor";
 import {
     Box,
@@ -24,319 +15,39 @@ import {
     Alert,
     Typography,
     Snackbar,
+    TextField,
+    Button,
+    List,
+    ListItem,
+    ListItemText,
+    IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import { useMapContext } from "@/components/canvas/CanvasProvider";
 
 interface PlanPlaceListProps {
-    planId: number;
-    userRole: "OWNER" | "EDITOR" | "VIEWER";
+    userRole?: "OWNER" | "EDITOR" | "VIEWER";
 }
 
-interface PendingUpdate {
-    updateId: string;
-    updateMessage: PlanUpdateMessage;
-}
+const PlanPlaceList: React.FC<PlanPlaceListProps> = ({
+    userRole = "VIEWER",
+}) => {
+    const {
+        isAuthenticated,
+        planPlaces,
+        loading,
+        error,
+        sendUpdate,
+        clearError,
+    } = useMapContext();
 
-const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId, userRole }) => {
-    const [planPlaces, setPlanPlaces] = useState<PlanPlaces | null>(null);
-    const planPlacesRef = useRef<PlanPlaces | null>(null);
-    const webSocketServiceRef = useRef<WebSocketService | null>(null);
     const [newGooglePlaceId, setNewGooglePlaceId] = useState<string>("");
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
-    const canEdit = userRole === "OWNER" || userRole === "EDITOR";
 
-    // Ordered queue of pending updates
-    const pendingUpdatesRef = useRef<PendingUpdate[]>([]);
-
-    // fetch the plan places data
-    const fetchPlanData = async () => {
-        try {
-            setLoading(true);
-
-            const response = await axiosInstance.get<
-                ResponseResult<PlanPlaces>
-            >(`/plan/${planId}/places`);
-
-            setPlanPlaces(response.data.data);
-            planPlacesRef.current = response.data.data;
-        } catch (err) {
-            log.error("Error fetching plan:", err);
-            if (err instanceof AppError) {
-                setError(err.message);
-            } else {
-                setError("Failed to load the plan. Please try again.");
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Load the plan places data
-    useEffect(() => {
-        fetchPlanData();
-    }, [planId]);
-
-    // Initialize and manage WebSocket connection
-    useEffect(() => {
-        if (webSocketServiceRef.current) return; // avoid re-initializing
-
-        const webSocketService = new WebSocketService(planId);
-        webSocketServiceRef.current = webSocketService;
-
-        const initializeWebSocket = async () => {
-            try {
-                await webSocketService.connect(
-                    (updateMessage: PlanUpdateMessage) => {
-                        log.info(
-                            "WebSocket update message received:",
-                            updateMessage
-                        );
-                        handleUpdateMessage(updateMessage);
-                    },
-                    (ackMessage: PlanAckMessage) => {
-                        log.info("WebSocket ack message received:", ackMessage);
-                        handleAckMessage(ackMessage);
-                    }
-                );
-            } catch (err) {
-                log.error("WebSocket connection error:", err);
-                if (err instanceof AppError) {
-                    setError(err.message);
-                } else {
-                    setError(
-                        "Failed to establish real-time connection. Updates may be delayed."
-                    );
-                }
-            }
-        };
-
-        initializeWebSocket();
-
-        return () => {
-            webSocketService.disconnect();
-        };
-    }, [planId]);
-
-    // Handle incoming plan updates from other clients
-    const handleUpdateMessage = (updateMessage: PlanUpdateMessage) => {
-        const { clientId, updateId, version } = updateMessage;
-
-        // If the update originated from this client, remove it from pending updates and do not re-apply, but update the plan version
-        if (clientId === webSocketServiceRef.current?.getClientId()) {
-            const pendingIndex = pendingUpdatesRef.current.findIndex(
-                (update) => update.updateId === updateId
-            );
-            if (pendingIndex !== -1) {
-                pendingUpdatesRef.current.splice(pendingIndex, 1);
-            }
-
-            // Update the plan version
-            setPlanPlaces((prevPlanPlaces) => {
-                if (!prevPlanPlaces) return prevPlanPlaces;
-                return { ...prevPlanPlaces, version };
-            });
-
-            return;
-        }
-
-        // Apply the update from other clients
-        if (!planPlacesRef.current) {
-            setError("Cannot apply update: Plan not loaded");
-            return;
-        }
-
-        try {
-            const updatedPlan = applyLocalUpdate(
-                planPlacesRef.current,
-                updateMessage
-            );
-            if (!updatedPlan) {
-                throw new AppError("Failed to apply incoming update", 422);
-            }
-
-            planPlacesRef.current = updatedPlan;
-            setPlanPlaces(updatedPlan);
-        } catch (err) {
-            log.error("Failed to apply incoming update:", err);
-            if (err instanceof AppError) {
-                setError(err.message);
-            } else {
-                setError("Failed to apply incoming update");
-            }
-            fetchPlanData(); // Reload the plan as fallback
-        }
-    };
-
-    // Handle incoming ack messages
-    const handleAckMessage = (ackMessage: PlanAckMessage) => {
-        const { updateId, status, errorMessage } = ackMessage;
-
-        // Remove the update from the pending updates
-        const pendingIndex = pendingUpdatesRef.current.findIndex(
-            (update) => update.updateId === updateId
-        );
-        if (pendingIndex !== -1) {
-            pendingUpdatesRef.current.splice(pendingIndex, 1);
-        }
-
-        if (status === "ERROR") {
-            log.error("Update failed:", errorMessage);
-            setError(errorMessage || "Update failed");
-            fetchPlanData(); // Reload the plan
-        }
-    };
-
-    // Apply update to the plan locally (used by both optimistic updates and incoming updates from other clients)
-    const applyLocalUpdate = (
-        currentPlan: PlanPlaces,
-        updateMessage: PlanUpdateMessage
-    ): PlanPlaces | null => {
-        try {
-            switch (updateMessage.action) {
-                case "REORDER":
-                    const { placeId, targetPlaceId, version } = updateMessage;
-                    const placeToMoveIndex = currentPlan.places.findIndex(
-                        (place) => place.placeId === placeId
-                    );
-                    if (placeToMoveIndex === -1) {
-                        return null;
-                    }
-
-                    const placeToMove = currentPlan.places[placeToMoveIndex];
-                    const updatedPlaces = Array.from(currentPlan.places);
-                    updatedPlaces.splice(placeToMoveIndex, 1); // Remove the place
-
-                    let targetIndex = updatedPlaces.length; // Default to end
-                    if (targetPlaceId) {
-                        const targetPlace = updatedPlaces.find(
-                            (place) => place.placeId === targetPlaceId
-                        );
-                        if (targetPlace) {
-                            targetIndex = updatedPlaces.indexOf(targetPlace); // Insert before the targetIndex
-                        }
-                    }
-
-                    // Adjust target index (insert after the targetIndex) if moving down
-                    if (targetIndex >= placeToMoveIndex) {
-                        targetIndex += 1;
-                    }
-
-                    updatedPlaces.splice(targetIndex, 0, placeToMove); // Insert at new position
-
-                    return { ...currentPlan, places: updatedPlaces, version };
-
-                case "ADD":
-                    if (updateMessage.placeId && updateMessage.googlePlaceId) {
-                        const newPlace: Place = {
-                            placeId: updateMessage.placeId,
-                            googlePlaceId: updateMessage.googlePlaceId,
-                            staySeconds: updateMessage.staySeconds || 1800,
-                        };
-                        return {
-                            ...currentPlan,
-                            places: [...currentPlan.places, newPlace],
-                            version: updateMessage.version,
-                        };
-                    }
-                    return null;
-
-                case "REMOVE":
-                    if (updateMessage.placeId) {
-                        const filteredPlaces = currentPlan.places.filter(
-                            (place) => place.placeId !== updateMessage.placeId
-                        );
-                        return {
-                            ...currentPlan,
-                            places: filteredPlaces,
-                            version: updateMessage.version,
-                        };
-                    }
-                    return null;
-
-                case "UPDATE":
-                    if (
-                        updateMessage.placeId &&
-                        updateMessage.googlePlaceId &&
-                        updateMessage.staySeconds
-                    ) {
-                        const updatedPlaces = currentPlan.places.map(
-                            (place) => {
-                                if (place.placeId === updateMessage.placeId) {
-                                    return {
-                                        ...place,
-                                        googlePlaceId:
-                                            updateMessage.googlePlaceId!,
-                                        staySeconds: updateMessage.staySeconds!,
-                                    };
-                                }
-                                return place;
-                            }
-                        );
-                        return {
-                            ...currentPlan,
-                            places: updatedPlaces,
-                            version: updateMessage.version,
-                        };
-                    }
-                    return null;
-                default:
-                    throw new AppError(
-                        `Unknown action: ${updateMessage.action}`,
-                        422
-                    );
-            }
-        } catch (err) {
-            if (err instanceof AppError) {
-                throw err;
-            }
-            throw new AppError("Failed to apply update", 422, err);
-        }
-    };
-
-    // Send an update message
-    const sendUpdate = (updateMessage: PlanUpdateMessage) => {
-        try {
-            if (!webSocketServiceRef.current?.isConnected()) {
-                throw new AppError(
-                    "WebSocket connection is not available",
-                    409
-                );
-            }
-
-            const updateId = uuidv4();
-
-            if (!planPlacesRef.current) {
-                throw new AppError("Plan data is not loaded", 409);
-            }
-
-            // Optimistically apply the update
-            const updatedPlan = applyLocalUpdate(
-                planPlacesRef.current,
-                updateMessage
-            );
-            if (!updatedPlan) {
-                throw new AppError("Failed to apply local update", 422);
-            }
-
-            planPlacesRef.current = updatedPlan;
-            setPlanPlaces(updatedPlan);
-
-            // Send the update via WebSocket
-            pendingUpdatesRef.current.push({ updateId, updateMessage });
-            webSocketServiceRef.current.sendUpdate(updateMessage, updateId);
-        } catch (err) {
-            log.error("Error sending update:", err);
-            if (err instanceof AppError) {
-                setError(err.message);
-            } else {
-                setError("Failed to send update. Please try again.");
-            }
-            // Revert optimistic update if needed
-            if (planPlacesRef.current) {
-                setPlanPlaces(planPlacesRef.current);
-            }
-        }
-    };
+    // Determine if user can edit based on role or authentication status
+    // For unauthenticated users, always allow editing (local only)
+    const canEdit =
+        !isAuthenticated || userRole === "OWNER" || userRole === "EDITOR";
 
     // Handle drag and drop
     const onDragEnd = (result: DropResult) => {
@@ -354,12 +65,12 @@ const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId, userRole }) => {
         const movedPlace = planPlaces.places[sourceIndex];
         const targetPlace = planPlaces.places[destinationIndex];
 
-        // Send update to the server via WebSocket
+        // Create update message
         const updateMessage: PlanUpdateMessage = {
             action: "REORDER",
             placeId: movedPlace.placeId,
             targetPlaceId: targetPlace.placeId,
-            clientId: webSocketServiceRef.current?.getClientId() || "",
+            clientId: uuidv4(), // This will be overridden in the provider for authenticated users
             updateId: uuidv4(),
             version: planPlaces.version,
         };
@@ -368,14 +79,68 @@ const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId, userRole }) => {
     };
 
     // Handle error snackbar close
-    const handleErrorClose = (
-        event?: React.SyntheticEvent | Event,
-        reason?: string
+    const handleErrorClose = () => {
+        clearError();
+    };
+
+    const handleAdd = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!planPlaces) return;
+
+        // Create update message for adding a place
+        const updateMessage: PlanUpdateMessage = {
+            clientId: uuidv4(),
+            updateId: uuidv4(),
+            action: "ADD",
+            placeId: uuidv4(),
+            version: planPlaces.version,
+            googlePlaceId: newGooglePlaceId,
+            staySeconds: 1800,
+        };
+
+        sendUpdate(updateMessage);
+        setNewGooglePlaceId("");
+    };
+
+    const handleDelete = (placeId: string) => {
+        if (!planPlaces) return;
+
+        // Create update message for removing a place
+        const updateMessage: PlanUpdateMessage = {
+            clientId: uuidv4(),
+            updateId: uuidv4(),
+            action: "REMOVE",
+            placeId,
+            version: planPlaces.version,
+        };
+
+        sendUpdate(updateMessage);
+    };
+
+    const handleStaySecondsUpdate = (
+        placeId: string,
+        newStaySeconds: number
     ) => {
-        if (reason === "clickaway") {
-            return;
-        }
-        setError(null);
+        if (!planPlaces) return;
+
+        const place = planPlaces.places.find(
+            (place) => place.placeId === placeId
+        );
+        if (!place) return;
+
+        // Create update message for updating a place
+        const updateMessage: PlanUpdateMessage = {
+            clientId: uuidv4(),
+            updateId: uuidv4(),
+            action: "UPDATE",
+            placeId,
+            version: planPlaces.version,
+            googlePlaceId: place.googlePlaceId,
+            staySeconds: newStaySeconds,
+        };
+
+        sendUpdate(updateMessage);
     };
 
     if (loading) {
@@ -394,72 +159,8 @@ const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId, userRole }) => {
         );
     }
 
-    const handleAdd = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // Send update to the server via WebSocket
-        const updateMessage: PlanUpdateMessage = {
-            clientId: webSocketServiceRef.current?.getClientId() || "",
-            updateId: uuidv4(),
-            action: "ADD",
-            placeId: uuidv4(),
-            version: planPlaces.version,
-            googlePlaceId: newGooglePlaceId,
-            staySeconds: 1800,
-        };
-
-        sendUpdate(updateMessage);
-
-        setNewGooglePlaceId("");
-    };
-
-    const handleDelete = async (placeId: string) => {
-        const index = planPlaces.places.findIndex(
-            (place) => place.placeId === placeId
-        );
-        if (index === -1) {
-            return;
-        }
-
-        // Send update to the server via WebSocket
-        const updateMessage: PlanUpdateMessage = {
-            clientId: webSocketServiceRef.current?.getClientId() || "",
-            updateId: uuidv4(),
-            action: "REMOVE",
-            placeId,
-            version: planPlaces.version,
-        };
-
-        sendUpdate(updateMessage);
-    };
-
-    const handleStaySecondsUpdate = async (
-        placeId: string,
-        newStaySeconds: number
-    ) => {
-        const place = planPlaces.places.find(
-            (place) => place.placeId === placeId
-        );
-        if (!place) {
-            return;
-        }
-
-        // Send update to the server via WebSocket
-        const updateMessage: PlanUpdateMessage = {
-            clientId: webSocketServiceRef.current?.getClientId() || "",
-            updateId: uuidv4(),
-            action: "UPDATE",
-            placeId,
-            version: planPlaces.version,
-            googlePlaceId: place.googlePlaceId,
-            staySeconds: newStaySeconds,
-        };
-
-        sendUpdate(updateMessage);
-    };
-
     return (
-        <Box>
+        <Box sx={{ p: 2 }}>
             <Snackbar
                 open={error !== null}
                 autoHideDuration={6000}
@@ -477,31 +178,38 @@ const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId, userRole }) => {
             </Snackbar>
 
             {canEdit && (
-                <form onSubmit={handleAdd}>
-                    <div>
-                        <label htmlFor="newGooglePlaceId">
-                            New Google Place Id:
-                        </label>
-                        <input
-                            type="text"
-                            id="newGooglePlaceId"
-                            value={newGooglePlaceId}
-                            onChange={(e) =>
-                                setNewGooglePlaceId(e.target.value)
-                            }
-                            required
-                        />
-                    </div>
-                    <button type="submit">Add New Place Index</button>
-                </form>
+                <Box component="form" onSubmit={handleAdd} sx={{ mb: 3 }}>
+                    <TextField
+                        label="New Google Place ID"
+                        value={newGooglePlaceId}
+                        onChange={(e) => setNewGooglePlaceId(e.target.value)}
+                        required
+                        fullWidth
+                        margin="normal"
+                        size="small"
+                    />
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        fullWidth
+                        disabled={!newGooglePlaceId}
+                    >
+                        Add New Place
+                    </Button>
+                </Box>
             )}
 
             <DragDropContext onDragEnd={canEdit ? onDragEnd : () => {}}>
                 <Droppable droppableId="places">
                     {(provided) => (
-                        <ul
+                        <List
                             {...provided.droppableProps}
                             ref={provided.innerRef}
+                            sx={{
+                                bgcolor: "background.paper",
+                                borderRadius: 1,
+                                boxShadow: 1,
+                            }}
                         >
                             {planPlaces.places.map((place, index) => (
                                 <Draggable
@@ -511,45 +219,76 @@ const PlanPlaceList: React.FC<PlanPlaceListProps> = ({ planId, userRole }) => {
                                     isDragDisabled={!canEdit}
                                 >
                                     {(provided) => (
-                                        <li
+                                        <ListItem
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                        >
-                                            {place.placeId}{" "}
-                                            {place.googlePlaceId}{" "}
-                                            {place.staySeconds}
-                                            {canEdit && (
-                                                <>
-                                                    <StaySecondsEditor
-                                                        placeId={place.placeId}
-                                                        currentStaySeconds={
-                                                            place.staySeconds
-                                                        }
-                                                        onSubmit={
-                                                            handleStaySecondsUpdate
-                                                        }
-                                                    />
-                                                    <button
+                                            divider
+                                            secondaryAction={
+                                                canEdit && (
+                                                    <IconButton
+                                                        edge="end"
                                                         onClick={() =>
                                                             handleDelete(
                                                                 place.placeId
                                                             )
                                                         }
+                                                        color="error"
                                                     >
-                                                        Delete
-                                                    </button>
-                                                </>
-                                            )}
-                                        </li>
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                )
+                                            }
+                                        >
+                                            <Box
+                                                {...provided.dragHandleProps}
+                                                sx={{ mr: 1 }}
+                                            >
+                                                <DragIndicatorIcon color="action" />
+                                            </Box>
+                                            <ListItemText
+                                                primary={place.googlePlaceId}
+                                                secondary={
+                                                    <Box sx={{ mt: 1 }}>
+                                                        {canEdit ? (
+                                                            <StaySecondsEditor
+                                                                placeId={
+                                                                    place.placeId
+                                                                }
+                                                                currentStaySeconds={
+                                                                    place.staySeconds
+                                                                }
+                                                                onSubmit={
+                                                                    handleStaySecondsUpdate
+                                                                }
+                                                            />
+                                                        ) : (
+                                                            <Typography variant="body2">
+                                                                Stay time:{" "}
+                                                                {
+                                                                    place.staySeconds
+                                                                }{" "}
+                                                                seconds
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                }
+                                            />
+                                        </ListItem>
                                     )}
                                 </Draggable>
                             ))}
                             {provided.placeholder}
-                        </ul>
+                        </List>
                     )}
                 </Droppable>
             </DragDropContext>
+
+            {!isAuthenticated && (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                    You are working in offline mode. Sign in to save your
+                    changes permanently.
+                </Alert>
+            )}
         </Box>
     );
 };
