@@ -28,51 +28,25 @@ import PlanAccessDialog from "./PlanAccessDialog";
 import { useCanvasContext } from "@/components/canvas/CanvasProvider";
 
 const PlanSummary = () => {
-    const { planId, setUserRole } = useCanvasContext();
-    const [planSummary, setPlanSummary] = useState<PlanSummaryType | null>(
-        null
-    );
-    const [error, setError] = useState<string>("");
+    const { planId, planSummary, loading, error, userRole, fetchPlanSummary } =
+        useCanvasContext();
     const [isEditing, setIsEditing] = useState(false);
     const [editedDescription, setEditedDescription] = useState("");
     const [editedIsPublic, setEditedIsPublic] = useState(false);
     const [updateError, setUpdateError] = useState("");
     const [isAccessDialogOpen, setIsAccessDialogOpen] = useState(false);
 
-    const canEdit =
-        planSummary?.role === "OWNER" || planSummary?.role === "EDITOR";
+    const canEdit = userRole === "OWNER" || userRole === "EDITOR";
 
+    // Initialize edit form when entering edit mode
     useEffect(() => {
-        const fetchPlanSummary = async () => {
-            try {
-                const response = await axiosInstance.get<
-                    ResponseResult<PlanSummaryType>
-                >(`/plan/${planId}`);
-
-                // Convert string dates to Date objects
-                const planSummary = {
-                    ...response.data.data,
-                    createTime: new Date(response.data.data.createTime),
-                    updateTime: new Date(response.data.data.updateTime),
-                };
-                setPlanSummary(planSummary);
-                setUserRole(planSummary.role);
-            } catch (err) {
-                log.error("Error fetching plans:", err);
-                if (err instanceof AppError) {
-                    setError(err.message);
-                } else {
-                    setError("Failed to load plans");
-                }
-            }
-        };
-
-        fetchPlanSummary();
-    }, [planId, setUserRole]);
+        if (isEditing && planSummary) {
+            setEditedDescription(planSummary.description || "");
+            setEditedIsPublic(planSummary.isPublic || false);
+        }
+    }, [isEditing, planSummary]);
 
     const handleEditClick = () => {
-        setEditedDescription(planSummary?.description || "");
-        setEditedIsPublic(planSummary?.isPublic || false);
         setIsEditing(true);
     };
 
@@ -85,14 +59,8 @@ const PlanSummary = () => {
                 isPublic: editedIsPublic,
             });
 
-            // Use the backend response to update the state
-            const updatedPlan = {
-                ...response.data.data,
-                createTime: new Date(response.data.data.createTime),
-                updateTime: new Date(response.data.data.updateTime),
-            };
-
-            setPlanSummary(updatedPlan);
+            // Refresh plan summary data after update
+            fetchPlanSummary();
             setIsEditing(false);
             setUpdateError("");
         } catch (err) {
@@ -107,6 +75,10 @@ const PlanSummary = () => {
 
     if (error) {
         return <div>{error}</div>;
+    }
+
+    if (loading || !planSummary) {
+        return <div>Loading plan summary...</div>;
     }
 
     return (
@@ -124,79 +96,77 @@ const PlanSummary = () => {
                     borderRadius: 2,
                 }}
             >
-                {planSummary && (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            width: "100%",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                        }}
-                    >
-                        <Typography variant="h6" component="div">
-                            {planSummary.planName}
-                        </Typography>
-                        <Stack direction="row" spacing={2} alignItems="center">
-                            {canEdit && (
-                                <IconButton
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsAccessDialogOpen(true);
-                                    }}
-                                    size="small"
-                                >
-                                    <PeopleIcon />
-                                </IconButton>
-                            )}
-                            <Tooltip
-                                title={
-                                    <Box sx={{ p: 1 }}>
-                                        <Typography variant="body2">
-                                            Created on{" "}
-                                            {planSummary.createTime.toLocaleDateString(
-                                                "en-US",
-                                                {
-                                                    weekday: "long",
-                                                    year: "numeric",
-                                                    month: "long",
-                                                    day: "numeric",
-                                                }
-                                            )}
-                                        </Typography>
-                                    </Box>
-                                }
-                                arrow
-                                placement="top"
-                                sx={{
-                                    backgroundColor: "background.paper",
-                                    boxShadow: 2,
-                                    borderRadius: 1,
+                <Box
+                    sx={{
+                        display: "flex",
+                        width: "100%",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                    }}
+                >
+                    <Typography variant="h6" component="div">
+                        {planSummary.planName}
+                    </Typography>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        {canEdit && (
+                            <IconButton
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsAccessDialogOpen(true);
                                 }}
+                                size="small"
                             >
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 0.5,
-                                        color: "text.secondary",
-                                    }}
-                                >
-                                    <AccessTimeIcon fontSize="small" />
+                                <PeopleIcon />
+                            </IconButton>
+                        )}
+                        <Tooltip
+                            title={
+                                <Box sx={{ p: 1 }}>
                                     <Typography variant="body2">
-                                        {planSummary.createTime.toLocaleTimeString(
+                                        Created on{" "}
+                                        {planSummary.createTime.toLocaleDateString(
                                             "en-US",
                                             {
-                                                hour: "numeric",
-                                                minute: "2-digit",
-                                                hour12: true,
+                                                weekday: "long",
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
                                             }
                                         )}
                                     </Typography>
                                 </Box>
-                            </Tooltip>
-                        </Stack>
-                    </Box>
-                )}
+                            }
+                            arrow
+                            placement="top"
+                            sx={{
+                                backgroundColor: "background.paper",
+                                boxShadow: 2,
+                                borderRadius: 1,
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
+                                    color: "text.secondary",
+                                }}
+                            >
+                                <AccessTimeIcon fontSize="small" />
+                                <Typography variant="body2">
+                                    {planSummary.createTime.toLocaleTimeString(
+                                        "en-US",
+                                        {
+                                            hour: "numeric",
+                                            minute: "2-digit",
+                                            hour12: true,
+                                        }
+                                    )}
+                                </Typography>
+                            </Box>
+                        </Tooltip>
+                    </Stack>
+                </Box>
             </AccordionSummary>
             <AccordionDetails>
                 {planSummary && (

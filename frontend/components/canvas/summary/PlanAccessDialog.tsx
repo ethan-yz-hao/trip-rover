@@ -32,7 +32,7 @@ import { RootState } from "@/lib/store";
 import log from "@/lib/log";
 import Autocomplete from "@mui/material/Autocomplete";
 import debounce from "lodash/debounce";
-import { useMapContext } from "../CanvasProvider";
+import { useCanvasContext } from "../CanvasProvider";
 
 interface PlanAccessDialogProps {
     open: boolean;
@@ -43,7 +43,7 @@ export default function PlanAccessDialog({
     open,
     onClose,
 }: PlanAccessDialogProps) {
-    const { planId } = useMapContext();
+    const { planId } = useCanvasContext();
     const [members, setMembers] = useState<PlanMember[]>([]);
     const [searchResults, setSearchResults] = useState<UserIndexResponseDTO[]>(
         []

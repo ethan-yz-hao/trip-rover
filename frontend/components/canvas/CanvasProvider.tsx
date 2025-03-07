@@ -7,7 +7,13 @@ import React, {
 } from "react";
 import { useAppSelector } from "@/lib/hooks";
 import WebSocketService from "@/lib/webSocketService";
-import { PlanUpdateMessage, PlanAckMessage, PlanPlaces } from "@/types/model";
+import {
+    PlanUpdateMessage,
+    PlanAckMessage,
+    PlanPlaces,
+    PlanSummary,
+    ResponseResult,
+} from "@/types/model";
 import { v4 as uuidv4 } from "uuid";
 import log from "@/lib/log";
 import { axiosInstance, AppError } from "@/lib/axios";
@@ -23,6 +29,7 @@ interface CanvasContextType {
     planId: number | null;
     isConnected: boolean;
     planPlaces: PlanPlaces | null;
+    planSummary: PlanSummary | null;
     loading: boolean;
     error: string | null;
     userRole: "OWNER" | "EDITOR" | "VIEWER";
@@ -30,6 +37,7 @@ interface CanvasContextType {
     // Methods for both authenticated and unauthenticated modes
     sendUpdate: (updateMessage: PlanUpdateMessage) => void;
     fetchPlanData: () => Promise<void>;
+    fetchPlanSummary: () => Promise<void>;
     clearError: () => void;
 }
 
@@ -39,12 +47,14 @@ const CanvasContext = createContext<CanvasContextType>({
     planId: null,
     isConnected: false,
     planPlaces: null,
+    planSummary: null,
     loading: false,
     error: null,
     userRole: "VIEWER",
     setUserRole: () => {},
     sendUpdate: () => {},
     fetchPlanData: async () => {},
+    fetchPlanSummary: async () => {},
     clearError: () => {},
 });
 
@@ -59,6 +69,7 @@ export const CanvasProvider: React.FC<{
         useState<WebSocketService | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [planPlaces, setPlanPlaces] = useState<PlanPlaces | null>(null);
+    const [planSummary, setPlanSummary] = useState<PlanSummary | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [userRole, setUserRole] = useState<"OWNER" | "EDITOR" | "VIEWER">(
@@ -81,6 +92,7 @@ export const CanvasProvider: React.FC<{
 
     // Fetch plan data from API
     const fetchPlanData = async () => {
+        console.log("fetchPlanData");
         if (!planId) return;
 
         try {
@@ -99,6 +111,39 @@ export const CanvasProvider: React.FC<{
                 setError(err.message);
             } else {
                 setError("Failed to load the plan. Please try again.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch plan summary from API
+    const fetchPlanSummary = async () => {
+        if (!planId) return;
+
+        try {
+            setLoading(true);
+            setError(null);
+
+            const response = await axiosInstance.get<
+                ResponseResult<PlanSummary>
+            >(`/plan/${planId}`);
+
+            // Convert string dates to Date objects
+            const summary = {
+                ...response.data.data,
+                createTime: new Date(response.data.data.createTime),
+                updateTime: new Date(response.data.data.updateTime),
+            };
+
+            setPlanSummary(summary);
+            setUserRole(summary.role);
+        } catch (err) {
+            log.error("Error fetching plan summary:", err);
+            if (err instanceof AppError) {
+                setError(err.message);
+            } else {
+                setError("Failed to load plan summary");
             }
         } finally {
             setLoading(false);
@@ -149,10 +194,11 @@ export const CanvasProvider: React.FC<{
         }
     }, [isAuthenticated, planId]);
 
-    // Load initial plan data
+    // Load initial plan data and summary
     useEffect(() => {
         if (planId) {
             fetchPlanData();
+            fetchPlanSummary();
         }
     }, [planId]);
 
@@ -405,12 +451,14 @@ export const CanvasProvider: React.FC<{
                 planId: planId || null,
                 isConnected,
                 planPlaces,
+                planSummary,
                 loading,
                 error,
                 userRole,
                 setUserRole,
                 sendUpdate,
                 fetchPlanData,
+                fetchPlanSummary,
                 clearError,
             }}
         >
