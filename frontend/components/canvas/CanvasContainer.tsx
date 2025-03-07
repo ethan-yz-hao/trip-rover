@@ -28,10 +28,8 @@ const MapContainer: React.FC<MapContainerProps> = ({ planId }) => {
         <APIProvider apiKey={apiKey}>
             <MapProvider planId={planId}>
                 <Grid container sx={{ height: "calc(100vh - 64px)" }}>
-                    <Grid item xs={12}>
-                        {isAuthenticated && <PlanSummary />}
-                    </Grid>
                     <Grid item xs={12} md={3}>
+                        {isAuthenticated && <PlanSummary />}
                         <PlanPlaceList />
                     </Grid>
                     <Grid item xs={12} md={9}>

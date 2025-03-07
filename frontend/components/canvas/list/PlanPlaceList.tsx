@@ -155,7 +155,7 @@ const PlanPlaceList: React.FC = () => {
     }
 
     return (
-        <Box sx={{ p: 2 }}>
+        <>
             <Snackbar
                 open={error !== null}
                 autoHideDuration={6000}
@@ -173,14 +173,13 @@ const PlanPlaceList: React.FC = () => {
             </Snackbar>
 
             {canEdit && (
-                <Box component="form" onSubmit={handleAdd} sx={{ mb: 3 }}>
+                <Box component="form" onSubmit={handleAdd}>
                     <TextField
                         label="New Google Place ID"
                         value={newGooglePlaceId}
                         onChange={(e) => setNewGooglePlaceId(e.target.value)}
                         required
                         fullWidth
-                        margin="normal"
                         size="small"
                     />
                     <Button
@@ -284,7 +283,7 @@ const PlanPlaceList: React.FC = () => {
                     changes permanently.
                 </Alert>
             )}
-        </Box>
+        </>
     );
 };
 

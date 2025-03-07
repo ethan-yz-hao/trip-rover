@@ -116,13 +116,11 @@ const PlanSummary = () => {
                 boxShadow: 1,
                 "&:before": { display: "none" },
                 borderRadius: 2,
-                mb: 2,
             }}
         >
             <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 sx={{
-                    minHeight: 64,
                     borderRadius: 2,
                 }}
             >
