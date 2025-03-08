@@ -31,6 +31,8 @@ const PlanPlaceList: React.FC = () => {
     const {
         planPlaces,
         loadingPlanPlaces,
+        placeDetails,
+        loadingPlaceDetails,
         error,
         sendUpdate,
         clearError,
@@ -197,18 +199,10 @@ const PlanPlaceList: React.FC = () => {
         sendUpdate(updateMessage);
     };
 
-    if (loadingPlanPlaces) {
+    if (loadingPlanPlaces || loadingPlaceDetails || !effectivePlanPlaces) {
         return (
             <Box display="flex" justifyContent="center" p={4}>
                 <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (!effectivePlanPlaces) {
-        return (
-            <Box p={2}>
-                <Typography>Loading plan data...</Typography>
             </Box>
         );
     }
@@ -306,6 +300,9 @@ const PlanPlaceList: React.FC = () => {
                                                     </Box>
                                                     <ListItemText
                                                         primary={
+                                                            placeDetails[
+                                                                place.placeId
+                                                            ]?.name ||
                                                             place.googlePlaceId
                                                         }
                                                         secondary={
