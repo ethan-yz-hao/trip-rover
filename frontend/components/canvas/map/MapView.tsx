@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Map, Marker, InfoWindow, useMap } from "@vis.gl/react-google-maps";
 import { useCanvasContext } from "@/components/canvas/CanvasProvider";
 import { Box, Typography, CircularProgress } from "@mui/material";
@@ -85,12 +85,7 @@ const MapView: React.FC = () => {
         null
     );
     const [initialLoading, setInitialLoading] = useState(true);
-    const [mapCenter, setMapCenter] = useState<google.maps.LatLngLiteral>({
-        lat: 40.7128,
-        lng: -74.006,
-    });
     const [zoom, setZoom] = useState(12);
-    const mapRef = useRef<google.maps.Map | null>(null);
 
     // Fetch place details for all places in the plan
     useEffect(() => {
@@ -140,34 +135,6 @@ const MapView: React.FC = () => {
         fetchPlaceDetails();
     }, [planPlaces]);
 
-    // Calculate map center and update it smoothly
-    useEffect(() => {
-        const places = Object.values(placeDetails);
-        if (places.length === 0) return;
-
-        // Calculate the average of all coordinates
-        const sum = places.reduce(
-            (acc, place) => ({
-                lat: acc.lat + place.location.lat,
-                lng: acc.lng + place.location.lng,
-            }),
-            { lat: 0, lng: 0 }
-        );
-
-        const newCenter = {
-            lat: sum.lat / places.length,
-            lng: sum.lng / places.length,
-        };
-
-        // Update center state
-        setMapCenter(newCenter);
-
-        // If we have a map reference, pan smoothly
-        if (mapRef.current) {
-            mapRef.current.panTo(newCenter);
-        }
-    }, [placeDetails]);
-
     if (loading || initialLoading) {
         return (
             <Box
@@ -185,7 +152,10 @@ const MapView: React.FC = () => {
     return (
         <Box sx={{ height: "100%", width: "100%" }}>
             <Map
-                center={mapCenter}
+                defaultCenter={{
+                    lat: 40.7128,
+                    lng: -74.006,
+                }}
                 zoom={zoom}
                 onZoomChanged={(e) => setZoom(e.detail.zoom)}
                 mapId="trip-planner-map"
