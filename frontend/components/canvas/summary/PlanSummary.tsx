@@ -28,6 +28,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import PlanAccessDialog from "./PlanAccessDialog";
 import { useCanvasContext } from "@/components/canvas/CanvasProvider";
 import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/lib/hooks";
 
 const PlanSummary = () => {
     const {
@@ -35,11 +36,10 @@ const PlanSummary = () => {
         planSummary,
         loading,
         error,
-        userRole,
         setPlanSummary,
         setPlanPlaces,
-        isAuthenticated,
     } = useCanvasContext();
+    const { isAuthenticated } = useAppSelector((state) => state.auth);
     const [isEditing, setIsEditing] = useState(false);
     const [editedDescription, setEditedDescription] = useState("");
     const [editedIsPublic, setEditedIsPublic] = useState(false);
@@ -50,7 +50,10 @@ const PlanSummary = () => {
 
     // Determine if this is a new plan (no planId) or if user can edit existing plan
     const isNewPlan = !planId;
-    const canEdit = isNewPlan || userRole === "OWNER" || userRole === "EDITOR";
+    const canEdit =
+        isNewPlan ||
+        planSummary?.role === "OWNER" ||
+        planSummary?.role === "EDITOR";
 
     // Initialize edit form when entering edit mode or for new plans
     useEffect(() => {

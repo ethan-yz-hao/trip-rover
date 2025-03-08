@@ -24,7 +24,6 @@ interface PendingUpdate {
 }
 
 interface CanvasContextType {
-    isAuthenticated: boolean;
     webSocketService: WebSocketService | null;
     planId: number | null;
     isConnected: boolean;
@@ -32,8 +31,6 @@ interface CanvasContextType {
     planSummary: PlanSummary | null;
     loading: boolean;
     error: string | null;
-    userRole: "OWNER" | "EDITOR" | "VIEWER";
-    setUserRole: (role: "OWNER" | "EDITOR" | "VIEWER") => void;
     // Methods for both authenticated and unauthenticated modes
     sendUpdate: (updateMessage: PlanUpdateMessage) => void;
     setPlanSummary: (summary: PlanSummary) => void;
@@ -42,7 +39,6 @@ interface CanvasContextType {
 }
 
 const CanvasContext = createContext<CanvasContextType>({
-    isAuthenticated: false,
     webSocketService: null,
     planId: null,
     isConnected: false,
@@ -50,8 +46,6 @@ const CanvasContext = createContext<CanvasContextType>({
     planSummary: null,
     loading: false,
     error: null,
-    userRole: "VIEWER",
-    setUserRole: () => {},
     sendUpdate: () => {},
     setPlanSummary: () => {},
     setPlanPlaces: () => {},
@@ -72,9 +66,6 @@ export const CanvasProvider: React.FC<{
     const [planSummary, setPlanSummary] = useState<PlanSummary | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [userRole, setUserRole] = useState<"OWNER" | "EDITOR" | "VIEWER">(
-        "VIEWER"
-    );
 
     // Refs for tracking state in callbacks
     const planPlacesRef = useRef<PlanPlaces | null>(null);
@@ -137,7 +128,6 @@ export const CanvasProvider: React.FC<{
             };
 
             setPlanSummary(summary);
-            setUserRole(summary.role);
         } catch (err) {
             log.error("Error fetching plan summary:", err);
             if (err instanceof AppError) {
@@ -451,7 +441,6 @@ export const CanvasProvider: React.FC<{
     return (
         <CanvasContext.Provider
             value={{
-                isAuthenticated,
                 webSocketService,
                 planId: planId || null,
                 isConnected,
@@ -459,8 +448,6 @@ export const CanvasProvider: React.FC<{
                 planSummary,
                 loading,
                 error,
-                userRole,
-                setUserRole,
                 sendUpdate,
                 setPlanSummary,
                 setPlanPlaces,

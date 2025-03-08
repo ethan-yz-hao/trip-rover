@@ -25,22 +25,17 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { useCanvasContext } from "@/components/canvas/CanvasProvider";
+import { useAppSelector } from "@/lib/hooks";
 
 const PlanPlaceList: React.FC = () => {
-    const {
-        isAuthenticated,
-        planPlaces,
-        loading,
-        error,
-        userRole,
-        sendUpdate,
-        clearError,
-    } = useCanvasContext();
-
+    const { planPlaces, loading, error, sendUpdate, clearError, planSummary } =
+        useCanvasContext();
+    const { isAuthenticated } = useAppSelector((state) => state.auth);
     const [newGooglePlaceId, setNewGooglePlaceId] = useState<string>("");
     const [localPlanPlaces, setLocalPlanPlaces] = useState<PlanPlaces | null>(
         null
     );
+    const [canEdit, setCanEdit] = useState(false);
 
     // Initialize empty plan for unauthenticated users or authenticated users with no plan
     useEffect(() => {
@@ -85,8 +80,15 @@ const PlanPlaceList: React.FC = () => {
 
     // Determine if user can edit based on role or authentication status
     // For unauthenticated users, always allow editing (local only)
-    const canEdit =
-        !isAuthenticated || userRole === "OWNER" || userRole === "EDITOR";
+    useEffect(() => {
+        if (isAuthenticated) {
+            setCanEdit(
+                planSummary?.role === "OWNER" || planSummary?.role === "EDITOR"
+            );
+        } else {
+            setCanEdit(true);
+        }
+    }, [isAuthenticated, planSummary]);
 
     // Get the effective plan data (server data or local data)
     const effectivePlanPlaces = planPlaces || localPlanPlaces;
@@ -258,7 +260,7 @@ const PlanPlaceList: React.FC = () => {
                         >
                             {effectivePlanPlaces.places.length === 0 ? (
                                 <ListItem>
-                                    <ListItemText primary="No places added yet. Add your first place above." />
+                                    <ListItemText primary="Add your first place above." />
                                 </ListItem>
                             ) : (
                                 effectivePlanPlaces.places.map(
