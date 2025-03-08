@@ -16,6 +16,7 @@ import {
     Button,
     Switch,
     FormControlLabel,
+    Alert,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -26,25 +27,61 @@ import { axiosInstance, AppError } from "@/lib/axios";
 import PeopleIcon from "@mui/icons-material/People";
 import PlanAccessDialog from "./PlanAccessDialog";
 import { useCanvasContext } from "@/components/canvas/CanvasProvider";
+import { useRouter } from "next/navigation";
 
 const PlanSummary = () => {
-    const { planId, planSummary, loading, error, userRole, setPlanSummary } =
-        useCanvasContext();
+    const {
+        planId,
+        planSummary,
+        loading,
+        error,
+        userRole,
+        setPlanSummary,
+        setPlanPlaces,
+        isAuthenticated,
+    } = useCanvasContext();
     const [isEditing, setIsEditing] = useState(false);
     const [editedDescription, setEditedDescription] = useState("");
     const [editedIsPublic, setEditedIsPublic] = useState(false);
+    const [editedPlanName, setEditedPlanName] = useState("");
     const [updateError, setUpdateError] = useState("");
     const [isAccessDialogOpen, setIsAccessDialogOpen] = useState(false);
+    const router = useRouter();
 
-    const canEdit = userRole === "OWNER" || userRole === "EDITOR";
+    // Determine if this is a new plan (no planId) or if user can edit existing plan
+    const isNewPlan = !planId;
+    const canEdit = isNewPlan || userRole === "OWNER" || userRole === "EDITOR";
 
-    // Initialize edit form when entering edit mode
+    // Initialize edit form when entering edit mode or for new plans
     useEffect(() => {
-        if (isEditing && planSummary) {
-            setEditedDescription(planSummary.description || "");
-            setEditedIsPublic(planSummary.isPublic || false);
+        if ((isEditing && planSummary) || isNewPlan) {
+            setEditedDescription(planSummary?.description || "");
+            setEditedIsPublic(planSummary?.isPublic || false);
+            setEditedPlanName(planSummary?.planName || "");
         }
-    }, [isEditing, planSummary]);
+    }, [isEditing, planSummary, isNewPlan]);
+
+    // For new plans, start in edit mode
+    useEffect(() => {
+        if (isNewPlan) {
+            setIsEditing(true);
+            setPlanSummary({
+                planId: -1,
+                planName: editedPlanName,
+                isPublic: editedIsPublic,
+                description: editedDescription,
+                role: "OWNER",
+                createTime: new Date(),
+                updateTime: new Date(),
+            });
+            setPlanPlaces({
+                planId: -1,
+                planName: editedPlanName,
+                places: [],
+                version: 0,
+            });
+        }
+    }, [isNewPlan]);
 
     const handleEditClick = () => {
         setIsEditing(true);
@@ -52,22 +89,58 @@ const PlanSummary = () => {
 
     const handleSubmit = async () => {
         try {
-            const response = await axiosInstance.patch<
-                ResponseResult<PlanSummaryType>
-            >(`/plan/${planId}`, {
-                description: editedDescription,
-                isPublic: editedIsPublic,
-            });
+            if (!isAuthenticated) {
+                // Prompt user to sign in
+                window.localStorage.setItem(
+                    "redirectAfterLogin",
+                    window.location.pathname
+                );
+                window.localStorage.setItem("pendingPlanName", editedPlanName);
+                window.localStorage.setItem(
+                    "pendingPlanDescription",
+                    editedDescription
+                );
+                window.localStorage.setItem(
+                    "pendingPlanIsPublic",
+                    String(editedIsPublic)
+                );
 
-            // Use the backend response to update the state
-            const updatedPlan = {
-                ...response.data.data,
-                createTime: new Date(response.data.data.createTime),
-                updateTime: new Date(response.data.data.updateTime),
-            };
+                router.push("/login");
+                return;
+            }
 
-            setPlanSummary(updatedPlan);
-            setIsEditing(false);
+            if (isNewPlan) {
+                // Create a new plan
+                const response = await axiosInstance.post<
+                    ResponseResult<PlanSummaryType>
+                >("/plan", {
+                    planName: editedPlanName,
+                    description: editedDescription,
+                    isPublic: editedIsPublic,
+                });
+
+                // Navigate to the new plan
+                const newPlanId = response.data.data.planId;
+                router.push(`/plan/${newPlanId}`);
+            } else {
+                // Update existing plan
+                const response = await axiosInstance.patch<
+                    ResponseResult<PlanSummaryType>
+                >(`/plan/${planId}`, {
+                    description: editedDescription,
+                    isPublic: editedIsPublic,
+                });
+
+                // Use the backend response to update the state
+                const updatedPlan = {
+                    ...response.data.data,
+                    createTime: new Date(response.data.data.createTime),
+                    updateTime: new Date(response.data.data.updateTime),
+                };
+
+                setPlanSummary(updatedPlan);
+                setIsEditing(false);
+            }
             setUpdateError("");
         } catch (err) {
             log.error("Error updating plan:", err);
@@ -78,6 +151,94 @@ const PlanSummary = () => {
             }
         }
     };
+
+    // For new plans, show a simplified form
+    if (isNewPlan) {
+        return (
+            <Accordion
+                expanded={true}
+                sx={{
+                    backgroundColor: "background.paper",
+                    boxShadow: 1,
+                    "&:before": { display: "none" },
+                    borderRadius: 2,
+                }}
+            >
+                <AccordionSummary sx={{ borderRadius: 2 }}>
+                    <Typography variant="h6" component="div">
+                        Create New Plan
+                    </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <Stack spacing={2}>
+                        <TextField
+                            label="Plan Name"
+                            value={editedPlanName}
+                            onChange={(e) => setEditedPlanName(e.target.value)}
+                            error={!!updateError}
+                            required
+                            fullWidth
+                        />
+                        <TextField
+                            multiline
+                            minRows={2}
+                            maxRows={4}
+                            label="Description"
+                            value={editedDescription}
+                            onChange={(e) =>
+                                setEditedDescription(e.target.value)
+                            }
+                            error={!!updateError}
+                            helperText={updateError}
+                            fullWidth
+                        />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={editedIsPublic}
+                                    onChange={(e) =>
+                                        setEditedIsPublic(e.target.checked)
+                                    }
+                                    color="success"
+                                />
+                            }
+                            label={
+                                <Stack
+                                    direction="row"
+                                    spacing={1}
+                                    alignItems="center"
+                                >
+                                    {editedIsPublic ? (
+                                        <PublicIcon />
+                                    ) : (
+                                        <LockIcon />
+                                    )}
+                                    <Typography>
+                                        {editedIsPublic ? "Public" : "Private"}
+                                    </Typography>
+                                </Stack>
+                            }
+                        />
+                        {!isAuthenticated && (
+                            <Alert severity="info">
+                                You'll need to sign in to save your plan.
+                            </Alert>
+                        )}
+                        <Button
+                            variant="contained"
+                            onClick={handleSubmit}
+                            disabled={!editedPlanName.trim()}
+                            fullWidth
+                        >
+                            {isAuthenticated
+                                ? "Create Plan"
+                                : "Sign in to Create Plan"}
+                        </Button>
+                    </Stack>
+                </AccordionDetails>
+            </Accordion>
+        );
+    }
 
     if (error) {
         return <div>{error}</div>;

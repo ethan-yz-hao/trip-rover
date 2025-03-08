@@ -37,6 +37,7 @@ interface CanvasContextType {
     // Methods for both authenticated and unauthenticated modes
     sendUpdate: (updateMessage: PlanUpdateMessage) => void;
     setPlanSummary: (summary: PlanSummary) => void;
+    setPlanPlaces: (places: PlanPlaces) => void;
     clearError: () => void;
 }
 
@@ -53,6 +54,7 @@ const CanvasContext = createContext<CanvasContextType>({
     setUserRole: () => {},
     sendUpdate: () => {},
     setPlanSummary: () => {},
+    setPlanPlaces: () => {},
     clearError: () => {},
 });
 
@@ -461,6 +463,7 @@ export const CanvasProvider: React.FC<{
                 setUserRole,
                 sendUpdate,
                 setPlanSummary,
+                setPlanPlaces,
                 clearError,
             }}
         >
