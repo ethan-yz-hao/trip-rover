@@ -1,6 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Map, Marker, InfoWindow, useMap } from "@vis.gl/react-google-maps";
+import {
+    Map,
+    Marker,
+    InfoWindow,
+    useMap,
+    ControlPosition,
+} from "@vis.gl/react-google-maps";
 import { useCanvasContext } from "@/components/canvas/CanvasProvider";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import { axiosInstance } from "@/lib/axios";
@@ -87,7 +93,6 @@ const MapView: React.FC = () => {
         null
     );
     const [initialLoading, setInitialLoading] = useState(true);
-    const [zoom, setZoom] = useState(12);
 
     // Fetch place details for all places in the plan
     useEffect(() => {
@@ -172,10 +177,21 @@ const MapView: React.FC = () => {
                     lat: 40.7128,
                     lng: -74.006,
                 }}
-                zoom={zoom}
-                onZoomChanged={(e) => setZoom(e.detail.zoom)}
-                mapId="trip-planner-map"
+                defaultZoom={5}
+                minZoom={3}
+                restriction={{
+                    latLngBounds: {
+                        north: 85,
+                        south: -85,
+                        east: 180,
+                        west: -180,
+                    },
+                }}
+                mapId="trip-rover-map"
                 fullscreenControl={false}
+                mapTypeControlOptions={{
+                    position: ControlPosition.TOP_RIGHT,
+                }}
                 style={{ width: "100%", height: "100%" }}
             >
                 <MapContent
