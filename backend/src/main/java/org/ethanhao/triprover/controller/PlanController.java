@@ -5,7 +5,7 @@ import java.util.List;
 import org.ethanhao.triprover.domain.LoginUser;
 import org.ethanhao.triprover.domain.PlanMember;
 import org.ethanhao.triprover.domain.ResponseResult;
-import org.ethanhao.triprover.dto.plan.PlanBaseDTO;
+import org.ethanhao.triprover.dto.plan.PlanCreateDTO;
 import org.ethanhao.triprover.dto.plan.PlanIndexResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanPlacesResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
@@ -77,7 +77,7 @@ public class PlanController {
     @PostMapping()
     @PreAuthorize("hasAuthority('user:all')")
     public ResponseResult<PlanSummaryResponseDTO> createPlan(
-            @Valid @RequestBody PlanBaseDTO request,
+            @Valid @RequestBody PlanCreateDTO request,
             Authentication authentication) {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUser().getId();

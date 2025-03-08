@@ -3,7 +3,7 @@ package org.ethanhao.triprover.service;
 import java.util.List;
 
 import org.ethanhao.triprover.domain.PlanMember;
-import org.ethanhao.triprover.dto.plan.PlanBaseDTO;
+import org.ethanhao.triprover.dto.plan.PlanCreateDTO;
 import org.ethanhao.triprover.dto.plan.PlanPlacesResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
@@ -17,7 +17,7 @@ public interface PlanService {
 
     PlanSummaryResponseDTO getPlanSummary(Long userId, Long planId);
 
-    PlanSummaryResponseDTO createPlan(Long userId, PlanBaseDTO request);
+    PlanSummaryResponseDTO createPlan(Long userId, PlanCreateDTO request);
 
     void deletePlan(Long planId);
 

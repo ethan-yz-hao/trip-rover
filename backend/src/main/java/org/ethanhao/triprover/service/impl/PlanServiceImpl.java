@@ -1,14 +1,17 @@
 package org.ethanhao.triprover.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.ethanhao.triprover.domain.Plan;
 import org.ethanhao.triprover.domain.PlanMember;
 import org.ethanhao.triprover.domain.PlanMemberId;
+import org.ethanhao.triprover.domain.PlanPlace;
 import org.ethanhao.triprover.domain.User;
-import org.ethanhao.triprover.dto.plan.PlanBaseDTO;
+import org.ethanhao.triprover.dto.plan.PlanCreateDTO;
 import org.ethanhao.triprover.dto.plan.PlanPlacesResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanSummaryResponseDTO;
 import org.ethanhao.triprover.dto.plan.PlanUpdateDTO;
@@ -68,22 +71,52 @@ public class PlanServiceImpl implements PlanService {
         return planRepository.findPlanSummaryByUserIdAndPlanId(userId, planId);
     }
 
-    @Transactional
     @Override
-    public PlanSummaryResponseDTO createPlan(Long userId, PlanBaseDTO request) {
+    @Transactional
+    public PlanSummaryResponseDTO createPlan(Long userId, PlanCreateDTO request) {
+        // Create the plan
+        Plan plan = new Plan();
+        plan.setPlanName(request.getPlanName());
+        plan.setDescription(request.getDescription());
+        plan.setIsPublic(request.getIsPublic());
+        plan.setCreateTime(LocalDateTime.now());
+        plan.setUpdateTime(LocalDateTime.now());
+        plan.setVersion(0L);
+
+        // Save the plan to get an ID
+        Plan savedPlan = planRepository.save(plan);
+
+        // Add the owner as a member
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Plan plan = planMapper.planBaseDtoToPlan(request);
-
-        // Create PlanMember with OWNER role
         PlanMember planMember = new PlanMember();
-        planMember.setId(new PlanMemberId(plan, user));
+        PlanMemberId key = new PlanMemberId();
+        key.setPlan(savedPlan);
+        key.setUser(user);
+        planMember.setId(key);
         planMember.setRole(PlanMember.RoleType.OWNER);
 
-        plan.getPlanMembers().add(planMember);
+        planMemberRepository.save(planMember);
 
-        Plan savedPlan = planRepository.save(plan);
+        // Save the places if provided
+        if (request.getPlaces() != null && !request.getPlaces().isEmpty()) {
+            List<PlanPlace> placesToSave = IntStream.range(0, request.getPlaces().size())
+                    .mapToObj(i -> {
+                        PlanPlace place = request.getPlaces().get(i);
+                        PlanPlace newPlace = new PlanPlace();
+                        newPlace.setPlan(savedPlan);
+                        newPlace.setPlaceId(place.getPlaceId());
+                        newPlace.setGooglePlaceId(place.getGooglePlaceId());
+                        newPlace.setStaySeconds(place.getStaySeconds());
+                        newPlace.setSequenceNumber(i);
+                        return newPlace;
+                    })
+                    .collect(Collectors.toList());
+
+            savedPlan.setPlaces(placesToSave);
+            planRepository.save(savedPlan);
+        }
 
         return planRepository.findPlanSummaryByUserIdAndPlanId(userId, savedPlan.getPlanId());
     }

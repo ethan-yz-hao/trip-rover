@@ -38,6 +38,7 @@ const PlanSummary = () => {
         error,
         setPlanSummary,
         setPlanPlaces,
+        planPlaces,
     } = useCanvasContext();
     const { isAuthenticated } = useAppSelector((state) => state.auth);
     const [isEditing, setIsEditing] = useState(false);
@@ -113,13 +114,14 @@ const PlanSummary = () => {
             }
 
             if (isNewPlan) {
-                // Create a new plan
+                // Create a new plan with places
                 const response = await axiosInstance.post<
                     ResponseResult<PlanSummaryType>
                 >("/plan", {
                     planName: editedPlanName,
                     description: editedDescription,
                     isPublic: editedIsPublic,
+                    places: planPlaces?.places || [],
                 });
 
                 // Navigate to the new plan
