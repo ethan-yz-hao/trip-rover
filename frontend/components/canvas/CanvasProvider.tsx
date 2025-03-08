@@ -23,14 +23,26 @@ interface PendingUpdate {
     updateMessage: PlanUpdateMessage;
 }
 
+interface PlaceDetails {
+    index: number;
+    placeId: string;
+    googlePlaceId: string;
+    name: string;
+    location: google.maps.LatLngLiteral;
+    address: string;
+}
+
 interface CanvasContextType {
     webSocketService: WebSocketService | null;
     planId: number | null;
     isConnected: boolean;
     planPlaces: PlanPlaces | null;
     planSummary: PlanSummary | null;
-    loading: boolean;
+    loadingPlanPlaces: boolean;
+    loadingPlanSummary: boolean;
     error: string | null;
+    placeDetails: Record<string, PlaceDetails>;
+    loadingPlaceDetails: boolean;
     // Methods for both authenticated and unauthenticated modes
     sendUpdate: (updateMessage: PlanUpdateMessage) => void;
     setPlanSummary: (summary: PlanSummary) => void;
@@ -44,8 +56,11 @@ const CanvasContext = createContext<CanvasContextType>({
     isConnected: false,
     planPlaces: null,
     planSummary: null,
-    loading: false,
+    loadingPlanPlaces: false,
+    loadingPlanSummary: false,
     error: null,
+    placeDetails: {},
+    loadingPlaceDetails: false,
     sendUpdate: () => {},
     setPlanSummary: () => {},
     setPlanPlaces: () => {},
@@ -64,8 +79,13 @@ export const CanvasProvider: React.FC<{
     const [isConnected, setIsConnected] = useState(false);
     const [planPlaces, setPlanPlaces] = useState<PlanPlaces | null>(null);
     const [planSummary, setPlanSummary] = useState<PlanSummary | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [loadingPlanPlaces, setLoadingPlanPlaces] = useState(false);
+    const [loadingPlanSummary, setLoadingPlanSummary] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [placeDetails, setPlaceDetails] = useState<
+        Record<string, PlaceDetails>
+    >({});
+    const [loadingPlaceDetails, setLoadingPlaceDetails] = useState(false);
 
     // Refs for tracking state in callbacks
     const planPlacesRef = useRef<PlanPlaces | null>(null);
@@ -87,7 +107,7 @@ export const CanvasProvider: React.FC<{
         if (!planId) return;
 
         try {
-            setLoading(true);
+            setLoadingPlanPlaces(true);
             setError(null);
 
             const response = await axiosInstance.get<{
@@ -104,7 +124,7 @@ export const CanvasProvider: React.FC<{
                 setError("Failed to load the plan. Please try again.");
             }
         } finally {
-            setLoading(false);
+            setLoadingPlanPlaces(false);
         }
     };
 
@@ -113,7 +133,7 @@ export const CanvasProvider: React.FC<{
         if (!planId) return;
 
         try {
-            setLoading(true);
+            setLoadingPlanSummary(true);
             setError(null);
 
             const response = await axiosInstance.get<
@@ -136,7 +156,7 @@ export const CanvasProvider: React.FC<{
                 setError("Failed to load plan summary");
             }
         } finally {
-            setLoading(false);
+            setLoadingPlanSummary(false);
         }
     };
 
@@ -191,6 +211,62 @@ export const CanvasProvider: React.FC<{
             fetchPlanSummary();
         }
     }, [planId]);
+
+    // Fetch place details for all places in the plan
+    useEffect(() => {
+        if (!planPlaces || planPlaces.places.length === 0) {
+            setPlaceDetails({});
+            return;
+        }
+
+        const fetchPlaceDetails = async () => {
+            setLoadingPlaceDetails(true);
+            const details: Record<string, PlaceDetails> = {};
+
+            // Process each place in parallel
+            await Promise.all(
+                planPlaces.places.map(async (place, index) => {
+                    try {
+                        // Skip if we already have details for this place
+                        if (placeDetails[place.placeId]) {
+                            details[place.placeId] =
+                                placeDetails[place.placeId];
+                            details[place.placeId].index = index;
+                            return;
+                        }
+
+                        const response = await axiosInstance.get(
+                            `/place/details/${place.googlePlaceId}`
+                        );
+
+                        const placeData = response.data.data;
+                        const detail = {
+                            placeId: place.placeId,
+                            googlePlaceId: place.googlePlaceId,
+                            name: placeData.displayName.text,
+                            location: {
+                                lat: placeData.location.latitude,
+                                lng: placeData.location.longitude,
+                            },
+                            address: placeData.formattedAddress,
+                            index: index,
+                        };
+                        details[place.placeId] = detail;
+                    } catch (error) {
+                        log.error(
+                            `Failed to fetch details for place ${place.googlePlaceId}:`,
+                            error
+                        );
+                    }
+                })
+            );
+
+            setPlaceDetails(details);
+            setLoadingPlaceDetails(false);
+        };
+
+        fetchPlaceDetails();
+    }, [planPlaces]);
 
     // Apply update to the plan locally (used by both optimistic updates and incoming updates from other clients)
     const applyLocalUpdate = (
@@ -446,8 +522,11 @@ export const CanvasProvider: React.FC<{
                 isConnected,
                 planPlaces,
                 planSummary,
-                loading,
+                loadingPlanPlaces,
+                loadingPlanSummary,
                 error,
+                placeDetails,
+                loadingPlaceDetails,
                 sendUpdate,
                 setPlanSummary,
                 setPlanPlaces,

@@ -28,8 +28,14 @@ import { useCanvasContext } from "@/components/canvas/CanvasProvider";
 import { useAppSelector } from "@/lib/hooks";
 
 const PlanPlaceList: React.FC = () => {
-    const { planPlaces, loading, error, sendUpdate, clearError, planSummary } =
-        useCanvasContext();
+    const {
+        planPlaces,
+        loadingPlanPlaces,
+        error,
+        sendUpdate,
+        clearError,
+        planSummary,
+    } = useCanvasContext();
     const { isAuthenticated } = useAppSelector((state) => state.auth);
     const [newGooglePlaceId, setNewGooglePlaceId] = useState<string>("");
     const [localPlanPlaces, setLocalPlanPlaces] = useState<PlanPlaces | null>(
@@ -39,7 +45,7 @@ const PlanPlaceList: React.FC = () => {
 
     // Initialize empty plan for unauthenticated users or authenticated users with no plan
     useEffect(() => {
-        if (!planPlaces && !loading) {
+        if (!planPlaces && !loadingPlanPlaces) {
             // Check localStorage first
             const localStorageKey = "local_plan";
             const savedPlan = localStorage.getItem(localStorageKey);
@@ -57,7 +63,7 @@ const PlanPlaceList: React.FC = () => {
         } else if (planPlaces) {
             setLocalPlanPlaces(null); // Use the server data when available
         }
-    }, [planPlaces, loading]);
+    }, [planPlaces, loadingPlanPlaces]);
 
     // Initialize an empty plan
     const initializeEmptyPlan = () => {
@@ -191,7 +197,7 @@ const PlanPlaceList: React.FC = () => {
         sendUpdate(updateMessage);
     };
 
-    if (loading) {
+    if (loadingPlanPlaces) {
         return (
             <Box display="flex" justifyContent="center" p={4}>
                 <CircularProgress />

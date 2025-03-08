@@ -34,7 +34,7 @@ const PlanSummary = () => {
     const {
         planId,
         planSummary,
-        loading,
+        loadingPlanSummary,
         error,
         setPlanSummary,
         setPlanPlaces,
@@ -252,7 +252,7 @@ const PlanSummary = () => {
         return <div>{error}</div>;
     }
 
-    if (loading || !planSummary) {
+    if (loadingPlanSummary || !planSummary) {
         return <div>Loading plan summary...</div>;
     }
 

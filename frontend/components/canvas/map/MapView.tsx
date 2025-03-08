@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { Map, ControlPosition } from "@vis.gl/react-google-maps";
 import { useCanvasContext } from "@/components/canvas/CanvasProvider";
 import { Box, CircularProgress } from "@mui/material";
-import { axiosInstance } from "@/lib/axios";
 import MapContent from "./MapContent";
 
 interface PlaceDetails {
@@ -16,78 +15,12 @@ interface PlaceDetails {
 }
 
 const MapView: React.FC = () => {
-    const { planPlaces, loading } = useCanvasContext();
-    const [placeDetails, setPlaceDetails] = useState<
-        Record<string, PlaceDetails>
-    >({});
+    const { placeDetails, loadingPlaceDetails } = useCanvasContext();
     const [selectedPlace, setSelectedPlace] = useState<PlaceDetails | null>(
         null
     );
-    const [initialLoading, setInitialLoading] = useState(true);
 
-    // Fetch place details for all places in the plan
-    useEffect(() => {
-        if (!planPlaces || planPlaces.places.length === 0) {
-            setPlaceDetails({});
-            setInitialLoading(false);
-            return;
-        }
-
-        const fetchPlaceDetails = async () => {
-            const details: Record<string, PlaceDetails> = {};
-
-            // Process each place in parallel
-            await Promise.all(
-                planPlaces.places.map(async (place, index) => {
-                    try {
-                        // Skip if we already have details for this place
-                        if (placeDetails[place.placeId]) {
-                            details[place.placeId] =
-                                placeDetails[place.placeId];
-                            details[place.placeId].index = index;
-                            return;
-                        }
-
-                        console.log(
-                            "fetching place details for place",
-                            place.placeId,
-                            place.googlePlaceId
-                        );
-
-                        const response = await axiosInstance.get(
-                            `/place/details/${place.googlePlaceId}`
-                        );
-
-                        const placeData = response.data.data;
-                        const detail = {
-                            placeId: place.placeId,
-                            googlePlaceId: place.googlePlaceId,
-                            name: placeData.displayName.text,
-                            location: {
-                                lat: placeData.location.latitude,
-                                lng: placeData.location.longitude,
-                            },
-                            address: placeData.formattedAddress,
-                            index: index,
-                        };
-                        details[place.placeId] = detail;
-                    } catch (error) {
-                        console.error(
-                            `Failed to fetch details for place ${place.googlePlaceId}:`,
-                            error
-                        );
-                    }
-                })
-            );
-
-            setPlaceDetails(details);
-            setInitialLoading(false);
-        };
-
-        fetchPlaceDetails();
-    }, [planPlaces]);
-
-    if (loading || initialLoading) {
+    if (loadingPlaceDetails) {
         return (
             <Box
                 display="flex"
