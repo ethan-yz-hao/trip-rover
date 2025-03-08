@@ -8,8 +8,6 @@ export default function Home() {
             <Navbar />
             <SearchUser />
             <SearchPlan />
-            Need a public list and map that works when not logged in and have no
-            websocket connection
             <CanvasContainer />
         </>
     );
