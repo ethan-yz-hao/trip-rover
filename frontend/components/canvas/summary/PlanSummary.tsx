@@ -156,7 +156,7 @@ const PlanSummary = () => {
     if (isNewPlan) {
         return (
             <Accordion
-                expanded={true}
+                defaultExpanded={false}
                 sx={{
                     backgroundColor: "background.paper",
                     boxShadow: 1,
@@ -164,7 +164,10 @@ const PlanSummary = () => {
                     borderRadius: 2,
                 }}
             >
-                <AccordionSummary sx={{ borderRadius: 2 }}>
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    sx={{ borderRadius: 2 }}
+                >
                     <Typography variant="h6" component="div">
                         Create New Plan
                     </Typography>
