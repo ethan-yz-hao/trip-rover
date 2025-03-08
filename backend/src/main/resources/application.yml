@@ -1,51 +1,56 @@
 spring:
-  application:
-    name: TripRover
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
+    application:
+        name: TripRover
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB}
+        username: ${POSTGRES_USER}
+        password: ${POSTGRES_PASSWORD}
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: true
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
-      database: 10
+    data:
+        redis:
+            host: ${REDIS_HOST:localhost}
+            port: ${REDIS_PORT:6379}
+            password: ${REDIS_PASSWORD}
+            database: 10
 
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/google"
-            scope:
-              - email
-              - profile
+    security:
+        oauth2:
+            client:
+                registration:
+                    google:
+                        client-id: ${GOOGLE_CLIENT_ID}
+                        client-secret: ${GOOGLE_CLIENT_SECRET}
+                        redirect-uri: "{baseUrl}/login/oauth2/code/google"
+                        scope:
+                            - email
+                            - profile
 
 aws:
-  accessKeyId: ${AWS_ACCESS_KEY_ID}
-  secretKey: ${AWS_SECRET_KEY}
-  region: ${AWS_REGION:us-west-2}
-  s3:
-    avatar-bucket-name: ${AWS_S3_AVATAR_BUCKET:trip-rover-avatars-dev}
-    avatar-bucket-domain: ${AWS_S3_AVATAR_DOMAIN:trip-rover-avatars-dev.s3.us-west-2.amazonaws.com}
-    default-avatar-key: default-avatar.png
+    accessKeyId: ${AWS_ACCESS_KEY_ID}
+    secretKey: ${AWS_SECRET_KEY}
+    region: ${AWS_REGION:us-west-2}
+    s3:
+        avatar-bucket-name: ${AWS_S3_AVATAR_BUCKET:trip-rover-avatars-dev}
+        avatar-bucket-domain: ${AWS_S3_AVATAR_DOMAIN:trip-rover-avatars-dev.s3.us-west-2.amazonaws.com}
+        default-avatar-key: default-avatar.png
 
 elasticsearch:
-  host: ${ELASTICSEARCH_HOST:localhost}
-  port: ${ELASTICSEARCH_PORT:9200}
-  username: ${ELASTIC_USERNAME:elastic}
-  password: ${ELASTIC_PASSWORD}
+    host: ${ELASTICSEARCH_HOST:localhost}
+    port: ${ELASTICSEARCH_PORT:9200}
+    username: ${ELASTIC_USERNAME:elastic}
+    password: ${ELASTIC_PASSWORD}
 
 logging:
-  level:
-    org.springframework.security: ${LOG_LEVEL_SECURITY:INFO}
-    org.ethanhao.triprover: ${LOG_LEVEL_APP:INFO}
+    level:
+        org.springframework.security: ${LOG_LEVEL_SECURITY:INFO}
+        org.ethanhao.triprover: ${LOG_LEVEL_APP:INFO}
+
+google:
+    maps:
+        api:
+            key: ${GOOGLE_MAPS_API_KEY}

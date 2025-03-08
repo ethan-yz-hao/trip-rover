@@ -45,18 +45,17 @@ const MapView: React.FC = () => {
                         );
 
                         const placeData = response.data.data;
-                        details[place.placeId] = {
+                        const detail = {
                             placeId: place.placeId,
-                            name: placeData.name,
+                            name: placeData.displayName.text,
                             location: {
-                                lat: placeData.geometry.location.lat,
-                                lng: placeData.geometry.location.lng,
+                                lat: placeData.location.latitude,
+                                lng: placeData.location.longitude,
                             },
-                            address:
-                                placeData.formatted_address ||
-                                placeData.vicinity ||
-                                "",
+                            address: placeData.formattedAddress,
                         };
+                        console.log(detail);
+                        details[place.placeId] = detail;
                     } catch (error) {
                         console.error(
                             `Failed to fetch details for place ${place.googlePlaceId}:`,
