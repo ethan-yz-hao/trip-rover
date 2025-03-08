@@ -6,7 +6,9 @@ import { Box, Typography, CircularProgress } from "@mui/material";
 import { axiosInstance } from "@/lib/axios";
 
 interface PlaceDetails {
+    index: number;
     placeId: string;
+    googlePlaceId: string;
     name: string;
     location: google.maps.LatLngLiteral;
     address: string;
@@ -44,13 +46,13 @@ const MapContent: React.FC<{
 
     return (
         <>
-            {Object.values(placeDetails).map((place, index) => (
+            {Object.values(placeDetails).map((place) => (
                 <Marker
                     key={place.placeId}
                     position={place.location}
                     onClick={() => setSelectedPlace(place)}
                     label={{
-                        text: (index + 1).toString(),
+                        text: (place.index + 1).toString(),
                         color: "white",
                         fontWeight: "bold",
                     }}
@@ -90,6 +92,7 @@ const MapView: React.FC = () => {
     // Fetch place details for all places in the plan
     useEffect(() => {
         if (!planPlaces || planPlaces.places.length === 0) {
+            setPlaceDetails({});
             setInitialLoading(false);
             return;
         }
@@ -99,10 +102,21 @@ const MapView: React.FC = () => {
 
             // Process each place in parallel
             await Promise.all(
-                planPlaces.places.map(async (place) => {
+                planPlaces.places.map(async (place, index) => {
                     try {
                         // Skip if we already have details for this place
-                        if (details[place.placeId]) return;
+                        if (placeDetails[place.placeId]) {
+                            details[place.placeId] =
+                                placeDetails[place.placeId];
+                            details[place.placeId].index = index;
+                            return;
+                        }
+
+                        console.log(
+                            "fetching place details for place",
+                            place.placeId,
+                            place.googlePlaceId
+                        );
 
                         const response = await axiosInstance.get(
                             `/place/details/${place.googlePlaceId}`
@@ -111,12 +125,14 @@ const MapView: React.FC = () => {
                         const placeData = response.data.data;
                         const detail = {
                             placeId: place.placeId,
+                            googlePlaceId: place.googlePlaceId,
                             name: placeData.displayName.text,
                             location: {
                                 lat: placeData.location.latitude,
                                 lng: placeData.location.longitude,
                             },
                             address: placeData.formattedAddress,
+                            index: index,
                         };
                         details[place.placeId] = detail;
                     } catch (error) {
