@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { useAppSelector } from "@/lib/hooks";
 import { CanvasProvider } from "@/components/canvas/CanvasProvider";
@@ -8,6 +8,7 @@ import PlanPlaceList from "@/components/canvas/list/PlanPlaceList";
 import PlanSummary from "@/components/canvas/summary/PlanSummary";
 import { useRouter } from "next/navigation";
 import { axiosInstance } from "@/lib/axios";
+import MapView from "@/components/canvas/map/MapView";
 
 interface CanvasContainerProps {
     planId?: number;
@@ -15,7 +16,6 @@ interface CanvasContainerProps {
 
 const CanvasContainer: React.FC<CanvasContainerProps> = ({ planId }) => {
     const { isAuthenticated } = useAppSelector((state) => state.auth);
-    const [apiKey, setApiKey] = useState<string>("");
     const router = useRouter();
 
     // Check for pending plan data after login
@@ -55,14 +55,7 @@ const CanvasContainer: React.FC<CanvasContainerProps> = ({ planId }) => {
         }
     }, [isAuthenticated, planId, router]);
 
-    useEffect(() => {
-        // Get API key from environment variable
-        setApiKey(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "");
-    }, []);
-
-    if (!apiKey) {
-        return <div>Loading Google Maps API...</div>;
-    }
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
     return (
         <APIProvider apiKey={apiKey}>
@@ -73,8 +66,7 @@ const CanvasContainer: React.FC<CanvasContainerProps> = ({ planId }) => {
                         <PlanPlaceList />
                     </Grid>
                     <Grid item xs={12} md={9}>
-                        <h1>Map</h1>
-                        {/* Map component will go here */}
+                        <MapView />
                     </Grid>
                 </Grid>
             </CanvasProvider>
