@@ -1,15 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-    Map,
-    Marker,
-    InfoWindow,
-    useMap,
-    ControlPosition,
-} from "@vis.gl/react-google-maps";
+import { Map, ControlPosition } from "@vis.gl/react-google-maps";
 import { useCanvasContext } from "@/components/canvas/CanvasProvider";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { axiosInstance } from "@/lib/axios";
+import MapContent from "./MapContent";
 
 interface PlaceDetails {
     index: number;
@@ -19,70 +14,6 @@ interface PlaceDetails {
     location: google.maps.LatLngLiteral;
     address: string;
 }
-
-const MapContent: React.FC<{
-    placeDetails: Record<string, PlaceDetails>;
-    selectedPlace: PlaceDetails | null;
-    setSelectedPlace: (place: PlaceDetails | null) => void;
-}> = ({ placeDetails, selectedPlace, setSelectedPlace }) => {
-    const map = useMap();
-
-    // Calculate map center and update it smoothly
-    useEffect(() => {
-        const places = Object.values(placeDetails);
-        if (places.length === 0 || !map) return;
-
-        // Calculate the average of all coordinates
-        const sum = places.reduce(
-            (acc, place) => ({
-                lat: acc.lat + place.location.lat,
-                lng: acc.lng + place.location.lng,
-            }),
-            { lat: 0, lng: 0 }
-        );
-
-        const newCenter = {
-            lat: sum.lat / places.length,
-            lng: sum.lng / places.length,
-        };
-
-        // Pan smoothly to new center
-        map.panTo(newCenter);
-    }, [placeDetails, map]);
-
-    return (
-        <>
-            {Object.values(placeDetails).map((place) => (
-                <Marker
-                    key={place.placeId}
-                    position={place.location}
-                    onClick={() => setSelectedPlace(place)}
-                    label={{
-                        text: (place.index + 1).toString(),
-                        color: "white",
-                        fontWeight: "bold",
-                    }}
-                />
-            ))}
-
-            {selectedPlace && (
-                <InfoWindow
-                    position={selectedPlace.location}
-                    onCloseClick={() => setSelectedPlace(null)}
-                >
-                    <Box sx={{ p: 1, maxWidth: 200 }}>
-                        <Typography variant="subtitle1" fontWeight="bold">
-                            {selectedPlace.name}
-                        </Typography>
-                        <Typography variant="body2">
-                            {selectedPlace.address}
-                        </Typography>
-                    </Box>
-                </InfoWindow>
-            )}
-        </>
-    );
-};
 
 const MapView: React.FC = () => {
     const { planPlaces, loading } = useCanvasContext();
@@ -177,7 +108,7 @@ const MapView: React.FC = () => {
                     lat: 40.7128,
                     lng: -74.006,
                 }}
-                defaultZoom={5}
+                defaultZoom={12}
                 minZoom={3}
                 restriction={{
                     latLngBounds: {
